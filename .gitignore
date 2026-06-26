@@ -1,0 +1,19 @@
+# Raw REDCap exports — contain practice contact info, keep off GitHub
+LABUBU_DATA_*.csv
+Old_redcap/
+
+# Intermediate name-fix work products
+practice_crosswalk.csv
+redcap_name_fixes*.csv
+phase1_needs*.csv
+
+# macOS
+.DS_Store
+
+# Claude session state
+.claude/
+
+# R session artifacts
+.Rhistory
+.RData
+.Rproj.user/
