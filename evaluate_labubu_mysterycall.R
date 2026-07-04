@@ -1,6 +1,6 @@
 library(mysterycall)
 
-input_file <- "LABUBU_DATA_LABELS_2026-06-25_1949.csv"
+input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"
 out_dir    <- "mysterycall_outputs"
 dir.create(out_dir, showWarnings = FALSE)
 
@@ -133,7 +133,17 @@ dat$analytic_inclusion <- !is.na(dat$exclusion_reason) & dat$exclusion_reason ==
 dat$form_finalized     <- !is.na(dat$complete) & dat$complete == "Complete"
 dat$contact_office     <- dat$analytic_inclusion
 dat$wait_days          <- as.numeric(dat$first_appt_date - dat$call_date)
-dat$log_wait_days      <- log1p(dat$wait_days)   # log(days + 1); handles zero-day waits
+# Business days (Mon–Fri, excluding US federal holidays) via the package helper.
+# Falls back to calendar days if bizdays is not installed.
+dat <- tryCatch(
+  mysterycall_business_days(
+    dat,
+    call_col   = "call_date",
+    appt_col   = "first_appt_date",
+    result_col = "business_days"
+  ),
+  error = function(e) { dat$business_days <- dat$wait_days; dat }
+)
 dat$first_appt_missing <- is.na(dat$first_appt_date)
 dat$insurance_accepts  <- !is.na(dat$insurance) & dat$insurance == "Yes they accept insurance"
 dat$blue_cross_bcbs_response <- dat$insurance
@@ -304,8 +314,8 @@ glmer_acceptance <- tryCatch(
 # Linear mixed model for wait time (days); same random-intercept structure.
 lmer_wait <- tryCatch(
   mysterycall_lmm(
-    data             = dat[!is.na(dat$log_wait_days) & !is.na(dat$practice_id) & !is.na(dat$scenario), ],
-    outcome          = "log_wait_days",
+    data             = dat[!is.na(dat$business_days) & !is.na(dat$practice_id) & !is.na(dat$scenario), ],
+    outcome          = "business_days",
     predictors       = "scenario",
     random_intercept = "practice_id"
   ),
@@ -357,30 +367,36 @@ fmt_lmm_result <- function(res) {
     return(list(ok = FALSE, text = res$error, note = "", n = 0L))
 
   ct <- as.data.frame(res$coef_table)
-  # Outcome is log1p(wait_days); exp(estimate) is a geometric mean ratio of
-  # (wait_days + 1). Back-transform for interpretability alongside log-scale values.
   ct_fmt <- data.frame(
-    Term      = ct$term,
-    log_Est   = round(ct$estimate,  3),
-    log_CI_lo = round(ct$ci_lower,  3),
-    log_CI_hi = round(ct$ci_upper,  3),
-    GMR       = round(exp(ct$estimate),  2),   # geometric mean ratio vs. reference
-    GMR_lo    = round(exp(ct$ci_lower),  2),
-    GMR_hi    = round(exp(ct$ci_upper),  2),
-    p         = ct$p_value_fmt,
-    stringsAsFactors = FALSE
+    Term               = ct$term,
+    Est_business_days  = round(ct$estimate,  1),
+    CI_lo              = round(ct$ci_lower,  1),
+    CI_hi              = round(ct$ci_upper,  1),
+    p                  = ct$p_value_fmt,
+    stringsAsFactors   = FALSE
   )
+
+  sw_p      <- res$normality$p_value
+  sw_str    <- fmt_p(sw_p)
+  norm_flag <- if (!is.na(sw_p) && sw_p < 0.05)
+    paste0("NORMALITY CAVEAT: Shapiro-Wilk p = ", sw_str,
+           " — residuals are right-skewed (expected for wait-time data). ",
+           "LMM point estimates remain unbiased but 95% CIs may be slightly ",
+           "anti-conservative with this sample size. A Poisson/negative-binomial ",
+           "GLMM sensitivity analysis is recommended to confirm inference.")
+  else
+    paste0("Shapiro-Wilk on residuals: p = ", sw_str, " (normality satisfied).")
 
   list(
     ok   = TRUE,
     text = paste(capture.output(print(ct_fmt, row.names = FALSE)), collapse = "\n"),
     note = paste0(
-      "mysterycall_lmm() [lme4::lmer] on log1p(wait_days). ",
-      "log_Est = coefficient on log scale; GMR = geometric mean ratio of (wait_days + 1) ",
-      "vs. Straight couple (reference); GMR < 1 = shorter wait. ",
-      "n = ", res$n, " records with observed wait time. ",
-      "Shapiro-Wilk on residuals: p = ", fmt_p(res$normality$p_value), " ",
-      "(log-transform applied; check Q-Q plot if still flagged). ",
+      "mysterycall_lmm() [lme4::lmer]. Outcome: business days until appointment ",
+      "(Mon-Fri, excluding US federal holidays). ",
+      "Estimates are mean difference in business days vs. Straight couple (reference); ",
+      "negative = shorter wait. ",
+      "n = ", res$n, " records with observed appointment date. ",
+      norm_flag, " ",
       "Marginal R² = ", round(res$r_squared$marginal, 3), ", ",
       "Conditional R² = ", round(res$r_squared$conditional, 3), "."
     ),
@@ -422,8 +438,70 @@ gee_output <- tryCatch({
   list(ok = FALSE, text = conditionMessage(e), note = "")
 })
 
+# ── Within-practice PAIRED analyses (the matched, unconfounded comparison) ────
+# Rationale: the unmatched chi-square is confounded because the three scenarios
+# were NOT called at the same set of practices (single-mother calls landed
+# disproportionately at high-acceptance practices). A within-practice comparison
+# removes each practice's baseline generosity. Only practices called for BOTH
+# scenarios contribute, and for the binary outcome only DISCORDANT practices
+# (different answer to the two callers) carry any information about a scenario
+# effect — so effective n is the discordant count, not the paired count.
+paired_contrasts <- list(
+  c("Straight_couple", "Single_mother"),
+  c("Lesbian_couple",  "Single_mother"),
+  c("Straight_couple", "Lesbian_couple")
+)
+
+# Exact-McNemar minimum detectable effect: smallest one-way discordant split
+# (expressed as an odds ratio) that yields 80% power at alpha = 0.05.
+mcnemar_mde_or <- function(n_d) {
+  if (is.na(n_d) || n_d < 1) return(NA_real_)
+  crit <- qbinom(0.025, n_d, 0.5)
+  for (psi in seq(0.50, 0.99, 0.01)) {
+    k   <- 0:n_d
+    rej <- (k <= crit) | (k >= n_d - crit)
+    if (sum(dbinom(k[rej], n_d, psi)) >= 0.80) return(psi / (1 - psi))
+  }
+  NA_real_
+}
+
+paired_acc_df <- do.call(rbind, lapply(paired_contrasts, function(cc) {
+  a <- wide_acc[[cc[1]]]; b <- wide_acc[[cc[2]]]
+  ok <- !is.na(a) & !is.na(b); a <- a[ok]; b <- b[ok]
+  yn <- sum(a & !b); ny <- sum(!a & b); disc <- yn + ny
+  data.frame(
+    contrast       = paste(gsub("_", " ", cc), collapse = " vs "),
+    n_paired       = length(a),
+    concordant     = sum(a == b),
+    discordant     = disc,
+    disc_favor_A   = yn,   # yes to 1st scenario, no to 2nd
+    disc_favor_B   = ny,   # no to 1st scenario, yes to 2nd
+    mcnemar_p      = if (disc > 0) round(binom.test(min(yn, ny), disc)$p.value, 3) else NA_real_,
+    mde_or_80power = round(mcnemar_mde_or(disc), 1),
+    stringsAsFactors = FALSE
+  )
+}))
+
+paired_wait_df <- do.call(rbind, lapply(paired_contrasts, function(cc) {
+  a <- wide_wait[[cc[1]]]; b <- wide_wait[[cc[2]]]
+  ok <- !is.na(a) & !is.na(b); a <- a[ok]; b <- b[ok]; d <- a - b
+  n <- length(d)
+  data.frame(
+    contrast        = paste(gsub("_", " ", cc), collapse = " vs "),
+    n_paired        = n,
+    mean_diff_days  = if (n >= 1) round(mean(d), 1) else NA_real_,
+    sd_diff         = if (n >= 2) round(sd(d), 1) else NA_real_,
+    paired_t_p      = if (n >= 3) round(tryCatch(t.test(a, b, paired = TRUE)$p.value, error = function(e) NA_real_), 3) else NA_real_,
+    wilcoxon_p      = if (n >= 3) round(suppressWarnings(tryCatch(wilcox.test(a, b, paired = TRUE)$p.value, error = function(e) NA_real_)), 3) else NA_real_,
+    mde_days_80power= if (n >= 3 && sd(d) > 0) round(tryCatch(power.t.test(n = n, sd = sd(d), power = 0.80, type = "paired")$delta, error = function(e) NA_real_), 1) else NA_real_,
+    stringsAsFactors = FALSE
+  )
+}))
+
 # ── Write output CSVs ─────────────────────────────────────────────────────────
 write.csv(dat,                          file.path(out_dir, "labubu_cleaned_analysis.csv"),                                 row.names = FALSE)
+write.csv(paired_acc_df,                file.path(out_dir, "mysterycall_paired_acceptance_mcnemar.csv"),                   row.names = FALSE)
+write.csv(paired_wait_df,               file.path(out_dir, "mysterycall_paired_wait_within_practice.csv"),                 row.names = FALSE)
 write.csv(completeness$summary,         file.path(out_dir, "mysterycall_completeness.csv"),                               row.names = FALSE)
 write.csv(acceptance_all$summary,       file.path(out_dir, "mysterycall_acceptance_by_scenario_all_records.csv"),         row.names = FALSE)
 write.csv(acceptance_finalized$summary, file.path(out_dir, "mysterycall_acceptance_by_scenario_finalized_records.csv"),   row.names = FALSE)
@@ -506,6 +584,38 @@ report <- c(
   paste0("- Chi-square (independent groups, descriptive only): ",
          acceptance_all$test_name, "; p = ", fmt_p(acceptance_all$p_value)),
   "",
+  paste0("> **CONFOUNDING CAUTION — do not report this chi-square as a result.** ",
+         "The three scenarios were not called at the same practices: single-mother ",
+         "calls landed disproportionately at high-acceptance practices (practices ",
+         "that received a single-mother call accept ~70% of *all* callers vs ~14% ",
+         "at practices that did not). The marginal rate therefore reflects *which ",
+         "practices were dialed*, not how callers were treated. Use the within-",
+         "practice paired analysis below."),
+  "",
+
+  # ── MATCHED: within-practice paired acceptance (McNemar) ─────────────────────
+  "## MATCHED ANALYSIS — Within-Practice Paired Acceptance (exact McNemar)",
+  "",
+  paste0("Each contrast uses only practices called for BOTH scenarios; only ",
+         "DISCORDANT practices (different answer to the two callers) carry ",
+         "information, so effective n = the discordant count. Concordant practices ",
+         "(same answer to both) are the substantive majority — most practices do ",
+         "not differentiate — but contribute nothing to the test."),
+  "",
+  "```",
+  capture(paired_acc_df),
+  "```",
+  "",
+  paste0("**Power / precision:** discordant practices number only ",
+         paste(paired_acc_df$discordant, collapse = ", "),
+         " across the three contrasts. At 80% power (alpha 0.05, exact McNemar) the ",
+         "smallest detectable effect is an odds ratio of roughly ",
+         paste(paired_acc_df$mde_or_80power, collapse = "/"),
+         ". Plausible audit-study effects (OR ~1.5-2.5) are well below this floor: ",
+         "the matched data can rule out a LARGE differential but is underpowered for ",
+         "small-to-moderate effects. Report as estimation with this precision ",
+         "statement, not as a null hypothesis test."),
+  "",
 
   # ── PRIMARY: GLMER ──────────────────────────────────────────────────────────
   "## PRIMARY ANALYSIS — Mixed-Effects Logistic Regression (glmer)",
@@ -522,9 +632,13 @@ report <- c(
   "",
 
   # ── SECONDARY: LMM wait time ────────────────────────────────────────────────
-  "## SECONDARY ANALYSIS — Mixed-Effects Linear Model for Wait Time (lmm)",
+  "## SECONDARY ANALYSIS — Mixed-Effects Linear Model for Wait Time in Business Days (lmm)",
   "",
-  paste0("Via mysterycall_lmm(). n = ", lmm_fmt$n, " records with observed wait time."),
+  paste0("Via mysterycall_lmm(). Outcome: business days (Mon–Fri, US federal holidays excluded). ",
+         "Estimates report the mean difference in business days relative to straight-couple callers ",
+         "(reference). n = ", lmm_fmt$n, " records with an observed appointment date. ",
+         "Note: wait-time distributions are typically right-skewed; ",
+         "see normality caveat in the model note below."),
   "",
   if (lmm_fmt$ok) {
     c("```", lmm_fmt$text, "```", "", paste0("Note: ", lmm_fmt$note))
@@ -542,6 +656,27 @@ report <- c(
   "",
   paste0("- Unmatched test (descriptive only): ", wait_included$test_name,
          "; p = ", fmt_p(wait_included$p_value)),
+  "",
+
+  # ── MATCHED: within-practice paired wait time ────────────────────────────────
+  "## MATCHED ANALYSIS — Within-Practice Paired Wait Time (paired t / Wilcoxon)",
+  "",
+  paste0("Practices with an observed appointment date for BOTH scenarios. ",
+         "Even scarcer than the acceptance pairs because most included calls lack ",
+         "an appointment date (~40% missing)."),
+  "",
+  "```",
+  capture(paired_wait_df),
+  "```",
+  "",
+  paste0("**Power / precision:** only ",
+         paste(paired_wait_df$n_paired, collapse = ", "),
+         " practices have both dates. The minimum detectable mean difference at ",
+         "80% power is ~",
+         paste(paired_wait_df$mde_days_80power, collapse = "/"),
+         " business days — far larger than any clinically meaningful gap. The ",
+         "paired wait-time comparison is the least-powered analysis in the study ",
+         "and should be reported as descriptive only."),
   "",
 
   # ── SENSITIVITY: GEE ────────────────────────────────────────────────────────
@@ -584,6 +719,8 @@ report <- c(
   "## Output Files",
   "",
   "- `labubu_cleaned_analysis.csv`",
+  "- `mysterycall_paired_acceptance_mcnemar.csv`",
+  "- `mysterycall_paired_wait_within_practice.csv`",
   "- `mysterycall_completeness.csv`",
   "- `mysterycall_acceptance_by_scenario_all_records.csv`",
   "- `mysterycall_acceptance_by_scenario_finalized_records.csv`",

@@ -1,0 +1,4 @@
+"contrast","n_paired","mean_diff_days","sd_diff","paired_t_p","wilcoxon_p","mde_days_80power"
+"Straight couple vs Single mother",8,0.8,22.7,0.928,0.932,26.2
+"Lesbian couple vs Single mother",10,-7,33.6,0.526,0.352,33.4
+"Straight couple vs Lesbian couple",9,7.6,26.5,0.417,0.447,28.3
