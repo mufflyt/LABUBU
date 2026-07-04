@@ -1,6 +1,8 @@
 library(mysterycall)
 
-input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"
+# Default export. refresh.R sets `input_file` before sourcing this script to
+# point at the newest export; the guard lets it override this default.
+if (!exists("input_file")) input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"
 out_dir    <- "mysterycall_outputs"
 dir.create(out_dir, showWarnings = FALSE)
 
@@ -223,6 +225,41 @@ n_singletons       <- sum(coverage_df$n_scenarios == 1)
 n_missing_straight <- sum(!coverage_df$has_straight)
 n_missing_lesbian  <- sum(!coverage_df$has_lesbian)
 n_missing_sm       <- sum(!coverage_df$has_sm)
+
+# ── Practice-name normalization safety net ────────────────────────────────────
+# New exports bring new practices and spelling variants; an unmatched variant
+# silently becomes a singleton and deflates the triad count. Surface (a) pairs of
+# practice keys that are near-duplicates (likely the same practice mis-typed) and
+# (b) all singleton practices, so mismatches are loud instead of silent.
+name_near_dupes <- local({
+  keys <- practice_levels
+  n    <- length(keys)
+  hits <- list()
+  if (n >= 2) {
+    dm <- adist(keys)
+    for (i in seq_len(n - 1)) for (j in (i + 1):n) {
+      d  <- dm[i, j]
+      nd <- d / max(nchar(keys[i]), nchar(keys[j]))
+      if (d <= 4 || nd <= 0.15)
+        hits[[length(hits) + 1]] <- data.frame(
+          key_a = keys[i], key_b = keys[j],
+          edit_distance = d, norm_distance = round(nd, 3),
+          stringsAsFactors = FALSE)
+    }
+  }
+  if (length(hits)) do.call(rbind, hits)
+  else data.frame(key_a = character(), key_b = character(),
+                  edit_distance = integer(), norm_distance = numeric())
+})
+singleton_practices <- coverage_df[coverage_df$n_scenarios == 1,
+  c("practice_id", "practice_key", "has_straight", "has_lesbian", "has_sm")]
+write.csv(name_near_dupes,     file.path(out_dir, "practice_name_review_nearduplicates.csv"), row.names = FALSE)
+write.csv(singleton_practices, file.path(out_dir, "practice_name_review_singletons.csv"),     row.names = FALSE)
+if (nrow(name_near_dupes) > 0)
+  message("SAFETY NET: ", nrow(name_near_dupes),
+          " near-duplicate practice-name pair(s) found. Review ",
+          "mysterycall_outputs/practice_name_review_nearduplicates.csv; if any are the ",
+          "same practice, add a rule to normalize_practice() so their calls collapse into one triad.")
 
 # ── Analytic subsets ──────────────────────────────────────────────────────────
 included          <- dat[dat$analytic_inclusion, ]
@@ -721,6 +758,8 @@ report <- c(
   "- `labubu_cleaned_analysis.csv`",
   "- `mysterycall_paired_acceptance_mcnemar.csv`",
   "- `mysterycall_paired_wait_within_practice.csv`",
+  "- `practice_name_review_nearduplicates.csv`",
+  "- `practice_name_review_singletons.csv`",
   "- `mysterycall_completeness.csv`",
   "- `mysterycall_acceptance_by_scenario_all_records.csv`",
   "- `mysterycall_acceptance_by_scenario_finalized_records.csv`",

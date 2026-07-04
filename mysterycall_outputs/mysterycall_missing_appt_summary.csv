@@ -1,6 +1,6 @@
 "variable","n_observed","n_missing","pct_missing","test","statistic","df","p_value","significant"
 "scenario",88,0,39.8,"Chi-square",13.8276226415094,2,0.00099396225908617,TRUE
 "contact_first_call",88,0,39.8,"Chi-square",0.28237710178411,1,0.595147396088447,FALSE
-"attempts",88,0,39.8,"Fisher",NA,NA,0.221889055472264,FALSE
+"attempts",88,0,39.8,"Fisher",NA,NA,0.212893553223388,FALSE
 "insurance",72,16,39.8,"Chi-square",0.221538461538462,1,0.637870179897945,FALSE
 "cost_estimate",67,21,39.8,"Chi-square",6.15052343401129,1,0.0131373213430482,TRUE

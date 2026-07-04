@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-07-04 16:06:31 MDT
+Generated: 2026-07-04 17:26:13 MDT
 
 ## Package
 
@@ -147,7 +147,7 @@ Note: GEE (sensitivity). Coefficients are log-ORs vs. Straight couple.
        p_value significant
 1 0.0009939623        TRUE
 2 0.5951473961       FALSE
-3 0.2218890555       FALSE
+3 0.2128935532       FALSE
 4 0.6378701799       FALSE
 5 0.0131373213        TRUE
 ```
@@ -169,6 +169,8 @@ Note: GEE (sensitivity). Coefficients are log-ORs vs. Straight couple.
 - `labubu_cleaned_analysis.csv`
 - `mysterycall_paired_acceptance_mcnemar.csv`
 - `mysterycall_paired_wait_within_practice.csv`
+- `practice_name_review_nearduplicates.csv`
+- `practice_name_review_singletons.csv`
 - `mysterycall_completeness.csv`
 - `mysterycall_acceptance_by_scenario_all_records.csv`
 - `mysterycall_acceptance_by_scenario_finalized_records.csv`
