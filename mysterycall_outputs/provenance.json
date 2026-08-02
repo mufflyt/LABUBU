@@ -1,0 +1,273 @@
+{
+  "environment": {
+    "generated_at": "2026-08-02 16:30:13 MDT",
+    "r_version": "R version 4.4.2 (2024-10-31)",
+    "platform": "x86_64-apple-darwin20",
+    "labubu_commit": "710e12e",
+    "labubu_branch": "main",
+    "labubu_dirty": true,
+    "packages": {
+      "mysterycall": "1.6.3",
+      "lme4": "1.1.38",
+      "geepack": "1.3.13",
+      "ggplot2": "4.0.3",
+      "dplyr": "1.2.1",
+      "readr": "2.2.0",
+      "ggridges": "0.5.7",
+      "patchwork": "1.3.2",
+      "ggbeeswarm": "0.7.3"
+    },
+    "mysterycall_commit": "c1569cd1",
+    "mysterycall_branch": "feat/reconcile-inclusion"
+  },
+  "source_export": {
+    "labels_file": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+    "labels_md5": "3bee40ec332e8f9e",
+    "labels_rows": 201,
+    "labels_mtime": "2026-08-02 16:17:10 MDT",
+    "raw_file": "LABUBU_DATA_2026-08-02_1616.csv",
+    "raw_md5": "3b30a89d11788e37"
+  },
+  "denominators": {
+    "all_records": {
+      "n": 201,
+      "practices": 104,
+      "rule": "every row in the REDCap export"
+    },
+    "analytic_inclusion": {
+      "n": 95,
+      "practices": 49,
+      "rule": "Reason for exclusions == 'Included where physician was able to be contacted'"
+    },
+    "wait_subset": {
+      "n": 55,
+      "practices": 35,
+      "rule": "analytic_inclusion & non-missing, non-negative business_days"
+    },
+    "within_practice_pairs": {
+      "n": 33,
+      "practices": 13,
+      "rule": "wait_subset restricted to practices with >= 2 distinct scenarios"
+    }
+  },
+  "figures": [
+    {
+      "artifact": "mysterycall_outputs/figures/fig1_raincloud_wait_by_scenario.png",
+      "script": "figures_wait_time.R",
+      "input": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "denominator": "wait_subset",
+      "md5": "bb2367b1ce4a8d15",
+      "created": "2026-08-02 16:30:08 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/figures/fig2_ridgeplot_wait_by_scenario.png",
+      "script": "figures_wait_time.R",
+      "input": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "denominator": "wait_subset",
+      "md5": "f279ca057a91f8b6",
+      "created": "2026-08-02 16:30:09 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/figures/fig3_ecdf_wait_by_scenario.png",
+      "script": "figures_wait_time.R",
+      "input": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "denominator": "wait_subset",
+      "md5": "e938a9b5d09272fa",
+      "created": "2026-08-02 16:30:09 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/figures/fig4_within_practice_pairs.png",
+      "script": "figures_wait_time.R",
+      "input": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "denominator": "within_practice_pairs",
+      "md5": "68ae17c720d10da1",
+      "created": "2026-08-02 16:30:10 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/figures/fig_panel_wait_times.png",
+      "script": "figures_wait_time.R",
+      "input": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "denominator": "wait_subset + within_practice_pairs (composite of figs 1-4)",
+      "md5": "e552bcff73a73077",
+      "created": "2026-08-02 16:30:13 MDT"
+    }
+  ],
+  "tables": [
+    {
+      "artifact": "mysterycall_outputs/labubu_cleaned_analysis.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 201,
+      "md5": "2f74f281fbea3ad3",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/matched_acceptance_wide.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 104,
+      "md5": "7a881304d86c5b49",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/matched_wait_wide.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 104,
+      "md5": "9f133798b570b8ca",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_acceptance_by_scenario_all_records.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "1a9b07e43121efe6",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_acceptance_by_scenario_finalized_records.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "794fe580a8c9dacc",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_completeness.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 14,
+      "md5": "33e5cf5238edb222",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_missing_appt_summary.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 5,
+      "md5": "e43a3d1504117b65",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_paired_acceptance_mcnemar.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "ab7bb1397e97c4dc",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_paired_wait_within_practice.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "aa7d223d13200384",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_table1_included_complete.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 39,
+      "md5": "ab1752c2698892d0",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_wait_by_scenario_included_complete.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "9bd55da709b6fa6d",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/mysterycall_wait_by_scenario_included.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "9bd55da709b6fa6d",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/practice_name_review_nearduplicates.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 0,
+      "md5": "6d827af900483846",
+      "created": "2026-08-02 16:30:05 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/practice_name_review_singletons.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 50,
+      "md5": "49a4feb35b6e3104",
+      "created": "2026-08-02 16:30:05 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/practice_scenario_coverage.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 104,
+      "md5": "abecb21878e1a0b5",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/scenario_counts_by_completion.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "8d6a6e3845d33e5b",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/scenario_counts_by_inclusion.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 3,
+      "md5": "7de766546e95c9fb",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/single_mother_call_list.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 64,
+      "md5": "ba65afc1b1c2c0ce",
+      "created": "2026-07-04 16:27:11 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/single_mother_calls_priority1_triads.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 13,
+      "md5": "8e82ed8e5366d77d",
+      "created": "2026-07-04 16:28:24 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/single_mother_calls_priority2_pairs.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "rows": 51,
+      "md5": "e924236a80117781",
+      "created": "2026-07-04 16:28:24 MDT"
+    }
+  ],
+  "reports": [
+    {
+      "artifact": "mysterycall_outputs/mysterycall_evaluation.md",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "md5": "61b88fd04b1978c5",
+      "created": "2026-08-02 16:30:06 MDT"
+    },
+    {
+      "artifact": "data_review.md",
+      "script": "hand-written, numbers verified against export",
+      "input": "LABUBU_DATA_LABELS_2026-08-02_1616.csv",
+      "md5": "76a0fef747bda955",
+      "created": "2026-08-02 16:27:20 MDT"
+    }
+  ]
+}

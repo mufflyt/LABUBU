@@ -7,6 +7,7 @@
 # changed. Run from the repo root:
 #
 #     Rscript refresh.R                 # auto-detect newest export
+#     Rscript refresh.R --pull          # download a fresh export from the API first
 #     Rscript refresh.R /path/to.csv    # use a specific LABELS export
 #
 # Raw exports stay gitignored; only regenerated outputs are tracked.
@@ -17,11 +18,22 @@ out_dir   <- file.path(repo, "mysterycall_outputs")
 archive   <- file.path(repo, "Old_redcap")
 dir.create(archive, showWarnings = FALSE)
 args <- commandArgs(trailingOnly = TRUE)
+pull <- "--pull" %in% args
+args <- setdiff(args, "--pull")
 
 newest <- function(dir, pattern) {
   f <- list.files(dir, pattern = pattern, full.names = TRUE)
   if (!length(f)) return(NA_character_)
   f[which.max(file.mtime(f))]
+}
+
+# ── 0. Optionally pull a fresh export from the REDCap API ─────────────────────
+# Writes into the repo root, so step 1 then finds it as the newest export.
+if (pull) {
+  cat("── Pulling LABUBU export from REDCap ──\n")
+  source(file.path(repo, "redcap_pull.R"))
+  redcap_pull(repo)
+  cat("\n")
 }
 
 # ── 1. Locate the export to use ───────────────────────────────────────────────
@@ -72,6 +84,12 @@ invisible(capture.output(source(file.path(repo, "evaluate_labubu_mysterycall.R")
 cat("Running figures_wait_time.R ...\n")
 tryCatch(invisible(capture.output(source(file.path(repo, "figures_wait_time.R")))),
          error = function(e) cat("  (figures skipped:", conditionMessage(e), ")\n"))
+
+# Provenance last: it checksums the artifacts the two steps above just wrote, so
+# it must run after them or it records the previous run's fingerprints.
+cat("Running provenance.R ...\n")
+tryCatch(invisible(capture.output(source(file.path(repo, "provenance.R")))),
+         error = function(e) cat("  (provenance skipped:", conditionMessage(e), ")\n"))
 
 # ── 5. Before/after delta ─────────────────────────────────────────────────────
 after <- snap(file.path("mysterycall_outputs", "practice_scenario_coverage.csv"),

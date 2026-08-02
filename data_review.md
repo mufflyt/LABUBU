@@ -1,114 +1,139 @@
 # Mystery Caller Study Data Review
 
-Source file: `LABUBU_DATA_LABELS_2026-06-24_1308.csv`
+Source file: `LABUBU_DATA_LABELS_2026-08-02_1616.csv` (201 records, MD5 `3bee40ec332e8f9e`)
+Reviewed: 2026-08-02. Supersedes the 2026-06-24 review (176 records).
+Artifact fingerprints: [`PROVENANCE.md`](PROVENANCE.md).
 
 ## Dataset Snapshot
 
-- Records: 176
+- Records: 201
 - Columns: 29
 - Scenario distribution:
   - Lesbian couple: 83
-  - Straight couple: 67
-  - Single mother: 22
-  - Missing scenario: 4
-- `Complete?` is present in the export but should be ignored for analysis.
+  - Straight couple: 75
+  - Single mother: 43
+  - Missing scenario: 0
+- `Complete?` is present in the export but should be ignored for analysis — see below.
+
+## Resolved since the June 24 review
+
+Four issues from the previous review have been fixed in REDCap and need no
+further action:
+
+1. **Missing scenario values are gone.** All 201 records now carry a scenario;
+   previously 4 records (21, 22, 23, 49) had none.
+2. **The included-vs-complete imbalance is gone.** Included-by-exclusion and
+   included-and-complete are now the *same* 95 records, evenly split 33 / 33 / 29
+   across straight / lesbian / single mother. The June 24 review flagged a 69-vs-58
+   gap with a lopsided scenario split; that no longer exists.
+3. **The future-dated call is resolved.** No call date now falls after the export
+   date. Record 3 previously carried `2026-08-03`, which has since passed and is
+   no longer anomalous.
+4. **IUI/IVF are no longer uniformly zero.** Each is now checked on exactly one
+   record, confirming the fields are reachable and were not silently broken.
 
 ## Key Analytic Denominator Issue
 
-`Complete?` should not be used as the analytic inclusion flag and should be ignored analytically.
+`Complete?` must not be used as the analytic inclusion flag. As of this export
+**every one of the 201 records is marked Complete**, so the field has zero
+discriminating power — using it as a denominator silently returns the whole
+dataset.
 
-The most defensible starting denominator is records with:
+The correct denominator is:
 
 - `Reason for exclusions = Included where physician was able to be contacted`
-- and, if requiring finalized forms, `Complete? = Complete`
 
 Counts:
 
-- Included by exclusion field: 69
-  - Straight couple: 25
-  - Lesbian couple: 22
-  - Single mother: 22
-- Included and complete: 58
-  - Straight couple: 24
-  - Lesbian couple: 16
-  - Single mother: 18
+- Included by exclusion field: 95
+  - Straight couple: 33
+  - Lesbian couple: 33
+  - Single mother: 29
+- Included **and** complete: 95 (identical — the `Complete?` filter is a no-op)
 
-This creates a major imbalance if only included-and-complete records are analyzed.
+Note that inclusion is not the denominator for the wait-time figures either.
+Only 55 of the 95 included calls produced an appointment date. See the
+[denominator cascade](PROVENANCE.md#2-denominator-cascade--read-this-before-quoting-any-n)
+before quoting any *n*.
 
-## Record-Level Inconsistencies
-Records that look internally inconsistent by inclusion/exclusion status:
+## Exclusion Reasons
 
-- 19, 20, 21, 22, 25, 29, 30, 34, 35, 41, 50, 51, 79, 80, 81, 82, 84, 85, 102, 103, 104, 105, 108, 109, 110, 117, 120, 161, 162, 163, 164, 166, 172
+Of the 106 excluded records:
 
-## Missing Scenario Values
+| Reason | n |
+|---|---|
+| Went to voicemail | 77 |
+| Number did not correspond to expected office/specialty | 8 |
+| Greater than 5 minutes on hold | 6 |
+| Not accepting new patients | 4 |
+| Phone not answered or busy signal on repeat calls | 4 |
+| Physician's personal phone | 4 |
+| Closed medical system (e.g. Kaiser or military hospital) | 2 |
+| *(missing)* | 1 |
 
-Four records have no scenario:
-
-- 21, 22, 23, 49
-
-Two of these are marked complete despite being excluded for wrong number or wrong specialty. These should be corrected or excluded before scenario-level analysis.
-
-## Date and Time Problems
-
-The first call field is labeled as date and time, but most entries contain only dates. There is one likely erroneous or out-of-window entry:
-
-- Record 3: `2026-08-03 10:07`
-
-Because the export date is 2026-06-24, this appears to be a future date unless it was intentionally entered for a later scheduled call.
-
-## Missingness in Included-and-Complete Records
-
-Among the 58 included-and-complete records:
-
-- Time to scheduled visit missing: 15/58
-- Insurance acceptance missing: 5/58
-- Time to pregnancy/live birth missing: 10/58
-- Cost estimate missing: 9/58
-- REI referral missing: 0/58
-- Donor sperm response missing: 0/58
-
-The live-birth question appears to be stored as `How long does it typically take for people to get pregnant?`, which is not equivalent to live birth.
+Voicemail dominates exclusions at 73% of them. One record has no exclusion
+reason recorded and is neither included nor assigned a reason; it should be
+resolved in REDCap.
 
 ## Field Coding Concerns
 
-The transfer field is not numeric. Values such as `No transfers` were entered, so the field needs recoding before analysis.
-
-Recommended recode:
+**The transfer field is still not numeric, and has gotten worse.** All 151
+non-missing values are non-numeric text — the field now contains only
+`No transfers` and `One transfer`. The recode is still required:
 
 - `No transfers` -> 0
+- `One transfer` -> 1
 - text with a numeric count -> numeric value
 - blank -> missing, not zero
 
-Service checkboxes show no IUI or IVF services selected in any record:
+Restriction checkboxes remain ambiguous: the field asks, "Are there any
+restrictions to the individuals you would provide care to?" A checked
+`Straight couple` could mean either a restriction *against* straight couples or
+a requirement *to be* one, depending on how staff interpreted it. This has not
+been resolved and limits any analysis of those three fields.
 
-- IUI checked: 0/176
-- IVF checked: 0/176
+No columns are 100% NA in this export, so there is nothing to drop on that rule.
 
-This may be true for the sampled practices, but it should be verified because the call script specifically asks about offering or referring for IUI/IVF.
+## Practice-Name Normalization
 
-Restriction checkboxes are ambiguous because the field asks, "Are there any restrictions to the individuals you would provide care to?" A checked `Straight couple` could mean either restriction against straight couples or a requirement to be a straight couple, depending on how staff interpreted the field.
+Zero near-duplicate practice-name pairs were flagged in this export, so no new
+spelling variants have split a practice. However, **two practice keys are phone
+numbers rather than names** — `(440) 823-9827` and `(603) 860-9942`. These are
+pre-existing, not introduced by this export, but they can never match a triad
+partner and should be corrected in REDCap.
 
 ## Protocol/Data Capture Concerns
 
-The heterosexual script asks for a three-year cost estimate twice. This may have increased missingness or inconsistent responses if callers handled the duplicate question differently.
+These are unchanged from the June 24 review and remain open:
 
-The script asks about live birth, but the REDCap field captures pregnancy. These should be separated or renamed before reporting.
-
-The lesbian and single mother scripts ask about donor sperm, but the donor sperm field includes `N/a > not a single mother or lesbian couple scenario`; at least three records used this value. Donor sperm should be analyzed only for scenarios where it was asked.
-
-The `Reason for exclusions` field is doing two jobs: eligibility status and exclusion reason. A separate binary `analytic_inclusion` field would reduce ambiguity.
-
-No columns are 100% NA in the current export, so there is nothing to drop on that rule right now. If a future export contains a fully missing field, remove it before analysis.
+- The heterosexual script asks for a three-year cost estimate twice, which may
+  inflate missingness or produce inconsistent responses.
+- The script asks about **live birth**, but the REDCap field captures
+  **pregnancy** (`How long does it typically take for people to get pregnant?`).
+  These are not equivalent and must be separated or renamed before reporting.
+- The lesbian and single-mother scripts ask about donor sperm, but the donor
+  sperm field includes `N/a > not a single mother or lesbian couple scenario`.
+  Donor sperm should be analyzed only within scenarios where it was asked.
+- `Reason for exclusions` is doing two jobs — eligibility status and exclusion
+  reason. A separate binary `analytic_inclusion` field in REDCap would remove the
+  ambiguity. (The analysis derives one, but the raw field remains overloaded.)
 
 ## Recommended Cleaning Rules
 
-1. Create a derived `analytic_inclusion` field:
-   - Included if `Reason for exclusions = Included where physician was able to be contacted`
-   - Excluded otherwise
-2. Add branching so `Date of first available appointment` is not required when the practice refuses to schedule because of caller scenario.
-3. Recode `Number of Transfers` to numeric.
-4. Recode appointment wait using date difference between call date and first-available appointment date.
-5. Analyze donor sperm only within lesbian couple and single mother scenarios.
-6. Treat pregnancy-time responses as pregnancy outcomes, not live-birth outcomes, unless the REDCap variable is corrected.
-7. Review the 4 missing scenario records and the future-dated record 3 manually.
-8. Remove any columns that are 100% NA in a future export.
+Rules 1–5 are implemented in `evaluate_labubu_mysterycall.R`; the rest are open.
+
+1. ~~Create a derived `analytic_inclusion` field.~~ **Implemented.**
+2. ~~Recode appointment wait as business-day difference between call date and
+   first-available appointment date.~~ **Implemented.**
+3. ~~Review missing-scenario records.~~ **Resolved in REDCap.**
+4. ~~Review the future-dated record.~~ **Resolved.**
+5. ~~Remove columns that are 100% NA.~~ **None present.**
+6. **Open —** Recode `Number of Transfers` to numeric.
+7. **Open —** Analyze donor sperm only within lesbian and single-mother scenarios.
+8. **Open —** Treat pregnancy-time responses as pregnancy outcomes, not
+   live-birth outcomes, unless the REDCap variable is corrected.
+9. **Open —** Add branching so `Date of first available appointment` is not
+   required when the practice refuses to schedule because of caller scenario.
+   This is the likely driver of the 40 included calls with no appointment date.
+10. **Open —** Fix the two phone-number practice names and the one record with no
+    exclusion reason.
