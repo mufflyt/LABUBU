@@ -1,0 +1,365 @@
+---
+title: "Access to Restorative Reproductive Medicine Practices by Caller Identity: A National Mystery-Caller Study"
+subtitle: "COMIRB 25-2596 · Denver Health and Hospital Authority"
+author: "Tyler Muffly, MD"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    theme: flatly
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+suppressMessages({library(dplyr); library(knitr); library(lme4)})
+
+OUT <- "mysterycall_outputs"
+
+# ── Every number in this manuscript is read from a generated artifact ─────────
+# Nothing below is typed by hand. If a value looks wrong, the fix belongs in the
+# pipeline, not in this file. See PROVENANCE.md for artifact fingerprints.
+d    <- read.csv(file.path(OUT, "labubu_cleaned_analysis.csv"), stringsAsFactors = FALSE)
+mc   <- read.csv(file.path(OUT, "mysterycall_paired_acceptance_mcnemar.csv"), stringsAsFactors = FALSE)
+cov  <- read.csv(file.path(OUT, "practice_scenario_coverage.csv"), stringsAsFactors = FALSE)
+pw   <- read.csv(file.path(OUT, "mysterycall_paired_wait_within_practice.csv"), stringsAsFactors = FALSE)
+wide <- read.csv(file.path(OUT, "matched_acceptance_wide.csv"), stringsAsFactors = FALSE)
+
+tf   <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+inc  <- d[tf(d$analytic_inclusion), ]
+wsub <- d |> filter(tf(analytic_inclusion), !is.na(business_days), business_days >= 0)
+pair <- wsub |> group_by(practice_id) |> filter(n_distinct(scenario) >= 2) |> ungroup()
+
+# Wilson score interval — appropriate here because several proportions sit near
+# 0 or 1, where the Wald interval misbehaves badly.
+wilson <- function(x, n, digits = 0) {
+  p <- x / n; z <- 1.96; den <- 1 + z^2 / n
+  c0 <- (p + z^2 / (2 * n)) / den
+  h  <- z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2)) / den
+  sprintf(paste0("%.", digits, "f%% (95%% CI %.", digits, "f--%.", digits, "f)"),
+          100 * p, 100 * max(0, c0 - h), 100 * min(1, c0 + h))
+}
+pctn <- function(x, n) sprintf("%.0f%% (%d/%d)", 100 * x / n, x, n)
+svc  <- function(v) wilson(sum(tf(inc[[v]])), nrow(inc))
+
+N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
+N_INC   <- nrow(inc); N_WAIT <- nrow(wsub)
+N_TRIAD <- sum(cov$n_scenarios == 3)
+SM_YES  <- sum(tf(cov$has_sm)); SM_NO <- sum(!tf(cov$has_sm))
+```
+
+> **Draft manuscript.** Generated `r format(Sys.time(), "%Y-%m-%d %H:%M %Z")` from
+> `manuscript.Rmd`. Every statistic is computed at render time from the files in
+> `mysterycall_outputs/`; see [`PROVENANCE.md`](PROVENANCE.md) for the artifact
+> fingerprints and the exact REDCap export behind them.
+
+# Abstract {-}
+
+**Objective.** To characterize the reproductive services offered by Restorative
+Reproductive Medicine (RRM) practices and to explore whether willingness to
+schedule a new patient differs by caller identity.
+
+**Methods.** In a national mystery-caller (audit) study, RRM practices were
+telephoned by trained callers presenting one of three scenarios: a straight
+couple, a lesbian couple, or a single mother seeking donor sperm. Each practice
+was eligible to be called once per scenario, making the design within-practice.
+The primary outcome was whether the practice offered to schedule an appointment;
+the secondary outcome was business days to the first available appointment.
+Because scenario assignment is complete only within practices called more than
+once, inference on caller identity is restricted to exact McNemar tests on
+within-practice discordant pairs, with a minimum detectable effect reported for
+each contrast.
+
+**Results.** `r N_REC` calls were placed to `r N_PRAC` practices, of which
+`r N_INC` reached a clinician or scheduler and met inclusion criteria.
+`r N_TRIAD` practices completed all three scenarios. Among included calls,
+cycle tracking was offered by `r svc("service_cycle_tracking")`, whereas
+intrauterine insemination was offered by `r svc("service_iui")`, in vitro
+fertilization by `r svc("service_ivf")`, and work with donor sperm by
+`r svc("donor_sperm_yes")`. The overall appointment-offer rate was
+`r wilson(sum(tf(d$contact_office)), N_REC)`. Practices treated callers
+concordantly in
+`r sprintf("%.0f--%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`
+of within-practice comparisons. No scenario contrast reached significance
+(all *p* ≥ `r sprintf("%.2f", min(mc$mcnemar_p))`), but each was powered only to
+detect an odds ratio of roughly
+`r sprintf("%.1f--%.1f", min(mc$mde_or_80power), max(mc$mde_or_80power))`.
+
+**Conclusion.** RRM practices in this sample almost uniformly offer cycle
+tracking and almost never offer IUI, IVF, or donor sperm services. Scenario
+comparisons were underpowered and should be read as hypothesis-generating; the
+unmatched marginal comparison is confounded by which practices received a
+single-mother call and is not reported.
+
+# Introduction
+
+Restorative Reproductive Medicine (RRM) is a model of fertility care that seeks
+to identify and treat underlying causes of subfertility rather than to bypass
+them with assisted reproductive technology. Because the model is defined partly
+by what it declines to offer, patients seeking care may encounter a narrower
+service menu than the fertility-clinic label implies, and that gap may fall
+unevenly across family structures — particularly for patients whose path to
+pregnancy requires donor gametes.
+
+Mystery-caller (audit) methodology measures what a practice actually does when
+an unannounced prospective patient calls, avoiding the social-desirability bias
+of surveying practices about their own behavior. We applied it to RRM practices
+with two aims: to describe the services actually offered, and to test whether
+willingness to schedule differs by caller identity.
+
+# Methods
+
+## Design and setting
+
+We conducted a national mystery-caller study of RRM practices. Trained callers
+telephoned each practice during business hours (08:00–17:00 local time,
+excluding 12:00–13:00) using a standardized script. Each practice was eligible
+to be called once per scenario, so scenario is a **within-practice** factor and
+practice enters all models as a random intercept. The study was approved by
+COMIRB (25-2596).
+
+## Scenarios
+
+Three caller identities were used: a **straight couple**, a **lesbian couple**,
+and a **single mother** seeking donor sperm. Scripts were identical apart from
+the caller's stated family structure and the donor-sperm question, which was
+asked only in the two scenarios where it is clinically implied.
+
+## Outcomes
+
+The primary outcome was whether the practice **offered to schedule an
+appointment**. The secondary outcome was **business days** from the call to the
+first available appointment, computed with a business-day calendar to avoid
+weekend and holiday artifacts.
+
+## Inclusion
+
+A call was analytically included when `Reason for exclusions` was
+*"Included where physician was able to be contacted."* The REDCap `Complete?`
+field was **not** used as an inclusion criterion: in the current export every
+record is marked complete, so the field has no discriminating power.
+
+```{r denominators}
+data.frame(
+  Level = c("All call records", "Analytically included", "Wait-time subset",
+            "Within-practice wait pairs"),
+  n = c(N_REC, N_INC, N_WAIT, nrow(pair)),
+  Practices = c(N_PRAC, n_distinct(inc$practice_id),
+                n_distinct(wsub$practice_id), n_distinct(pair$practice_id)),
+  Definition = c("every row in the REDCap export",
+                 "clinician or scheduler reached",
+                 "included and an appointment date was obtained",
+                 "wait subset, practices with >= 2 scenarios")
+) |> kable(caption = "Analytic denominators. Each outcome is estimated on a different subset; the wait-time analyses use a substantially smaller sample than the acceptance analyses.")
+```
+
+`r N_INC - N_WAIT` included calls produced no appointment date, almost always
+because the practice did not offer to schedule. Wait-time results therefore
+describe the subset of encounters that reached scheduling and should not be read
+as representative of all included calls.
+
+## Statistical analysis
+
+Acceptance was modeled with mixed-effects logistic regression (acceptance ~
+scenario + (1 | practice), `lme4::glmer`). Because that model borrows strength
+across practices that were not called for every scenario, it is reported as
+supporting rather than primary.
+
+**Primary inference is the matched analysis.** For each pair of scenarios we
+restricted to practices called for both and applied an **exact McNemar test** to
+the discordant pairs. This is the only comparison in which caller identity is
+not confounded with practice selection. For each contrast we report the minimum
+detectable odds ratio at 80% power given the observed number of discordant
+pairs, so that a null result is not mistaken for evidence of equivalence.
+Proportions carry Wilson score intervals.
+
+# Results
+
+## Sample
+
+```{r sample}
+d |> count(scenario, name = "Calls") |>
+  left_join(inc |> count(scenario, name = "Included"), by = "scenario") |>
+  rename(Scenario = scenario) |>
+  kable(caption = "Calls placed and analytically included, by scenario.")
+```
+
+`r N_REC` calls were placed to `r N_PRAC` practices; `r N_INC` met inclusion
+criteria. `r N_TRIAD` practices completed all three scenarios, and `r SM_NO` of
+`r N_PRAC` practices have not yet received a single-mother call.
+
+## Services offered (primary descriptive findings)
+
+```{r services}
+data.frame(
+  Service = c("Cycle tracking", "Hormonal labs / fertility timing",
+              "Ovulation induction", "Intrauterine insemination (IUI)",
+              "In vitro fertilization (IVF)", "Works with donor sperm"),
+  Estimate = c(svc("service_cycle_tracking"), svc("service_hormonal_timing"),
+               svc("service_ovulation_induction"), svc("service_iui"),
+               svc("service_ivf"), svc("donor_sperm_yes"))
+) |> kable(caption = sprintf(
+  "Services offered among analytically included calls (n = %d). Wilson score intervals.", N_INC))
+```
+
+These are the study's most precisely estimated findings and do not depend on the
+scenario comparison. RRM practices in this sample almost uniformly offer cycle
+tracking (`r svc("service_cycle_tracking")`) while essentially never offering
+IUI (`r svc("service_iui")`) or IVF (`r svc("service_ivf")`), and rarely working
+with donor sperm (`r svc("donor_sperm_yes")`). The overall appointment-offer
+rate across all `r N_REC` calls was
+`r wilson(sum(tf(d$contact_office)), N_REC)`.
+
+## Caller identity and willingness to schedule
+
+### The unmatched comparison is confounded and is not reported
+
+```{r confound}
+sm_ids <- cov$practice_id[tf(cov$has_sm)]
+oth    <- d |> filter(scenario %in% c("Straight couple", "Lesbian couple"))
+a <- oth |> filter(practice_id %in% sm_ids); b <- oth |> filter(!practice_id %in% sm_ids)
+marg <- d |> group_by(scenario) |>
+  summarise(`Unmatched acceptance` = pctn(sum(tf(contact_office)), n()), .groups = "drop") |>
+  rename(Scenario = scenario)
+kable(marg, caption = "Marginal (unmatched) acceptance by scenario. Reported here only to be set aside — see text.")
+```
+
+Taken at face value, single-mother callers appear to be scheduled far more often
+than the other two. This is an artifact of **which practices received a
+single-mother call**, not of how single mothers are treated. Single-mother calls
+were placed at only `r SM_YES` of `r N_PRAC` practices, and those practices are
+markedly more accommodating in general: their straight and lesbian calls are
+accepted `r pctn(sum(tf(a$contact_office)), nrow(a))` of the time, versus
+`r pctn(sum(tf(b$contact_office)), nrow(b))` at practices never called for a
+single mother. The single-mother group is therefore drawn almost entirely from
+high-acceptance practices while the comparison groups mix high- and
+low-acceptance practices. We do not report this contrast as a finding.
+
+### Matched within-practice comparisons
+
+```{r mcnemar}
+mc |>
+  transmute(Contrast = contrast, `Practices paired` = n_paired,
+            Concordant = concordant, Discordant = discordant,
+            `Exact McNemar p` = sprintf("%.3f", mcnemar_p),
+            `Min. detectable OR (80% power)` = sprintf("%.1f", mde_or_80power)) |>
+  kable(caption = "Matched within-practice acceptance comparisons. The MDE column is essential: a non-significant result here excludes only very large effects.")
+```
+
+Restricted to practices called for both scenarios in a contrast, no comparison
+approached significance. Concordance — practices treating both callers
+identically — ranged from
+`r sprintf("%.0f%% to %.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`.
+
+```{r within-direction}
+rows <- lapply(c("Straight_couple", "Lesbian_couple"), function(o) {
+  p <- wide[!is.na(wide$Single_mother) & !is.na(wide[[o]]), ]
+  data.frame(Comparison = sprintf("Single mother vs %s", sub("_", " ", o)),
+             Practices = nrow(p),
+             `Single mother` = sprintf("%.0f%%", 100 * mean(tf(p$Single_mother))),
+             `Comparator`    = sprintf("%.0f%%", 100 * mean(tf(p[[o]]))),
+             Difference = sprintf("%+.0f pts",
+               100 * (mean(tf(p$Single_mother)) - mean(tf(p[[o]])))),
+             check.names = FALSE)
+})
+do.call(rbind, rows) |> kable(caption = "Direction of the within-practice difference. Among the same practices, single-mother callers fare slightly worse, not better — the reverse of the unmatched comparison.")
+```
+
+Within the same practices, single-mother callers were scheduled slightly *less*
+often than straight or lesbian callers — the opposite sign from the unmatched
+comparison, and the clearest illustration that the marginal contrast is
+confounded. These differences are small and well inside the noise floor implied
+by the minimum detectable effects above.
+
+## Wait times
+
+```{r wait-summary}
+wsub |> group_by(Scenario = scenario) |>
+  summarise(n = n(), Median = median(business_days), IQR = IQR(business_days),
+            Mean = round(mean(business_days), 1), .groups = "drop") |>
+  kable(caption = sprintf("Business days to first available appointment, among calls that reached scheduling (n = %d).", N_WAIT))
+```
+
+```{r fig-panel, fig.cap="Wait-time analyses. Panels use the wait-time subset; the within-practice panel uses only practices with two or more observed scenarios. See PROVENANCE.md for exact per-figure denominators.", out.width="100%"}
+knitr::include_graphics(file.path(OUT, "figures", "fig_panel_wait_times.png"))
+```
+
+```{r fig-pairs, fig.cap="Within-practice wait times across scenarios. Lines connect calls to the same practice.", out.width="85%"}
+knitr::include_graphics(file.path(OUT, "figures", "fig4_within_practice_pairs.png"))
+```
+
+Wait-time distributions overlapped substantially across scenarios. With
+`r N_WAIT` observations across `r n_distinct(wsub$practice_id)` practices — and
+only `r n_distinct(pair$practice_id)` practices contributing a within-practice
+comparison — these analyses are the least powered in the study and are presented
+descriptively.
+
+# Discussion
+
+The most secure findings in this study are descriptive. RRM practices in this
+sample offer cycle tracking nearly universally and almost never offer IUI, IVF,
+or donor-sperm services. For a patient whose path to pregnancy requires donor
+gametes, this is a structural access limitation independent of any differential
+treatment by staff: the service is largely not on the menu.
+
+Our scenario comparisons were **underpowered by design constraint rather than by
+oversight**. The matched analysis draws information only from practices that
+answered *differently* to two callers, and most practices answered identically.
+With `r min(mc$discordant)`–`r max(mc$discordant)` discordant practices per
+contrast, only odds ratios of roughly
+`r sprintf("%.1f--%.1f", min(mc$mde_or_80power), max(mc$mde_or_80power))` were
+detectable. Effects of that magnitude are far larger than plausible real-world
+differential treatment. These comparisons therefore exclude gross disparity but
+can neither confirm nor rule out the small-to-moderate effects most likely to
+exist, and we frame them as hypothesis-generating.
+
+We draw particular attention to the confounded marginal comparison. Reported
+naively, it would suggest single mothers are scheduled substantially *more*
+often than other callers. The within-practice analysis reverses the sign. This
+is a clean example of how incomplete factorial coverage in an audit study can
+manufacture an apparent disparity in the wrong direction, and it argues for
+reporting matched analyses as primary in any audit design where coverage is
+incomplete.
+
+## Limitations
+
+1. **Incomplete scenario coverage.** `r SM_NO` of `r N_PRAC` practices have not
+   received a single-mother call. This is the dominant limitation: it drives the
+   confounding above and caps the matched sample.
+2. **Wait-time missingness is informative.** Only `r N_WAIT` of `r N_INC`
+   included calls yielded an appointment date, largely because practices that
+   declined to schedule have no date to give. Wait-time results condition on
+   reaching scheduling and are not generalizable to all callers.
+3. **Single-call design.** Each practice–scenario cell reflects one call on one
+   day with one staff member; day-to-day and person-to-person variation is not
+   separable from scenario effects.
+4. **Ambiguous restriction fields.** The REDCap item asking about restrictions on
+   whom the practice will treat cannot distinguish a restriction *against* a
+   group from a requirement *to be* in that group, so those fields are not
+   analyzed.
+5. **Non-response.** Voicemail accounted for most exclusions. Practices reachable
+   by phone may differ systematically from those that are not.
+
+# Reproducibility
+
+```{r prov}
+data.frame(
+  Item = c("Analysis repository", "Modeling package", "Source export",
+           "Artifact record", "Rendered"),
+  Value = c(
+    "github.com/mufflyt/LABUBU",
+    sprintf("mysterycall v%s", as.character(packageVersion("mysterycall"))),
+    { f <- list.files(".", "^LABUBU_DATA_LABELS_.*\\.csv$")
+      if (length(f)) f[which.max(file.mtime(f))] else "—" },
+    "PROVENANCE.md / mysterycall_outputs/provenance.json",
+    format(Sys.time(), "%Y-%m-%d %H:%M %Z"))
+) |> kable(caption = "Provenance summary. Raw exports are not distributed (practice contact information); PROVENANCE.md records their checksums.")
+```
+
+All tables and figures regenerate with `Rscript refresh.R`, which runs the
+analysis, the figures, and the provenance record in that order. This document is
+rendered from `manuscript.Rmd`, which reads only generated artifacts — no
+statistic in the text is transcribed by hand.
