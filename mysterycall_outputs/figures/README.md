@@ -7,7 +7,7 @@ from `mysterycall_outputs/labubu_cleaned_analysis.csv`, which was derived by
 `evaluate_labubu_mysterycall.R` from REDCap export `LABUBU_DATA_LABELS_2026-08-02_1616.csv`
 (MD5 `3bee40ec332e8f9e`, 201 rows, downloaded 2026-08-02 16:17:10 MDT).
 
-Generated 2026-08-02 16:30:13 MDT at commit `710e12e` using mysterycall v1.6.3 and R version 4.4.2 (2024-10-31).
+Generated 2026-08-11 20:09:06 MDT at commit `5bf4f61` using mysterycall v1.6.3 and R version 4.4.2 (2024-10-31).
 
 ## Denominators — do not quote the record count under these figures
 

@@ -1,7 +1,7 @@
 "practice_id","practice_key","has_straight","has_lesbian","has_sm"
 1,"(440) 823-9827",FALSE,TRUE,FALSE
 2,"(603) 860-9942",FALSE,TRUE,FALSE
-3,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,FALSE
+4,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,FALSE
 5,"Angelus FertilityCare Center (Brazil)",TRUE,FALSE,FALSE
 8,"Armando Garza, MD (TX)",TRUE,FALSE,FALSE
 11,"Avera McKennen (SD)",FALSE,TRUE,FALSE
@@ -24,14 +24,14 @@
 41,"Faithful Hearts FertilityCare (NJ)",FALSE,TRUE,FALSE
 42,"Faustina FertilityCare Center (WI)",FALSE,TRUE,FALSE
 43,"Femme Health",FALSE,FALSE,TRUE
-45,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,FALSE
-48,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,FALSE
-49,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,FALSE
-50,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,FALSE
-52,"FertilityCare Center of Reno (NV)",FALSE,TRUE,FALSE
-55,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE
-58,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE
-59,"FertilityCare of the Palouse (ID)",FALSE,TRUE,FALSE
+44,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,FALSE
+47,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,FALSE
+48,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,FALSE
+49,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,FALSE
+51,"FertilityCare Center of Reno (NV)",FALSE,TRUE,FALSE
+54,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE
+57,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE
+62,"FertilityCare of the Palouse (ID)",FALSE,TRUE,FALSE
 69,"Karen Dalton, MD (CO, CT)",TRUE,FALSE,FALSE
 70,"Kathleen Berchelmann, MD (CT, teleahealth)",TRUE,FALSE,FALSE
 71,"Kimberly Barrows, MD (telehealth)",TRUE,FALSE,FALSE

@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-08-02 16:30:06 MDT
+Generated: 2026-08-11 20:08:52 MDT
 
 ## Package
 
@@ -37,10 +37,10 @@ Missing calls by scenario:
 `accepted` = analytic inclusion flag (practice successfully scheduled the caller).
 
 ```
-# A tibble: 3 × 8
+# A tibble: 3 x 8
   scenario       n_total n_missing n_accepted n_rejected  rate ci_lower ci_upper
   <chr>            <int>     <int>      <int>      <int> <dbl>    <dbl>    <dbl>
-1 Straight coup…      75         0         33         42 0.44     0.333    0.553
+1 Straight coup~      75         0         33         42 0.44     0.333    0.553
 2 Lesbian couple      83         0         33         50 0.398    0.299    0.505
 3 Single mother       43         0         29         14 0.674    0.525    0.795
 ```
@@ -95,7 +95,7 @@ Note: mysterycall_lmm() [lme4::lmer]. Outcome: business days until appointment (
 ## Wait Time by Scenario — Descriptive (unmatched)
 
 ```
-# A tibble: 3 × 10
+# A tibble: 3 x 10
   scenario            n n_missing  mean    sd median    q1    q3   min   max
   <chr>           <int>     <int> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>
 1 Straight couple    27         6  44.5  48.0     23  9     60.5     0   179
@@ -147,7 +147,7 @@ Note: GEE (sensitivity). Coefficients are log-ORs vs. Straight couple.
       p_value significant
 1 0.002371277        TRUE
 2 0.584906302       FALSE
-3 0.294852574       FALSE
+3 0.306346827       FALSE
 4 0.628450218       FALSE
 5 0.012057501        TRUE
 ```
