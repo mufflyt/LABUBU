@@ -1,0 +1,68 @@
+To: Sofie
+From: Tyler Muffly
+Date: August 11, 2026
+Subject: LABUBU — Aug 11 Data Refresh & Statistical Power Update
+
+Hi Sofie,
+
+I have ingested the new August 11 REDCap export (LABUBU_DATA_LABELS_2026-08-11_2017.csv) and re-run our entire analytical pipeline, wait-time figures, and power calculations. Here is the full update and an evaluation of whether we have met 80% statistical power.
+
+
+1. DATA COLLECTION PROGRESS (Aug 2 vs. Aug 11 Export)
+=====================================================
+
+Major Progress on Single-Mother Calls: The caller team completed 33 single-mother calls since August 2, expanding our complete practice triads by +12 and cutting our missing single-mother calls nearly in half!
+
+Metric                                 July 4    August 2    August 11 (Latest)
+-------------------------------------------------------------------------------
+Total Call Records                       194        201         234 (+33)
+Unique RRM Practices                     102        104         106
+Complete Triads (All 3 Scenarios)         35         36          48 (+12)
+Practices Missing Single-Mother Call      64         62          33 (-29)
+
+We also fixed a near-duplicate practice entry (FertilityCare Center of Colorado Springs), allowing its records to collapse into a canonical practice key and adding another complete triad.
+
+
+2. POWER ANALYSIS: HAVE WE MET 80% POWER?
+=========================================
+
+DIRECT ANSWER:
+• For subtle identity gaps (Odds Ratios OR 1.5 to 2.0): NO. Achieved power ranges from 5.9% to 28.2%.
+• For large structural policy gaps (OR >= 3.3): YES. The Straight vs. Single Mother contrast achieves 81.6% power at OR = 3.3 and 93.3% power at OR = 4.6.
+
+In a within-practice paired audit study, statistical power is governed strictly by the number of DISCORDANT practices (practices that treat two scenarios differently). Because 69% to 80% of practices treat all callers identically (high baseline concordance), discordant pairs are relatively rare:
+
+Contrast                           Paired (n)  Discordant (nd)  Power (OR=1.5)  Power (OR=2.0)  MDE at 80% Power (alpha=0.05)
+---------------------------------------------------------------------------------------------------------------------------
+Straight vs. Single Mother             54        17 (11 vs 6)       12.9%           28.2%       OR = 3.3 (81.6% power)
+Lesbian vs. Single Mother              65        13 (7 vs 6)         5.9%           13.9%       OR = 4.6 (81.0% power)
+Straight vs. Lesbian                   50        13 (8 vs 5)         5.9%           13.9%       OR = 4.6 (81.0% power)
+
+To achieve 80% power for a modest odds ratio of OR = 2.0 (a ~10–12 percentage point gap), we would require 72 discordant practices (approximately 218 complete paired practices).
+
+Wait-Time Power: Only 8 to 10 practices have observed appointment dates across paired scenarios. Power to detect a 5-business-day wait difference is <8%; minimum detectable wait differences at 80% power remain 26 to 33 business days. Wait times must be reported as EXPLORATORY / DESCRIPTIVE ONLY.
+
+
+3. HOW LABUBU COMPARES TO LITERATURE BENCHMARKS
+================================================
+
+Audit studies in published medical and health services literature fall into two distinct tiers:
+
+• Structural / Insurance Audit Studies (e.g. NEJM, JAMA, Annals): Focus on large policy barriers (such as Medicaid vs. Private Insurance) where effect sizes are massive (OR >= 3.0 to 10.0+; 20–50% gaps). In this category, 30 to 60 paired practices are standard. LABUBU MATCHES LITERATURE REQUIREMENTS FOR DETECTING LARGE STRUCTURAL BARRIERS.
+
+• Identity & Demographic Audit Studies (e.g. American Sociological Review, Health Affairs): Focus on subtle discrimination by race, sexual orientation, or family structure (OR ~ 1.4 to 1.8; 5–15% gaps). These studies require 200 to 350 paired practices (70–100 discordant pairs) to achieve 80% power. LABUBU (48 TRIADS) IS SIZED AS A HIGH-PRECISION FEASIBILITY / REGIONAL AUDIT.
+
+
+4. MANUSCRIPT RECOMMENDATIONS
+=============================
+
+Recommended Framing for the Manuscript:
+1. Lead with our strongest, well-powered findings: Practice service mix (cycle tracking ~95%, IUI 1%, IVF 1%, donor sperm 3%), overall appointment offer rate (~42–45%), and high practice scenario concordance (69–80%).
+2. Frame scenario contrasts as paired estimations with explicit precision bounds: Report paired proportion differences with 95% confidence intervals (e.g. Straight vs. Single Mother: +5.6% difference [95% CI: -13.2% to +24.3%]), emphasizing that while large disparities (>25%) are ruled out, subtle differences cannot be definitively excluded.
+3. Highlight high concordance as a positive finding: Most RRM practices in this sample evaluate callers on clinical/insurance criteria rather than caller family structure.
+
+All regenerated figures, CSV tables, and the audit trail in PROVENANCE.md are updated in the repository. Let me know if you'd like to adjust any manuscript tables or discuss the framing further!
+
+Best regards,
+Tyler Muffly, MD
+Denver Health / University of Colorado
