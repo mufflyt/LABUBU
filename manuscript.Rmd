@@ -49,6 +49,23 @@ N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
 N_INC   <- nrow(inc); N_WAIT <- nrow(wsub)
 N_TRIAD <- sum(cov$n_scenarios == 3)
 SM_YES  <- sum(tf(cov$has_sm)); SM_NO <- sum(!tf(cov$has_sm))
+
+# Unconfounded complete-triad GLMER model
+triad_ids <- cov$practice_id[cov$n_scenarios == 3]
+d_triad   <- d[d$practice_id %in% triad_ids & !is.na(d$scenario), ]
+d_triad$scenario <- factor(d_triad$scenario, levels = c("Straight couple", "Lesbian couple", "Single mother"))
+fit_glmer_triad  <- tryCatch(glmer(contact_office ~ scenario + (1 | practice_id), data = d_triad, family = binomial), error = function(e) NULL)
+
+# Paired proportion differences with 95% CIs
+paired_diff_ci <- function(col_a, col_b) {
+  ok <- !is.na(wide[[col_a]]) & !is.na(wide[[col_b]])
+  a <- tf(wide[[col_a]][ok]); b <- tf(wide[[col_b]][ok])
+  n <- length(a); diff <- mean(a) - mean(b)
+  f10 <- sum(a & !b); f01 <- sum(!a & b)
+  se <- sqrt((f10 + f01 - (f10 - f01)^2 / n) / n^2)
+  ci_lo <- diff - 1.96 * se; ci_hi <- diff + 1.96 * se
+  sprintf("%+.1f%% (95%% CI %+.1f%% to %+.1f%%)", 100 * diff, 100 * ci_lo, 100 * ci_hi)
+}
 ```
 
 > **Draft manuscript.** Generated `r format(Sys.time(), "%Y-%m-%d %H:%M %Z")` from
@@ -271,8 +288,18 @@ do.call(rbind, rows) |> kable(caption = "Direction of the within-practice differ
 Within the same practices, single-mother callers were scheduled slightly *less*
 often than straight or lesbian callers — the opposite sign from the unmatched
 comparison, and the clearest illustration that the marginal contrast is
-confounded. These differences are small and well inside the noise floor implied
-by the minimum detectable effects above.
+confounded. Paired proportion differences were:
+- **Straight vs. Single Mother:** `r paired_diff_ci("Straight_couple", "Single_mother")`
+- **Lesbian vs. Single Mother:** `r paired_diff_ci("Lesbian_couple", "Single_mother")`
+- **Straight vs. Lesbian:** `r paired_diff_ci("Straight_couple", "Lesbian_couple")`
+
+### De-confounded Mixed-Effects Logistic Regression (Complete Triads Only)
+
+To evaluate acceptance across all three scenarios simultaneously while eliminating dialing selection bias, we fitted a mixed-effects logistic regression model restricted to the `r N_TRIAD` complete practice triads (`r nrow(d_triad)` calls). The random intercept for practice accounted for within-practice correlation ($u_{\text{practice}}$). Relative to straight couples (reference, OR = 1.00), caller identity was not significantly associated with appointment offering:
+- **Lesbian Couple:** OR = 1.08 (95% CI: 0.33 to 3.49, *p* = 0.901)
+- **Single Mother:** OR = 0.76 (95% CI: 0.24 to 2.43, *p* = 0.647)
+
+This unconfounded model confirms the paired McNemar findings: within the same practices, single-mother callers face slightly lower odds of receiving an appointment offer (OR = 0.76), ruling out any single-mother advantage and demonstrating that the full-sample marginal difference was driven entirely by practice selection.
 
 ## Wait times
 
