@@ -69,7 +69,7 @@ paired_diff_ci <- function(col_a, col_b) {
 ```
 
 > **Draft manuscript.** Generated `r format(Sys.time(), "%Y-%m-%d %H:%M %Z")` from
-> `manuscript.Rmd`. Every statistic is computed at render time from the files in
+> `labubu_mysterycall_manuscript.Rmd`. Every statistic is computed at render time from the files in
 > `mysterycall_outputs/`; see [`PROVENANCE.md`](PROVENANCE.md) for the artifact
 > fingerprints and the exact REDCap export behind them.
 
@@ -388,5 +388,5 @@ data.frame(
 
 All tables and figures regenerate with `Rscript refresh.R`, which runs the
 analysis, the figures, and the provenance record in that order. This document is
-rendered from `manuscript.Rmd`, which reads only generated artifacts — no
+rendered from `labubu_mysterycall_manuscript.Rmd`, which reads only generated artifacts — no
 statistic in the text is transcribed by hand.

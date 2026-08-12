@@ -116,7 +116,7 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 | [`provenance.R`](file:///Users/tylermuffly/labubu/provenance.R) | Computes MD5 checksums, Git state, package versions, and denominator levels into `PROVENANCE.md`. |
 | [`call_progress.R`](file:///Users/tylermuffly/labubu/call_progress.R) | Lightweight progress utility to count remaining single-mother calls and complete practice triads. |
 | [`app.R`](file:///Users/tylermuffly/labubu/app.R) | Interactive Shiny application for exploring practice-level data and scheduling distributions. |
-| [`manuscript.Rmd`](file:///Users/tylermuffly/labubu/manuscript.Rmd) | Reproducible IMRaD manuscript template rendering directly to `manuscript.html`. |
+| [`labubu_mysterycall_manuscript.Rmd`](file:///Users/tylermuffly/labubu/labubu_mysterycall_manuscript.Rmd) | Reproducible IMRaD manuscript template rendering directly to `labubu_mysterycall_manuscript.html`. |
 
 ---
 
@@ -171,8 +171,8 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 ├── provenance.R                                │ Audit trail generator
 ├── call_progress.R                             │ Call tracking utility
 ├── app.R                                       │ Interactive Shiny dashboard
-├── manuscript.Rmd                              │ Reproducible manuscript template
-├── manuscript.html                             │ Self-contained HTML manuscript
+├── labubu_mysterycall_manuscript.Rmd           │ Reproducible manuscript template
+├── labubu_mysterycall_manuscript.html          │ Self-contained HTML manuscript
 ├── 25-2596 LABUBU Protocol.docx                │ IRB protocol document
 ├── 25-2596 LABUBU Debrief Letter.docx         │ IRB debrief documentation
 ├── Old_redcap/                                 ← Archived prior REDCap exports (gitignored)
