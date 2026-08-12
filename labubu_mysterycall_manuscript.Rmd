@@ -19,12 +19,48 @@ output:
 /* Obstetrics & Gynecology (The Green Journal) Custom Styling */
 body {
   font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 16px;
+  font-size: 15.5px;
   line-height: 1.65;
   color: #111111;
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 30px;
+  background-color: #ffffff;
+  padding: 20px;
+}
+
+.main-container {
+  max-width: 1140px !important;
+  margin: 0 auto !important;
+}
+
+/* Fix floating Table of Contents overlap */
+div.tocify {
+  width: 230px !important;
+  max-width: 230px !important;
+  font-family: 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 12.5px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+div.tocify .tocify-header {
+  font-weight: 600 !important;
+  color: #003366 !important;
+}
+
+div.tocify ul, div.tocify li {
+  line-height: 1.35 !important;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 11.5px !important;
+  padding-left: 15px !important;
+}
+
+@media (min-width: 992px) {
+  .col-md-9 {
+    padding-left: 35px !important;
+  }
 }
 
 h1, h2, h3, h4 {
