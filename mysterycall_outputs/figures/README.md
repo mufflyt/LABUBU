@@ -4,18 +4,18 @@
 
 All figures in this directory were produced by `figures_wait_time.R`
 from `mysterycall_outputs/labubu_cleaned_analysis.csv`, which was derived by
-`evaluate_labubu_mysterycall.R` from REDCap export `LABUBU_DATA_LABELS_2026-08-02_1616.csv`
-(MD5 `3bee40ec332e8f9e`, 201 rows, downloaded 2026-08-02 16:17:10 MDT).
+`evaluate_labubu_mysterycall.R` from REDCap export `LABUBU_DATA_LABELS_2026-08-11_2017.csv`
+(MD5 `9e1ea18b77d3cd64`, 234 rows, downloaded 2026-08-11 20:18:08 MDT).
 
-Generated 2026-08-11 20:09:06 MDT at commit `5bf4f61` using mysterycall v1.6.3 and R version 4.4.2 (2024-10-31).
+Generated 2026-08-11 20:18:58 MDT at commit `6e6a88b` using mysterycall v1.6.3 and R version 4.4.2 (2024-10-31).
 
 ## Denominators — do not quote the record count under these figures
 
 | Figure | n calls | practices | Subset |
 |---|---|---|---|
-| `fig1_raincloud_wait_by_scenario.png` | 55 | 35 | wait_subset |
-| `fig2_ridgeplot_wait_by_scenario.png` | 55 | 35 | wait_subset |
-| `fig3_ecdf_wait_by_scenario.png` | 55 | 35 | wait_subset |
+| `fig1_raincloud_wait_by_scenario.png` | 57 | 37 | wait_subset |
+| `fig2_ridgeplot_wait_by_scenario.png` | 57 | 37 | wait_subset |
+| `fig3_ecdf_wait_by_scenario.png` | 57 | 37 | wait_subset |
 | `fig4_within_practice_pairs.png` | 33 | 13 | within_practice_pairs |
 | `fig_panel_wait_times.png` | see below | see below | wait_subset + within_practice_pairs (composite of figs 1-4) |
 

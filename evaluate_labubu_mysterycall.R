@@ -189,6 +189,8 @@ normalize_practice <- function(x) {
   x <- sub("Edward J\\. Fleming", "Edward J Fleming", x)
   # Nicholas Kongoasa: missing comma between MD and FACOG
   x <- sub("Kongoasa, MD FACOG", "Kongoasa, MD, FACOG", x)
+  # FertilityCare Center of Colorado Springs state tag
+  x <- sub("^FertilityCare Center of Colorado Springs$", "FertilityCare Center of Colorado Springs (CO)", x)
   trimws(x)
 }
 

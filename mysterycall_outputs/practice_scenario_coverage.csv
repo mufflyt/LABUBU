@@ -2,104 +2,106 @@
 1,"(440) 823-9827",FALSE,TRUE,FALSE,1
 2,"(603) 860-9942",FALSE,TRUE,FALSE,1
 3,"Abiding FertilityCare Center (TX)",TRUE,TRUE,TRUE,3
-4,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,FALSE,1
+4,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,TRUE,2
 5,"Angelus FertilityCare Center (Brazil)",TRUE,FALSE,FALSE,1
 6,"Anna Lacey (SD, virtual)",TRUE,TRUE,FALSE,2
 7,"Archdiocese of San Francisco FertilityCare Center",TRUE,TRUE,TRUE,3
 8,"Armando Garza, MD (TX)",TRUE,FALSE,FALSE,1
 9,"Ashwood FertilityCare Center, LLC (APPs)",TRUE,TRUE,TRUE,3
 10,"Ave Maria FertilityCare Center of Tampa Bay (FL)",TRUE,TRUE,TRUE,3
-11,"Avera McKennen (SD)",FALSE,TRUE,FALSE,1
+11,"Avera McKennen (SD)",FALSE,TRUE,TRUE,2
 12,"Avera St. Luke FertilityCare Services (SD)",TRUE,TRUE,TRUE,3
 13,"Barb Giles, RNC (SD)",TRUE,TRUE,TRUE,3
 14,"Benjamin Paul, DO (IA)",TRUE,TRUE,TRUE,3
-15,"Beth Berard, CFCP (Caritas FertilityCare MD)",FALSE,TRUE,FALSE,1
-16,"Bismarck FertilityCare Center (ND)",TRUE,TRUE,FALSE,2
+15,"Beth Berard, CFCP (Caritas FertilityCare MD)",FALSE,TRUE,TRUE,2
+16,"Bismarck FertilityCare Center (ND)",TRUE,TRUE,TRUE,3
 17,"Brad & Angie Schutt (SD)",FALSE,TRUE,FALSE,1
-18,"Briana Mueller, FCP (Donum FertilityCare Center SD)",TRUE,TRUE,FALSE,2
+18,"Briana Mueller, FCP (Donum FertilityCare Center SD)",TRUE,TRUE,TRUE,3
 19,"Brianna Best, DO (FL)",TRUE,FALSE,FALSE,1
-20,"Brynn Manning BSN, RN (SD,virtual)",TRUE,FALSE,FALSE,1
+20,"Brynn Manning BSN, RN (SD,virtual)",TRUE,FALSE,TRUE,2
 21,"Caritas FertilityCare (MD)",TRUE,FALSE,FALSE,1
 22,"Catholic FertilityCare Center of Western New York (NY)",TRUE,TRUE,TRUE,3
-23,"Cedar of Lebanon FertilityCare Center (MA)",TRUE,FALSE,FALSE,1
+23,"Cedar of Lebanon FertilityCare Center (MA)",TRUE,FALSE,TRUE,2
 24,"Cherish FertilityCare (British Columbia)",TRUE,FALSE,FALSE,1
-25,"Columbia Basin FertilityCare Services (WA)",TRUE,TRUE,FALSE,2
-26,"Community FertilityCare Center (AL)",TRUE,TRUE,FALSE,2
+25,"Columbia Basin FertilityCare Services (WA)",TRUE,TRUE,TRUE,3
+26,"Community FertilityCare Center (AL)",TRUE,TRUE,TRUE,3
 27,"Craig Cunningham, MD (IA)",TRUE,TRUE,TRUE,3
 28,"Danielle Koester, Femm Health",FALSE,TRUE,FALSE,1
 29,"Danielle Koestner, DO (MI)",TRUE,FALSE,FALSE,1
 30,"David Wachs, CFCMC, CFCP (SD)",FALSE,TRUE,FALSE,1
 31,"Dr. Kristina Pakiz, MD (NE)",TRUE,TRUE,TRUE,3
 32,"Dr. Mitchell F. Finnie, MD (TX)",TRUE,FALSE,FALSE,1
-33,"Dr. Renee C. & Matthew Schroeder (SD)",TRUE,FALSE,FALSE,1
-34,"Eastern Upper Peninsula (EUP) FertilityCare Center (MI)",FALSE,TRUE,FALSE,1
+33,"Dr. Renee C. & Matthew Schroeder (SD)",TRUE,FALSE,TRUE,2
+34,"Eastern Upper Peninsula (EUP) FertilityCare Center (MI)",FALSE,TRUE,TRUE,2
 35,"Edward J Fleming, MD, CFCMC (PA)",TRUE,TRUE,TRUE,3
 36,"Emmaus Road FertilityCare (FL)",FALSE,TRUE,TRUE,2
 37,"Empowered FertilityCare Center (TX)",FALSE,TRUE,TRUE,2
-38,"Epiphany FertilityCare Center (CO)",FALSE,TRUE,FALSE,1
-39,"Faith & Hope FertilityCare (PA)",FALSE,TRUE,FALSE,1
+38,"Epiphany FertilityCare Center (CO)",FALSE,TRUE,TRUE,2
+39,"Faith & Hope FertilityCare (PA)",FALSE,TRUE,TRUE,2
 40,"Faithful FertilityCare (CA)",FALSE,TRUE,FALSE,1
-41,"Faithful Hearts FertilityCare (NJ)",FALSE,TRUE,FALSE,1
-42,"Faustina FertilityCare Center (WI)",FALSE,TRUE,FALSE,1
-43,"Femme Health",FALSE,FALSE,TRUE,1
-44,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,FALSE,1
-45,"FertilityCare Center of Chicago (IL)",TRUE,TRUE,TRUE,3
-46,"FertilityCare Center of Colorado Springs (CO)",TRUE,TRUE,FALSE,2
-47,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,FALSE,1
-48,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,FALSE,1
-49,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,FALSE,1
-50,"FertilityCare Center of Omaha (NE)",TRUE,TRUE,TRUE,3
-51,"FertilityCare Center of Reno (NV)",FALSE,TRUE,FALSE,1
-52,"FertilityCare Center of Rochester (NY)",TRUE,TRUE,TRUE,3
-53,"FertilityCare Center of Rockville Centre (NY)",FALSE,TRUE,TRUE,2
-54,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE,1
-55,"FertilityCare Center of the Big Horns (WY)",TRUE,TRUE,TRUE,3
-56,"FertilityCare Center of the Diocese of Phoenix (AZ)",TRUE,TRUE,FALSE,2
-57,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE,1
-58,"FertilityCare Services Catholic Diocese of Wichita (KS)",TRUE,TRUE,TRUE,3
-59,"FertilityCare Services of Denver through Bella Health + Wellness (CO)",TRUE,TRUE,TRUE,3
-60,"FertilityCare Services of the Heartland (ND)",TRUE,TRUE,FALSE,2
-61,"FertilityCare at FMCC-Fertility and Midwifery Care Center (IN)",FALSE,TRUE,TRUE,2
-62,"FertilityCare of the Palouse (ID)",FALSE,TRUE,FALSE,1
-63,"Fidem FertilityCare Center (IA)",TRUE,TRUE,FALSE,2
-64,"Flourish FertilityCare (AL)",TRUE,TRUE,TRUE,3
-65,"Helena FertilityCare (MT)",TRUE,TRUE,TRUE,3
-66,"Holy Family FertilityCare (MN)",TRUE,TRUE,FALSE,2
-67,"Jean Golden-Tevald, DO, CFCMC, IFMCP (NJ)",TRUE,TRUE,TRUE,3
-68,"Jeff Cannon, MD (TX)",TRUE,TRUE,TRUE,3
-69,"Karen Dalton, MD (CO, CT)",TRUE,FALSE,FALSE,1
-70,"Kathleen Berchelmann, MD (CT, teleahealth)",TRUE,FALSE,FALSE,1
-71,"Kimberly Barrows, MD (telehealth)",TRUE,FALSE,FALSE,1
-72,"Kristin Blanchard, MS FCP (Compassion FertilityCare Center CO)",TRUE,TRUE,TRUE,3
-73,"Kyle Beiter, MD (NC)",TRUE,TRUE,TRUE,3
-74,"Leslie Marbach, PharmD, CFCP (Abiding FertilityCare Center TX)",FALSE,TRUE,FALSE,1
-75,"Linda Mackenzie, RN, CFCP (FL)",TRUE,TRUE,FALSE,2
-76,"Lindy Meyer, CFCP, CFCE (Diocese of Salina FertilityCare Services KS)",TRUE,TRUE,FALSE,2
-77,"Lisa Cote, FCP Coastal FertilityCare (NH)",TRUE,TRUE,TRUE,3
-78,"Marah Van Diest, M.D. (SD)",FALSE,TRUE,FALSE,1
-79,"Marilyn Wachs, CFCP (SD)",FALSE,TRUE,FALSE,1
-80,"Marise Frangie MS, CFCP (Cedar of Lebanon FertilityCare Center, MA)",TRUE,TRUE,TRUE,3
-81,"Mary Anderson, MD (LA, CA)",TRUE,TRUE,TRUE,3
-82,"Mary Callahan, MD (telehealth)",TRUE,FALSE,FALSE,1
-83,"Maura Buete, MD (Telehealth)",TRUE,FALSE,FALSE,1
-84,"Michelle Chambers, FCP Creighton Model FertilityCare Center of the Heartland, LLC (NE)",TRUE,TRUE,TRUE,3
-85,"Monique Ruberu MD, FACOG (PA)",TRUE,TRUE,TRUE,3
-86,"Nicholas Kongoasa, MD, FACOG (AL)",TRUE,TRUE,TRUE,3
-87,"Nicole Bazger (MI, OH)",TRUE,FALSE,FALSE,1
-88,"Nicole Boudreau, MD (MA)",TRUE,TRUE,TRUE,3
-89,"Patrick Beeman, MD Veranova Health (OH)",TRUE,TRUE,TRUE,3
-90,"Paul A. Carpentier, MD, CFCMC (NY)",TRUE,TRUE,TRUE,3
-91,"Rachel Langley, DO (CO springs)",FALSE,TRUE,FALSE,1
-92,"Reply Fertility",FALSE,TRUE,FALSE,1
-93,"Reproductive Health Medicine & Gynecology",FALSE,FALSE,TRUE,1
-94,"Reproductive Health Medicine & Gynecology (https://rhmgyn.com) (AL)",TRUE,FALSE,FALSE,1
-95,"Robin Roach, FCP (Austin FertilityCare Center TX)",TRUE,TRUE,TRUE,3
-96,"Sarah Pederson, MD (Westminster, CO)",TRUE,FALSE,FALSE,1
-97,"Shane T Fejfar, MD, FAAOS",TRUE,TRUE,FALSE,2
-98,"Stefania Bigi Alzati, FCP (Discover Your Cycle FertilityCare Center CA)",TRUE,TRUE,TRUE,3
-99,"Stephanie Gavin BSN, RN, FCP (Bluebonnet FertilityCare TX)",TRUE,TRUE,TRUE,3
-100,"Susan Caldwell, MD (LA, CA)",TRUE,FALSE,FALSE,1
-101,"Teresa Asam Jensen, MD (telehealth)",TRUE,TRUE,FALSE,2
-102,"Teresa Kenney, APRN (NE)",FALSE,TRUE,FALSE,1
-103,"Teresa Studer, M.D. (IA)",TRUE,FALSE,FALSE,1
-104,"Wendy Imm, RN, FCP (Divine Grace FertilityCare OH)",TRUE,TRUE,TRUE,3
+41,"Faithful Hearts FertilityCare (NJ)",FALSE,TRUE,TRUE,2
+42,"Family FertilityCare Center (OH)",TRUE,FALSE,TRUE,2
+43,"Family FertilityCare Services, LLC (NH)",TRUE,FALSE,TRUE,2
+44,"Faustina FertilityCare Center (WI)",FALSE,TRUE,TRUE,2
+45,"Femme Health",FALSE,FALSE,TRUE,1
+46,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,TRUE,2
+47,"FertilityCare Center of Chicago (IL)",TRUE,TRUE,TRUE,3
+48,"FertilityCare Center of Colorado Springs (CO)",TRUE,TRUE,TRUE,3
+49,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,TRUE,2
+50,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,TRUE,2
+51,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,TRUE,2
+52,"FertilityCare Center of Omaha (NE)",TRUE,TRUE,TRUE,3
+53,"FertilityCare Center of Reno (NV)",FALSE,TRUE,TRUE,2
+54,"FertilityCare Center of Rochester (NY)",TRUE,TRUE,TRUE,3
+55,"FertilityCare Center of Rockville Centre (NY)",FALSE,TRUE,TRUE,2
+56,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE,1
+57,"FertilityCare Center of the Big Horns (WY)",TRUE,TRUE,TRUE,3
+58,"FertilityCare Center of the Diocese of Phoenix (AZ)",TRUE,TRUE,FALSE,2
+59,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE,1
+60,"FertilityCare Services Catholic Diocese of Wichita (KS)",TRUE,TRUE,TRUE,3
+61,"FertilityCare Services of Denver through Bella Health + Wellness (CO)",TRUE,TRUE,TRUE,3
+62,"FertilityCare Services of the Heartland (ND)",TRUE,TRUE,TRUE,3
+63,"FertilityCare at FMCC-Fertility and Midwifery Care Center (IN)",FALSE,TRUE,TRUE,2
+64,"FertilityCare of the Palouse (ID)",FALSE,TRUE,TRUE,2
+65,"Fidem FertilityCare Center (IA)",TRUE,TRUE,TRUE,3
+66,"Flourish FertilityCare (AL)",TRUE,TRUE,TRUE,3
+67,"Helena FertilityCare (MT)",TRUE,TRUE,TRUE,3
+68,"Holy Family FertilityCare (MN)",TRUE,TRUE,TRUE,3
+69,"Jean Golden-Tevald, DO, CFCMC, IFMCP (NJ)",TRUE,TRUE,TRUE,3
+70,"Jeff Cannon, MD (TX)",TRUE,TRUE,TRUE,3
+71,"Karen Dalton, MD (CO, CT)",TRUE,FALSE,FALSE,1
+72,"Kathleen Berchelmann, MD (CT, teleahealth)",TRUE,FALSE,FALSE,1
+73,"Kimberly Barrows, MD (telehealth)",TRUE,FALSE,FALSE,1
+74,"Kristin Blanchard, MS FCP (Compassion FertilityCare Center CO)",TRUE,TRUE,TRUE,3
+75,"Kyle Beiter, MD (NC)",TRUE,TRUE,TRUE,3
+76,"Leslie Marbach, PharmD, CFCP (Abiding FertilityCare Center TX)",FALSE,TRUE,FALSE,1
+77,"Linda Mackenzie, RN, CFCP (FL)",TRUE,TRUE,TRUE,3
+78,"Lindy Meyer, CFCP, CFCE (Diocese of Salina FertilityCare Services KS)",TRUE,TRUE,TRUE,3
+79,"Lisa Cote, FCP Coastal FertilityCare (NH)",TRUE,TRUE,TRUE,3
+80,"Marah Van Diest, M.D. (SD)",FALSE,TRUE,FALSE,1
+81,"Marilyn Wachs, CFCP (SD)",FALSE,TRUE,FALSE,1
+82,"Marise Frangie MS, CFCP (Cedar of Lebanon FertilityCare Center, MA)",TRUE,TRUE,TRUE,3
+83,"Mary Anderson, MD (LA, CA)",TRUE,TRUE,TRUE,3
+84,"Mary Callahan, MD (telehealth)",TRUE,FALSE,FALSE,1
+85,"Maura Buete, MD (Telehealth)",TRUE,FALSE,FALSE,1
+86,"Michelle Chambers, FCP Creighton Model FertilityCare Center of the Heartland, LLC (NE)",TRUE,TRUE,TRUE,3
+87,"Monique Ruberu MD, FACOG (PA)",TRUE,TRUE,TRUE,3
+88,"Nicholas Kongoasa, MD, FACOG (AL)",TRUE,TRUE,TRUE,3
+89,"Nicole Bazger (MI, OH)",TRUE,FALSE,FALSE,1
+90,"Nicole Boudreau, MD (MA)",TRUE,TRUE,TRUE,3
+91,"Patrick Beeman, MD Veranova Health (OH)",TRUE,TRUE,TRUE,3
+92,"Paul A. Carpentier, MD, CFCMC (NY)",TRUE,TRUE,TRUE,3
+93,"Rachel Langley, DO (CO springs)",FALSE,TRUE,FALSE,1
+94,"Reply Fertility",FALSE,TRUE,FALSE,1
+95,"Reproductive Health Medicine & Gynecology",FALSE,FALSE,TRUE,1
+96,"Reproductive Health Medicine & Gynecology (https://rhmgyn.com) (AL)",TRUE,FALSE,FALSE,1
+97,"Robin Roach, FCP (Austin FertilityCare Center TX)",TRUE,TRUE,TRUE,3
+98,"Sarah Pederson, MD (Westminster, CO)",TRUE,FALSE,FALSE,1
+99,"Shane T Fejfar, MD, FAAOS",TRUE,TRUE,TRUE,3
+100,"Stefania Bigi Alzati, FCP (Discover Your Cycle FertilityCare Center CA)",TRUE,TRUE,TRUE,3
+101,"Stephanie Gavin BSN, RN, FCP (Bluebonnet FertilityCare TX)",TRUE,TRUE,TRUE,3
+102,"Susan Caldwell, MD (LA, CA)",TRUE,FALSE,FALSE,1
+103,"Teresa Asam Jensen, MD (telehealth)",TRUE,TRUE,TRUE,3
+104,"Teresa Kenney, APRN (NE)",FALSE,TRUE,FALSE,1
+105,"Teresa Studer, M.D. (IA)",TRUE,FALSE,FALSE,1
+106,"Wendy Imm, RN, FCP (Divine Grace FertilityCare OH)",TRUE,TRUE,TRUE,3
