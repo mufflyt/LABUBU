@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; max-width: 720px; margin: 0 auto; padding: 20px; line-height: 1.55; }
+  h3 { color: #2c5f8a; margin-top: 24px; border-bottom: 2px solid #2c5f8a; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+  th { background-color: #2c5f8a; color: white; padding: 9px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) { background-color: #f4f7fb; }
+  ol, ul { margin: 8px 0; padding-left: 22px; line-height: 1.7; }
+  .good { background-color: #e6f4ea; padding: 12px 16px; border-left: 4px solid #34a853; margin: 18px 0; border-radius: 0 4px 4px 0; }
+  .warn { background-color: #fff3cd; padding: 12px 16px; border-left: 4px solid #f0a500; margin: 18px 0; border-radius: 0 4px 4px 0; }
+  .info { background-color: #e8f0fe; padding: 12px 16px; border-left: 4px solid #1a73e8; margin: 18px 0; border-radius: 0 4px 4px 0; }
+  .footer { margin-top: 36px; color: #555; border-top: 1px solid #eee; padding-top: 16px; }
+  code { background: #f0f2f5; padding: 2px 5px; border-radius: 3px; font-family: Consolas, monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<p><strong>To:</strong> Sofie<br>
+<strong>From:</strong> Tyler Muffly<br>
+<strong>Date:</strong> August 11, 2026<br>
+<strong>Subject:</strong> LABUBU — Aug 11 Data Refresh & Statistical Power Update</p>
+
+<p>Hi Sofie,</p>
+
+<p>I have ingested the new August 11 REDCap export (<code>LABUBU_DATA_LABELS_2026-08-11_2017.csv</code>) and re-run our entire analytical pipeline, wait-time figures, and power calculations. Here is the full update and an evaluation of whether we have met 80% statistical power.</p>
+
+<h3>1. Data Collection Progress (Aug 2 vs. Aug 11 Export)</h3>
+
+<div class="good">
+<strong>Major Progress on Single-Mother Calls:</strong> The caller team completed 33 single-mother calls since August 2, expanding our complete practice triads by +12 and cutting our missing single-mother calls nearly in half!
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>July 4</th>
+      <th>August 2</th>
+      <th>August 11 (Latest)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Total Call Records</td>
+      <td>194</td>
+      <td>201</td>
+      <td><strong>234</strong> (+33)</td>
+    </tr>
+    <tr>
+      <td>Unique RRM Practices</td>
+      <td>102</td>
+      <td>104</td>
+      <td><strong>106</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Complete Triads (All 3 Scenarios)</strong></td>
+      <td>35</td>
+      <td>36</td>
+      <td><strong>48 (+12)</strong></td>
+    </tr>
+    <tr>
+      <td>Practices Missing Single-Mother Call</td>
+      <td>64</td>
+      <td>62</td>
+      <td><strong>33 (-29)</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>We also fixed a near-duplicate practice entry (<code>FertilityCare Center of Colorado Springs</code>), allowing its records to collapse into a canonical practice key and adding another complete triad.</p>
+
+<h3>2. Power Analysis: Have We Met 80% Power?</h3>
+
+<div class="info">
+<strong>Direct Answer:</strong> 
+<ul>
+  <li><strong>For subtle identity gaps (Odds Ratios OR 1.5 to 2.0):</strong> <strong>No.</strong> Achieved power ranges from <strong>5.9% to 28.2%</strong>.</li>
+  <li><strong>For large structural policy gaps (OR &ge; 3.3):</strong> <strong>Yes.</strong> The <em>Straight vs. Single Mother</em> contrast achieves <strong>81.6% power at OR = 3.3</strong> and <strong>93.3% power at OR = 4.6</strong>.</li>
+</ul>
+</div>
+
+<p>In a within-practice paired audit study, statistical power is governed strictly by the number of <strong>discordant practices</strong> (practices that treat two scenarios differently). Because <strong>69% to 80% of practices treat all callers identically</strong> (high baseline concordance), discordant pairs are relatively rare:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Contrast</th>
+      <th>Paired Practices (n)</th>
+      <th>Discordant Practices (n<sub>d</sub>)</th>
+      <th>Power at OR = 1.5</th>
+      <th>Power at OR = 2.0</th>
+      <th>MDE at 80% Power (&alpha;=0.05)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Straight vs. Single Mother</strong></td>
+      <td>54</td>
+      <td><strong>17</strong> (11 vs 6)</td>
+      <td>12.9%</td>
+      <td>28.2%</td>
+      <td><strong>OR = 3.3</strong> (81.6% power)</td>
+    </tr>
+    <tr>
+      <td><strong>Lesbian vs. Single Mother</strong></td>
+      <td>65</td>
+      <td><strong>13</strong> (7 vs 6)</td>
+      <td>5.9%</td>
+      <td>13.9%</td>
+      <td><strong>OR = 4.6</strong> (81.0% power)</td>
+    </tr>
+    <tr>
+      <td><strong>Straight vs. Lesbian</strong></td>
+      <td>50</td>
+      <td><strong>13</strong> (8 vs 5)</td>
+      <td>5.9%</td>
+      <td>13.9%</td>
+      <td><strong>OR = 4.6</strong> (81.0% power)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>To achieve 80% power for a modest odds ratio of <strong>OR = 2.0</strong> (a ~10–12 percentage point gap), we would require <strong>72 discordant practices</strong> (approximately <strong>218 complete paired practices</strong>).</p>
+
+<p><strong>Wait-Time Power:</strong> Only 8 to 10 practices have observed appointment dates across paired scenarios. Power to detect a 5-business-day wait difference is &lt;8%; minimum detectable wait differences at 80% power remain 26 to 33 business days. Wait times must be reported as <strong>exploratory / descriptive only</strong>.</p>
+
+<h3>3. How LABUBU Compares to Literature Benchmarks</h3>
+
+<p>Audit studies in published medical and health services literature fall into two distinct tiers:</p>
+
+<ul>
+  <li><strong>Structural / Insurance Audit Studies (e.g. <em>NEJM</em>, <em>JAMA</em>, <em>Annals</em>):</strong> Focus on large policy barriers (such as Medicaid vs. Private Insurance) where effect sizes are massive (OR &ge; 3.0 to 10.0+; 20–50% gaps). In this category, 30 to 60 paired practices are standard. <strong>LABUBU matches literature requirements for detecting large structural barriers.</strong></li>
+  <li><strong>Identity &amp; Demographic Audit Studies (e.g. <em>American Sociological Review</em>, <em>Health Affairs</em>):</strong> Focus on subtle discrimination by race, sexual orientation, or family structure (OR &approx; 1.4 to 1.8; 5–15% gaps). These studies require 200 to 350 paired practices (70–100 discordant pairs) to achieve 80% power. <strong>LABUBU (48 triads) is sized as a high-precision feasibility / regional audit.</strong></li>
+</ul>
+
+<h3>4. Manuscript Recommendations</h3>
+
+<div class="warn">
+<strong>Recommended Framing for the Manuscript:</strong>
+<ol>
+  <li><strong>Lead with our strongest, well-powered findings:</strong> Practice service mix (cycle tracking ~95%, IUI 1%, IVF 1%, donor sperm 3%), overall appointment offer rate (~42–45%), and high practice scenario concordance (69–80%).</li>
+  <li><strong>Frame scenario contrasts as paired estimations with explicit precision bounds:</strong> Report paired proportion differences with 95% confidence intervals (e.g. Straight vs. Single Mother: +5.6% difference [95% CI: -13.2% to +24.3%]), emphasizing that while large disparities (&gt;25%) are ruled out, subtle differences cannot be definitively excluded.</li>
+  <li><strong>Highlight high concordance as a positive finding:</strong> Most RRM practices in this sample evaluate callers on clinical/insurance criteria rather than caller family structure.</li>
+</ol>
+</div>
+
+<p>All regenerated figures, CSV tables, and the audit trail in <code>PROVENANCE.md</code> are updated in the repository. Let me know if you'd like to adjust any manuscript tables or discuss the framing further!</p>
+
+<p class="footer">Best regards,<br>
+<strong>Tyler Muffly, MD</strong><br>
+Denver Health / University of Colorado</p>
+
+</body>
+</html>
