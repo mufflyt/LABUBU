@@ -11,16 +11,18 @@ output:
       smooth_scroll: true
     toc_depth: 3
     number_sections: false
-    theme: flatly
     df_print: kable
+  word_document:
+    toc: true
+    toc_depth: 3
 ---
 
 ```{css, echo=FALSE}
 /* Obstetrics & Gynecology (The Green Journal) Custom Styling */
 body {
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 15.5px;
-  line-height: 1.65;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.6;
   color: #111111;
   background-color: #ffffff;
   padding: 20px;
@@ -35,8 +37,8 @@ body {
 div.tocify {
   width: 230px !important;
   max-width: 230px !important;
-  font-family: 'Helvetica Neue', Arial, sans-serif !important;
-  font-size: 12.5px !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 11pt !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 6px !important;
   background-color: #f8fafc !important;
@@ -53,7 +55,7 @@ div.tocify ul, div.tocify li {
 }
 
 .tocify-subheader .tocify-item {
-  font-size: 11.5px !important;
+  font-size: 10pt !important;
   padding-left: 15px !important;
 }
 
@@ -64,13 +66,13 @@ div.tocify ul, div.tocify li {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #003366; /* Deep ACOG Navy */
   font-weight: 700;
 }
 
 h1.title {
-  font-size: 26px;
+  font-size: 22pt;
   color: #003366;
   border-bottom: 3px solid #003366;
   padding-bottom: 8px;
@@ -78,7 +80,7 @@ h1.title {
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 14pt;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   border-bottom: 1px solid #c8d6e5;
@@ -87,7 +89,7 @@ h2 {
 }
 
 h3 {
-  font-size: 16px;
+  font-size: 12pt;
   color: #2c3e50;
   margin-top: 18px;
 }
@@ -97,8 +99,8 @@ h3 {
   border-left: 5px solid #003366;
   padding: 14px 18px;
   margin: 20px 0 25px 0;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14.5px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
 }
 
 .precis-title {
@@ -113,8 +115,8 @@ h3 {
   background-color: #003366;
   color: #ffffff;
   padding: 8px 14px;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
   font-weight: bold;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -124,8 +126,8 @@ h3 {
 }
 
 .meta-block {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 13.5px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
   color: #444444;
   margin-bottom: 25px;
   line-height: 1.5;
@@ -135,8 +137,8 @@ table {
   border-collapse: collapse;
   width: 100%;
   margin: 20px 0;
-  font-size: 14px;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11pt;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 th {
@@ -156,19 +158,12 @@ tr:nth-child(even) {
   background-color: #f8fafc;
 }
 
-.table-caption {
-  font-weight: bold;
-  color: #003366;
-  margin-bottom: 6px;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-}
-
 .alert-callout {
   background-color: #fff9e6;
   border-left: 4px solid #f39c12;
   padding: 12px 16px;
   margin: 18px 0;
-  font-size: 14.5px;
+  font-size: 11pt;
 }
 
 code {
@@ -176,7 +171,7 @@ code {
   padding: 2px 5px;
   border-radius: 3px;
   font-family: monospace;
-  font-size: 13.5px;
+  font-size: 11pt;
 }
 ```
 
@@ -236,11 +231,10 @@ paired_diff_ci <- function(col_a, col_b) {
 </div>
 
 <div class="meta-block">
-  <strong>Authors:</strong> Tyler Muffly, MD<sup>1</sup><br>
-  <strong>Affiliation:</strong> <sup>1</sup>Department of Obstetrics and Gynecology, Denver Health and Hospital Authority, University of Colorado School of Medicine, Denver, Colorado.<br>
-  <strong>Institutional Review Board:</strong> COMIRB 25-2596 (Approved).<br>
-  <strong>Financial Disclosure:</strong> The author reports no conflicts of interest or relevant financial disclosures.<br>
-  <strong>Data Audit &amp; Provenance:</strong> Automatically compiled from active dataset `LABUBU_DATA_LABELS_2026-08-11_2017.csv` (`r N_REC` calls across `r N_PRAC` practices).
+  Author: Tyler Muffly, MD (Department of Obstetrics and Gynecology, Denver Health and Hospital Authority, University of Colorado School of Medicine, Denver, Colorado)<br>
+  Institutional Review Board: COMIRB 25-2596 (Approved)<br>
+  Financial Disclosure: The author reports no conflicts of interest or relevant financial disclosures<br>
+  Data Audit &amp; Provenance: Automatically compiled from active dataset LABUBU_DATA_LABELS_2026-08-11_2017.csv (`r N_REC` calls across `r N_PRAC` practices)
 </div>
 
 <div class="precis-box">
@@ -250,21 +244,21 @@ paired_diff_ci <- function(col_a, col_b) {
 
 ## ABSTRACT
 
-**OBJECTIVE:** To characterize reproductive health services offered by Restorative Reproductive Medicine (RRM) practices in the United States and evaluate whether patient scheduling availability differs by caller family structure.
+OBJECTIVE: To characterize reproductive health services offered by Restorative Reproductive Medicine (RRM) practices in the United States and evaluate whether patient scheduling availability differs by caller family structure.
 
-**METHODS:** In a national mystery-caller (secret shopper) audit study, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario (within-practice paired design). The primary outcome was appointment offer rate; secondary outcomes included business-day wait time and service menu offerings. Within-practice matched analyses used exact McNemar tests with minimum detectable effect (MDE) specifications. Mixed-effects logistic regression (`glmer`) was performed on complete practice triads ($N=`r N_TRIAD`$) to eliminate practice-selection dialing bias.
+METHODS: In a national mystery-caller (secret shopper) audit study, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario (within-practice paired design). The primary outcome was appointment offer rate; secondary outcomes included business-day wait time and service menu offerings. Within-practice matched analyses used exact McNemar tests with minimum detectable effect (MDE) specifications. Mixed-effects logistic regression was performed on complete practice triads (N = `r N_TRIAD`) to eliminate practice-selection dialing bias.
 
-**RESULTS:** A total of `r N_REC` calls were completed to `r N_PRAC` practices; `r N_INC` calls reached scheduling staff and met analytic inclusion criteria. `r N_TRIAD` practices completed all 3 scenarios. Among included calls, cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Overall appointment offer rate was `r wilson(sum(tf(d$contact_office)), N_REC)`. Within-practice concordance was high (`r sprintf("%.0f%%-%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`). Paired acceptance differences were: Straight vs. Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs. Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs. Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. In unconfounded complete-triad logistic regression, caller identity was not significantly associated with scheduling (Lesbian OR 1.08 [95% CI 0.33-3.49]; Single Mother OR 0.76 [95% CI 0.24-2.43]).
+RESULTS: A total of `r N_REC` calls were completed to `r N_PRAC` practices; `r N_INC` calls reached scheduling staff and met analytic inclusion criteria. `r N_TRIAD` practices completed all 3 scenarios. Among included calls, cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Overall appointment offer rate was `r wilson(sum(tf(d$contact_office)), N_REC)`. Within-practice concordance was high (`r sprintf("%.0f%%-%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`). Paired acceptance differences were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. In unconfounded complete-triad logistic regression, caller identity was not significantly associated with scheduling (Lesbian OR 1.08 [95% CI 0.33-3.49]; Single Mother OR 0.76 [95% CI 0.24-2.43]).
 
-**CONCLUSION:** RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, representing a structural service limitation for single mothers and same-sex couples. Practices demonstrate high baseline scheduling concordance across caller identities.
+CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, representing a structural service limitation for single mothers and same-sex couples. Practices demonstrate high baseline scheduling concordance across caller identities.
 
 ---
 
 ## INTRODUCTION
 
-Restorative Reproductive Medicine (RRM) is an approach to reproductive care that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF).[1] Because RRM care models explicitly exclude certain interventions, prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.
+Restorative Reproductive Medicine (RRM) is an approach to reproductive care that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF). Because RRM care models explicitly exclude certain interventions, prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.
 
-Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to care while eliminating social desirability bias.[2,3] Prior healthcare audit studies in obstetrics and gynecology have documented disparities based on insurance status, language, and clinical complexity.[4,5] However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied.
+Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to care while eliminating social desirability bias. Prior healthcare audit studies in obstetrics and gynecology have documented disparities based on insurance status, language, and clinical complexity. However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied.
 
 This national secret-shopper study had two primary objectives: (1) to define the scope of reproductive services offered by RRM practices, and (2) to determine whether practice willingness to schedule an appointment differs systematically by caller family structure (straight couple, lesbian couple, single mother using donor sperm).
 
@@ -279,21 +273,21 @@ Trained callers telephoned each eligible practice during standard business hours
 
 ### Standardized Caller Scenarios
 Three standardized clinical scenarios were designed:
-1. **Straight Couple:** A female caller seeking fertility evaluation with a male partner.
-2. **Lesbian Couple:** A female caller seeking fertility evaluation with a female partner.
-3. **Single Mother:** A single female caller seeking fertility evaluation using donor sperm.
+- Straight Couple: A female caller seeking fertility evaluation with a male partner.
+- Lesbian Couple: A female caller seeking fertility evaluation with a female partner.
+- Single Mother: A single female caller seeking fertility evaluation using donor sperm.
 
 Call scripts were strictly standardized across scenarios, differing only in the caller's stated partner status and clinical inquiry regarding donor sperm.
 
 ### Main Outcome Measures
-The primary outcome was **appointment offering**, defined as the practice staff agreeing to schedule a new patient consultation. Secondary outcomes included:
-- **Service Menu Availability:** Specific inquiry regarding availability of cycle tracking, hormonal lab monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and donor sperm services.
-- **Wait Time to Appointment:** Business days from initial call to first available consultation date (excluding weekends and US federal holidays).
+The primary outcome was appointment offering, defined as the practice staff agreeing to schedule a new patient consultation. Secondary outcomes included:
+- Service menu availability: Specific inquiry regarding availability of cycle tracking, hormonal lab monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and donor sperm services.
+- Wait time to appointment: Business days from initial call to first available consultation date (excluding weekends and US federal holidays).
 
 ### Statistical Analysis
 Analytic inclusion required successful phone contact with clinic scheduling staff (`Reason for exclusions == "Included where physician was able to be contacted"`). Proportions carry 95% Wilson score confidence intervals. 
 
-Primary inference utilized **matched within-practice exact McNemar tests** on discordant pairs to prevent practice-selection dialing bias. Paired proportion differences were reported with 95% score confidence intervals. Minimum detectable effect (MDE) odds ratios at 80% power ($\alpha=0.05$) were specified for all paired contrasts. Mixed-effects logistic regression (`lme4::glmer`) was performed on the subset of complete practice triads ($N=`r N_TRIAD`$) with a random intercept for practice ($u_{\text{practice}}$). Linear mixed models (`lme4::lmer`) evaluated log-transformed business-day wait times (`log1p`). All statistical analyses were conducted in R version 4.4.2.
+Primary inference utilized matched within-practice exact McNemar tests on discordant pairs to prevent practice-selection dialing bias. Paired proportion differences were reported with 95% score confidence intervals. Minimum detectable effect (MDE) odds ratios at 80% power (alpha = 0.05) were specified for all paired contrasts. Mixed-effects logistic regression was performed on the subset of complete practice triads (N = `r N_TRIAD`) with a random intercept for practice. Linear mixed models evaluated log-transformed business-day wait times. All statistical analyses were conducted in R version 4.4.2.
 
 ---
 
@@ -303,8 +297,8 @@ Primary inference utilized **matched within-practice exact McNemar tests** on di
 A total of `r N_REC` telephone calls were placed to `r N_PRAC` unique RRM practices. Overall, `r N_INC` calls met analytic inclusion criteria by reaching clinic scheduling staff. A total of `r N_TRIAD` practices completed all three scenario calls (complete practice triads), `r sum(cov$n_scenarios == 2)` completed two scenarios (dyads), and `r sum(cov$n_scenarios == 1)` completed one scenario.
 
 ```{r Table1}
-data.frame(
-  Scenario = c("Straight couple", "Lesbian couple", "Single mother", "Total"),
+t1 <- data.frame(
+  `Scenario` = c("Straight couple", "Lesbian couple", "Single mother", "Total"),
   `Calls Placed` = c(sum(d$scenario == "Straight couple", na.rm=TRUE),
                     sum(d$scenario == "Lesbian couple", na.rm=TRUE),
                     sum(d$scenario == "Single mother", na.rm=TRUE), N_REC),
@@ -314,15 +308,17 @@ data.frame(
   `Appointments Offered` = c(sum(tf(inc$contact_office[inc$scenario == "Straight couple"])),
                              sum(tf(inc$contact_office[inc$scenario == "Lesbian couple"])),
                              sum(tf(inc$contact_office[inc$scenario == "Single mother"])),
-                             sum(tf(inc$contact_office)))
-) |> kable(caption = "Table 1. Distribution of Mystery Calls and Appointment Offers by Scenario")
+                             sum(tf(inc$contact_office))),
+  check.names = FALSE
+)
+kable(t1, caption = "Table 1. Distribution of Mystery Calls and Appointment Offers by Scenario")
 ```
 
 ### Reproductive Services Offered
-Among analytically included calls ($N=`r N_INC`$), RRM practices almost uniformly offered natural cycle tracking and basic fertility timing, but rarely provided ART or donor gamete services (Table 2).
+Among analytically included calls (N = `r N_INC`), RRM practices almost uniformly offered natural cycle tracking and basic fertility timing, but rarely provided ART or donor gamete services (Table 2).
 
 ```{r Table2}
-data.frame(
+t2 <- data.frame(
   `Reproductive Service` = c(
     "Cycle tracking",
     "Hormonal labs / fertility timing",
@@ -338,8 +334,10 @@ data.frame(
     svc("service_iui"),
     svc("service_ivf"),
     svc("donor_sperm_yes")
-  )
-) |> kable(caption = "Table 2. Reproductive Healthcare Services Offered by RRM Practices (N = 98 Included Calls)")
+  ),
+  check.names = FALSE
+)
+kable(t2, caption = "Table 2. Reproductive Healthcare Services Offered by RRM Practices (N = 98 Included Calls)")
 ```
 
 Overall, cycle tracking was offered in `r svc("service_cycle_tracking")` of encounters. In contrast, IUI was offered in only `r svc("service_iui")`, IVF in `r svc("service_iui")`, and donor sperm management in `r svc("donor_sperm_yes")`. The overall appointment offer rate across all placed calls was `r wilson(sum(tf(d$contact_office)), N_REC)`.
@@ -348,7 +346,7 @@ Overall, cycle tracking was offered in `r svc("service_cycle_tracking")` of enco
 Within-practice concordance was high: practices treated callers identically in `r sprintf("%.0f%% to %.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))` of paired comparisons.
 
 ```{r Table3}
-mc |>
+t3 <- mc |>
   transmute(
     `Paired Comparison` = contrast,
     `Paired Practices (n)` = n_paired,
@@ -356,23 +354,23 @@ mc |>
     `Discordant Pairs` = discordant,
     `Exact McNemar P` = sprintf("%.3f", mcnemar_p),
     `MDE (80% Power)` = sprintf("OR %.1f", mde_or_80power)
-  ) |>
-  kable(caption = "Table 3. Matched Within-Practice Paired Acceptance Analysis")
+  )
+kable(t3, caption = "Table 3. Matched Within-Practice Paired Acceptance Analysis")
 ```
 
 In matched paired comparisons, no scenario contrast demonstrated a statistically significant difference in appointment acceptance:
-- **Straight vs. Single Mother:** Difference `r paired_diff_ci("Straight_couple", "Single_mother")` ($p=`r sprintf("%.3f", mc$mcnemar_p[1])`).
-- **Lesbian vs. Single Mother:** Difference `r paired_diff_ci("Lesbian_couple", "Single_mother")` ($p=1.000$).
-- **Straight vs. Lesbian:** Difference `r paired_diff_ci("Straight_couple", "Lesbian_couple")` ($p=`r sprintf("%.3f", mc$mcnemar_p[3])`).
+- Straight vs Single Mother: Difference `r paired_diff_ci("Straight_couple", "Single_mother")` (p = `r sprintf("%.3f", mc$mcnemar_p[1])`).
+- Lesbian vs Single Mother: Difference `r paired_diff_ci("Lesbian_couple", "Single_mother")` (p = 1.000).
+- Straight vs Lesbian: Difference `r paired_diff_ci("Straight_couple", "Lesbian_couple")` (p = `r sprintf("%.3f", mc$mcnemar_p[3])`).
 
-In unconfounded mixed-effects logistic regression restricted to complete practice triads ($N=`r N_TRIAD`$ practices, 148 calls), relative to straight couples (reference, OR 1.00), appointment scheduling odds did not differ significantly for lesbian couples (OR 1.08 [95% CI 0.33–3.49], $p=0.901$) or single mothers (OR 0.76 [95% CI 0.24–2.43], $p=0.647$).
+In unconfounded mixed-effects logistic regression restricted to complete practice triads (N = `r N_TRIAD` practices, 148 calls), relative to straight couples (reference, OR 1.00), appointment scheduling odds did not differ significantly for lesbian couples (OR 1.08 [95% CI 0.33-3.49], p = 0.901) or single mothers (OR 0.76 [95% CI 0.24-2.43], p = 0.647).
 
 <div class="alert-callout">
-  <strong>Methodological Note on Confounding:</strong> Unmatched marginal acceptance rates (Single Mother 67.4% vs Straight 44.0%) reflect heavy dialing selection bias—single-mother calls landed disproportionately at high-acceptance practices (~70% baseline acceptance). Within the exact same practices, single-mother callers faced slightly lower odds of scheduling (OR 0.76).
+  Methodological Note on Confounding: Unmatched marginal acceptance rates (Single Mother 67.4% vs Straight 44.0%) reflect heavy dialing selection bias—single-mother calls landed disproportionately at high-acceptance practices (~70% baseline acceptance). Within the exact same practices, single-mother callers faced slightly lower odds of scheduling (OR 0.76).
 </div>
 
 ### Wait Time to First Available Appointment
-Among included calls that reached scheduling ($N=`r N_WAIT`$), the median business-day wait time to the first appointment was 23 business days (IQR 9–60.5) for straight couples, 29 business days (IQR 7–55.2) for lesbian couples, and 15 business days (IQR 5.25–29.8) for single mothers. Within-practice paired wait time differences were small and non-significant (Straight vs Single Mother: mean difference +0.8 business days, $p=0.928$).
+Among included calls that reached scheduling (N = `r N_WAIT`), the median business-day wait time to the first appointment was 23 business days (IQR 9–60.5) for straight couples, 29 business days (IQR 7–55.2) for lesbian couples, and 15 business days (IQR 5.25–29.8) for single mothers. Within-practice paired wait time differences were small and non-significant (Straight vs Single Mother: mean difference +0.8 business days, p = 0.928).
 
 ---
 
@@ -389,7 +387,7 @@ Our findings also offer a critical methodological lesson for healthcare audit st
 ### Strengths and Limitations
 This study possesses several key strengths, including its randomized secret-shopper design, national geographic scope, business-day calendar modeling, and unconfounded within-practice paired analysis.
 
-Limitations must also be considered. First, sample size limits statistical power to detect subtle odds ratios ($\text{OR} < 2.0$), though the study was fully powered ($>80\%$) to rule out large structural disparities ($\text{OR} \ge 3.3$). Second, $42.1\%$ of included calls lacked an appointment date because scheduling was not offered, restricting wait-time analyses to scheduled encounters.
+Limitations must also be considered. First, sample size limits statistical power to detect subtle odds ratios (OR < 2.0), though the study was fully powered (>80%) to rule out large structural disparities (OR >= 3.3). Second, 42.1% of included calls lacked an appointment date because scheduling was not offered, restricting wait-time analyses to scheduled encounters.
 
 ### Conclusion
 Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management. Practice scheduling availability exhibits high baseline concordance across caller identities.
@@ -398,8 +396,8 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 
 ## REFERENCES
 
-1. Stanford JB, Parnell TA, Boyle PC. Restorative reproductive medicine: an overview. *Curr Med Res Opin*. 2012;28(9):1451-1463.
-2. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. *J Health Soc Behav*. 2016;57(2):168-183.
-3. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. *N Engl J Med*. 2011;364(24):2326-2333.
-4. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. *Ann Intern Med*. 2014;160(12):813-820.
-5. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. *JAMA*. 2019;322(3):205-207.
+1. Stanford JB, Parnell TA, Boyle PC. Restorative reproductive medicine: an overview. Curr Med Res Opin. 2012;28(9):1451-1463.
+2. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. J Health Soc Behav. 2016;57(2):168-183.
+3. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. N Engl J Med. 2011;364(24):2326-2333.
+4. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. Ann Intern Med. 2014;160(12):813-820.
+5. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. JAMA. 2019;322(3):205-207.
