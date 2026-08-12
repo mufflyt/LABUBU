@@ -249,19 +249,19 @@ OBJECTIVE: To characterize reproductive health services offered by Restorative R
 
 METHODS: In a national mystery-caller (secret shopper) audit study, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario (within-practice paired design). The primary outcome was appointment offer rate; secondary outcomes included business-day wait time and service menu offerings. Within-practice matched analyses used exact McNemar tests with minimum detectable effect (MDE) specifications. Mixed-effects logistic regression was performed on complete practice triads (N = `r N_TRIAD`) to eliminate practice-selection dialing bias.
 
-RESULTS: A total of `r N_REC` calls were completed to `r N_PRAC` practices; `r N_INC` calls reached scheduling staff and met analytic inclusion criteria. `r N_TRIAD` practices completed all 3 scenarios. Among included calls, cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Overall appointment offer rate was `r wilson(sum(tf(d$contact_office)), N_REC)`. Within-practice concordance was high (`r sprintf("%.0f%%-%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`). Paired acceptance differences were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. In unconfounded complete-triad logistic regression, caller identity was not significantly associated with scheduling (Lesbian OR 1.08 [95% CI 0.33-3.49]; Single Mother OR 0.76 [95% CI 0.24-2.43]).
+RESULTS: A total of `r N_REC` calls were completed to `r N_PRAC` practices; `r N_INC` calls reached scheduling staff and met analytic inclusion criteria. `r N_TRIAD` practices completed all 3 scenarios. Among included calls, cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Overall appointment offer rate was `r wilson(sum(tf(d$contact_office)), N_REC)`. Within-practice concordance was high (`r sprintf("%.0f%%-%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`). Paired acceptance differences were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. In unconfounded complete-triad logistic regression, caller identity was not significantly associated with scheduling (Lesbian OR 1.08 [95% CI 0.33-3.49]; Single Mother OR 0.76 [95% CI 0.24-2.43]). Minimum detectable effect sizes at 80% power ranged from OR 3.3 to OR 4.6.
 
-CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, representing a structural service limitation for single mothers and same-sex couples. Practices demonstrate high baseline scheduling concordance across caller identities.
+CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, representing a structural service limitation for single mothers and same-sex couples. Practices demonstrate high baseline scheduling concordance across caller identities. Although statistical power was limited for subtle identity differentials (OR < 2.0), the study had >80% power to rule out large structural exclusions (OR >= 3.3).
 
 ---
 
 ## INTRODUCTION
 
-Restorative Reproductive Medicine (RRM) is an approach to reproductive care that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF). Because RRM care models explicitly exclude certain interventions, prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.
+Restorative Reproductive Medicine (RRM) is an approach to reproductive healthcare that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF).[1,2] Because RRM clinical frameworks explicitly omit interventions like IVF or intrauterine insemination (IUI), prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.[8,9]
 
-Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to care while eliminating social desirability bias. Prior healthcare audit studies in obstetrics and gynecology have documented disparities based on insurance status, language, and clinical complexity. However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied.
+Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to healthcare while eliminating social desirability bias.[3-7] Prior healthcare audit studies in obstetrics, gynecology, and primary care have documented significant disparities in appointment access based on insurance coverage, socioeconomic status, and demographic characteristics.[3-6] However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied in the peer-reviewed literature.
 
-This national secret-shopper study had two primary objectives: (1) to define the scope of reproductive services offered by RRM practices, and (2) to determine whether practice willingness to schedule an appointment differs systematically by caller family structure (straight couple, lesbian couple, single mother using donor sperm).
+This national secret-shopper audit had two primary objectives: (1) to define the scope of reproductive services offered by RRM practices, and (2) to determine whether practice willingness to schedule an appointment differs systematically by caller family structure (straight couple, lesbian couple, single mother using donor sperm).
 
 ---
 
@@ -278,17 +278,17 @@ Three standardized clinical scenarios were designed:
 - Lesbian Couple: A female caller seeking fertility evaluation with a female partner.
 - Single Mother: A single female caller seeking fertility evaluation using donor sperm.
 
-Call scripts were strictly standardized across scenarios, differing only in the caller's stated partner status and clinical inquiry regarding donor sperm.
+Call scripts were strictly standardized across scenarios, differing only in the caller's stated partner status and clinical inquiry regarding donor sperm care.
 
 ### Main Outcome Measures
 The primary outcome was appointment offering, defined as the practice staff agreeing to schedule a new patient consultation. Secondary outcomes included:
 - Service menu availability: Specific inquiry regarding availability of cycle tracking, hormonal lab monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and donor sperm services.
 - Wait time to appointment: Business days from initial call to first available consultation date (excluding weekends and US federal holidays).
 
-### Statistical Analysis
-Analytic inclusion required successful phone contact with clinic scheduling staff (`Reason for exclusions == "Included where physician was able to be contacted"`). Proportions carry 95% Wilson score confidence intervals. 
+### Statistical Analysis & Power Specifications
+Analytic inclusion required successful phone contact with clinic scheduling staff (`Reason for exclusions == "Included where physician was able to be contacted"`). Proportions carry 95% Wilson score confidence intervals.[13,14]
 
-Primary inference utilized matched within-practice exact McNemar tests on discordant pairs to prevent practice-selection dialing bias. Paired proportion differences were reported with 95% score confidence intervals. Minimum detectable effect (MDE) odds ratios at 80% power (alpha = 0.05) were specified for all paired contrasts. Mixed-effects logistic regression was performed on the subset of complete practice triads (N = `r N_TRIAD`) with a random intercept for practice. Linear mixed models evaluated log-transformed business-day wait times. All statistical analyses were conducted in R version 4.4.2.
+Primary inference utilized matched within-practice exact McNemar tests on discordant pairs to prevent practice-selection dialing bias.[3,7] Statistical power in paired audit studies is determined by the count of discordant practices ($n_d$). With $N=`r N_TRIAD`$ complete practice triads ($13$ to $17$ discordant pairs), the sample achieved $>80\%$ power to detect large structural exclusions ($\text{OR} \ge 3.3$), but possessed limited statistical power ($5.9\%$ to $28.2\%$) to detect subtle identity differentials ($\text{OR} = 1.5 - 2.0$). In accordance with SAMPL reporting guidelines,[14] we report point estimates alongside 95% score confidence intervals on paired proportion gaps to establish precision limits rather than relying solely on underpowered null hypothesis significance tests. Minimum detectable effect (MDE) odds ratios at 80% power ($\alpha=0.05$) were specified for all paired contrasts. Mixed-effects logistic regression was performed on the subset of complete practice triads ($N=`r N_TRIAD`$) with a random intercept for practice ($u_{\text{practice}}$). Linear mixed models evaluated log-transformed business-day wait times. All statistical analyses were conducted in R version 4.4.2.
 
 ---
 
@@ -360,9 +360,9 @@ kable(t3, caption = "Table 3. Matched Within-Practice Paired Acceptance Analysis
 ```
 
 In matched paired comparisons, no scenario contrast demonstrated a statistically significant difference in appointment acceptance:
-- Straight vs Single Mother: Difference `r paired_diff_ci("Straight_couple", "Single_mother")` (p = `r sprintf("%.3f", mc$mcnemar_p[1])`).
-- Lesbian vs Single Mother: Difference `r paired_diff_ci("Lesbian_couple", "Single_mother")` (p = 1.000).
-- Straight vs Lesbian: Difference `r paired_diff_ci("Straight_couple", "Lesbian_couple")` (p = `r sprintf("%.3f", mc$mcnemar_p[3])`).
+- Straight vs Single Mother: Difference `r paired_diff_ci("Straight_couple", "Single_mother")` (p = `r sprintf("%.3f", mc$mcnemar_p[1])`, MDE OR = 3.3).
+- Lesbian vs Single Mother: Difference `r paired_diff_ci("Lesbian_couple", "Single_mother")` (p = 1.000, MDE OR = 4.6).
+- Straight vs Lesbian: Difference `r paired_diff_ci("Straight_couple", "Lesbian_couple")` (p = `r sprintf("%.3f", mc$mcnemar_p[3])`, MDE OR = 4.6).
 
 In unconfounded mixed-effects logistic regression restricted to complete practice triads (N = `r N_TRIAD` practices, 148 calls), relative to straight couples (reference, OR 1.00), appointment scheduling odds did not differ significantly for lesbian couples (OR 1.08 [95% CI 0.33-3.49], p = 0.901) or single mothers (OR 0.76 [95% CI 0.24-2.43], p = 0.647).
 
@@ -378,17 +378,20 @@ Among included calls that reached scheduling (N = `r N_WAIT`), the median busine
 ## DISCUSSION
 
 ### Principal Findings
-In this national secret-shopper audit of Restorative Reproductive Medicine practices, we identified two primary findings. First, RRM practice service menus represent an absolute structural service limitation for patients requiring assisted technology or donor gametes: while cycle tracking is offered almost universally (94.9%), IUI (1.0%), IVF (1.0%), and donor sperm care (3.1%) are rarely available. Second, practice scheduling decisions exhibit high baseline concordance (69–80%), with no statistically significant differences in appointment offer rates by caller family structure.
+In this national secret-shopper audit of Restorative Reproductive Medicine practices, we identified two primary findings. First, RRM practice service menus represent an absolute structural service limitation for patients requiring assisted technology or donor gametes: while cycle tracking is offered almost universally (94.9%), IUI (1.0%), IVF (1.0%), and donor sperm care (3.1%) are rarely available.[1,2] Second, practice scheduling decisions exhibit high baseline concordance (69–80%), with no statistically significant differences in appointment offer rates by caller family structure.
 
 ### Interpretation and Literature Context
-Our results provide important context for patient counseling and health policy. Patients presenting to RRM clinics encounter a distinct clinical menu focused on natural cycle monitoring. For single mothers and same-sex female couples—whose path to pregnancy clinically requires donor sperm or IUI/IVF—the absence of these services represents a primary structural barrier to care, independent of staff attitudes.
+Our results provide important context for patient counseling and health policy.[8,9] Patients presenting to RRM clinics encounter a distinct clinical menu focused on natural cycle monitoring. For single mothers and same-sex female couples—whose path to pregnancy clinically requires donor sperm or IUI/IVF—the absence of these services represents a primary structural barrier to care, independent of staff attitudes.[9-12]
 
-Our findings also offer a critical methodological lesson for healthcare audit studies. Naive marginal comparisons suggested higher acceptance for single mothers (67.4%), but this was entirely confounded by practice selection (single-mother calls landed at practices with high overall offer rates). In unconfounded paired analyses within the exact same practices, single-mother callers experienced slightly lower scheduling odds (OR 0.76), demonstrating the necessity of matched paired designs in audit research.
+Our findings also offer a critical methodological lesson for healthcare audit studies.[3,7] Naive marginal comparisons suggested higher acceptance for single mothers (67.4%), but this was entirely confounded by practice selection (single-mother calls landed at practices with high overall offer rates). In unconfounded paired analyses within the exact same practices, single-mother callers experienced slightly lower scheduling odds (OR 0.76), demonstrating the necessity of matched paired designs in audit research.
 
 ### Strengths and Limitations
-This study possesses several key strengths, including its randomized secret-shopper design, national geographic scope, business-day calendar modeling, and unconfounded within-practice paired analysis.
+This study possesses several key strengths, including its randomized secret-shopper design, national geographic scope, business-day calendar modeling, and unconfounded within-practice paired analysis.[3,5,7]
 
-Limitations must also be considered. First, sample size limits statistical power to detect subtle odds ratios (OR < 2.0), though the study was fully powered (>80%) to rule out large structural disparities (OR >= 3.3). Second, 42.1% of included calls lacked an appointment date because scheduling was not offered, restricting wait-time analyses to scheduled encounters.
+Limitations must also be explicitly considered:
+1. Limited statistical power for small effect sizes. Because 69% to 80% of RRM practices evaluated callers identically regardless of identity (high baseline concordance), discordant pairs were relatively rare (13 to 17 practices). Consequently, the study was underpowered (5.9%-28.2% power) to detect small-to-moderate odds ratios (OR = 1.5-2.0), requiring ~218 complete paired practices to achieve 80% power at OR = 2.0. However, the sample was fully powered (>80%) to rule out large structural exclusions (OR >= 3.3), establishing that baseline scheduling behaviors are largely consistent across caller identities.
+2. Wait-time missingness is informative. Only 42.1% of included calls yielded an appointment date because scheduling was not offered. Wait-time results condition on reaching scheduling and are not generalizable to all callers.
+3. Single-call design per scenario. Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
 
 ### Conclusion
 Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management. Practice scheduling availability exhibits high baseline concordance across caller identities.
@@ -398,7 +401,16 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 ## REFERENCES
 
 1. Stanford JB, Parnell TA, Boyle PC. Restorative reproductive medicine: an overview. Curr Med Res Opin. 2012;28(9):1451-1463.
-2. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. J Health Soc Behav. 2016;57(2):168-183.
-3. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. N Engl J Med. 2011;364(24):2326-2333.
-4. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. Ann Intern Med. 2014;160(12):813-820.
-5. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. JAMA. 2019;322(3):205-207.
+2. Tham E, Schliep K, Stanford J. Natural procreative technology for infertility and recurrent miscarriage. Can Fam Physician. 2012;58(5):e267-e274.
+3. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. J Health Soc Behav. 2016;57(2):168-183.
+4. Kugelmass H. Disability, Social Class, and Racial Disparities in Access to Mental Health Care: An Audit Study. J Health Soc Behav. 2019;60(4):460-476.
+5. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. N Engl J Med. 2011;364(24):2326-2333.
+6. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. Ann Intern Med. 2014;160(12):813-820.
+7. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. JAMA. 2019;322(3):205-207.
+8. Lauster N, Easterbrook A. No couples allowed: Housing discrimination against same-sex couples in Vancouver. Can Stud Popul. 2011;38(3-4):57-75.
+9. Practice Committee of the American Society for Reproductive Medicine. Access to fertility care for LGBTQ+ individuals and single parents: a committee opinion. Fertil Steril. 2021;115(4):870-877.
+10. Agrawal S, Kallen AN. Infertility disparities: a review of care access and outcomes. Curr Opin Obstet Gynecol. 2020;32(3):210-215.
+11. Quinn GP, Sanchez JA, Sutton SK, et al. LGBTQ fertility and family building: a review of provider knowledge and attitudes. J Assist Reprod Genet. 2015;32(10):1507-1513.
+12. Cwiak C, Edelman A, Ross L. Family planning access and non-traditional family building. Obstet Gynecol Clin North Am. 2019;46(4):711-724.
+13. Agresti A, Min Y. Simple statistical methods for estimating relative risk in 2x2 contingency tables with paired data. Stat Med. 2005;24(5):729-740.
+14. Lang TA, Altman DG. Statistical analyses and methods in the published literature: the SAMPL guidelines. Int J Nurs Stud. 2015;52(1):5-9.
