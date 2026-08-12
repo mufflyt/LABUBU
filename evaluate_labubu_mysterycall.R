@@ -333,14 +333,24 @@ inclusion_counts <- aggregate(
 
 fmt_p <- function(p) if (is.na(p)) "NA" else if (p < 0.001) "< 0.001" else signif(p, 3)
 
-# ── Primary analysis: mysterycall_logistic_model() ───────────────────────────
-# Protocol-specified mixed-effects logistic regression (lme4::glmer).
-# Random intercept for practice_id accounts for within-practice correlation
-# across the three scenario calls; scenario fixed effect estimates the change
-# in odds of an appointment offer when caller identity changes.
+# Complete triad practice IDs (for unconfounded paired GLMER)
+triad_practice_ids <- coverage_df$practice_id[coverage_df$n_scenarios == 3]
+
 glmer_acceptance <- tryCatch(
   mysterycall_logistic_model(
     data             = dat[!is.na(dat$practice_id) & !is.na(dat$scenario), ],
+    outcome          = "contact_office",
+    predictors       = "scenario",
+    random_intercept = "practice_id"
+  ),
+  error = function(e) structure(list(error = conditionMessage(e)),
+                                class = "mysterycall_logistic_model_error")
+)
+
+# Unconfounded GLMER (restricted to practices with all 3 scenarios complete)
+glmer_acceptance_triads <- tryCatch(
+  mysterycall_logistic_model(
+    data             = dat[!is.na(dat$practice_id) & dat$practice_id %in% triad_practice_ids & !is.na(dat$scenario), ],
     outcome          = "contact_office",
     predictors       = "scenario",
     random_intercept = "practice_id"
@@ -443,8 +453,9 @@ fmt_lmm_result <- function(res) {
   )
 }
 
-glmer_fmt <- fmt_glmer_result(glmer_acceptance)
-lmm_fmt   <- fmt_lmm_result(lmer_wait)
+glmer_fmt        <- fmt_glmer_result(glmer_acceptance)
+glmer_fmt_triads <- fmt_glmer_result(glmer_acceptance_triads)
+lmm_fmt          <- fmt_lmm_result(lmer_wait)
 
 # ── Sensitivity analysis: GEE ─────────────────────────────────────────────────
 # Population-average model (vs. the subject-specific glmer). Uses all records
@@ -661,7 +672,21 @@ report <- c(
   "",
   paste0("Protocol-specified analysis via mysterycall_logistic_model(). ",
          "Random intercept for practice accounts for within-practice correlation ",
-         "across the three scenario calls. n = ", glmer_fmt$n, " records."),
+         "across the scenario calls."),
+  "",
+  "### Unconfounded Model — Complete Practice Triads Only (n = ", glmer_fmt_triads$n, " records)",
+  "Restricted to practices called for ALL 3 scenarios to eliminate practice-selection dialing bias.",
+  "",
+  if (glmer_fmt_triads$ok) {
+    c("```", glmer_fmt_triads$text, "```", "", paste0("Note: ", glmer_fmt_triads$note))
+  } else {
+    paste0("glmer triads not run: ", glmer_fmt_triads$text)
+  },
+  "",
+  "### Full-Sample Model — All Records (n = ", glmer_fmt$n, " records)",
+  "> **CONFOUNDING WARNING:** Includes unbalanced singletons/dyads. Single-mother calls landed ",
+  "> disproportionately at high-acceptance practices, causing this full-sample GLMER to reflect ",
+  "> practice selection rather than scenario effects. Use the complete-triads model above.",
   "",
   if (glmer_fmt$ok) {
     c("```", glmer_fmt$text, "```", "", paste0("Note: ", glmer_fmt$note))

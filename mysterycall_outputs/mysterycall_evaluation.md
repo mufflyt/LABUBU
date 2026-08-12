@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-08-11 20:18:46 MDT
+Generated: 2026-08-11 20:29:01 MDT
 
 ## Package
 
@@ -68,7 +68,28 @@ Each contrast uses only practices called for BOTH scenarios; only DISCORDANT pra
 
 ## PRIMARY ANALYSIS — Mixed-Effects Logistic Regression (glmer)
 
-Protocol-specified analysis via mysterycall_logistic_model(). Random intercept for practice accounts for within-practice correlation across the three scenario calls. n = 234 records.
+Protocol-specified analysis via mysterycall_logistic_model(). Random intercept for practice accounts for within-practice correlation across the scenario calls.
+
+### Unconfounded Model — Complete Practice Triads Only (n = 
+148
+ records)
+Restricted to practices called for ALL 3 scenarios to eliminate practice-selection dialing bias.
+
+```
+                   Term    OR CI_lo CI_hi     p
+            (Intercept) 1.307 0.506 3.375 0.580
+ scenarioLesbian couple 0.890 0.331 2.391 0.817
+  scenarioSingle mother 0.701 0.260 1.887 0.482
+```
+
+Note: mysterycall_logistic_model() [lme4::glmer]. Reference: Straight couple. OR < 1 = lower odds of appointment offer. n = 148 records across 48 practices. Practice random-intercept variance: 4.864. 
+
+### Full-Sample Model — All Records (n = 
+234
+ records)
+> **CONFOUNDING WARNING:** Includes unbalanced singletons/dyads. Single-mother calls landed 
+> disproportionately at high-acceptance practices, causing this full-sample GLMER to reflect 
+> practice selection rather than scenario effects. Use the complete-triads model above.
 
 ```
                    Term    OR CI_lo CI_hi     p
@@ -147,7 +168,7 @@ Note: GEE (sensitivity). Coefficients are log-ORs vs. Straight couple.
       p_value significant
 1 0.001701222        TRUE
 2 0.544511965       FALSE
-3 0.476261869       FALSE
+3 0.480759620       FALSE
 4 0.526965892       FALSE
 5 0.008117469        TRUE
 ```
