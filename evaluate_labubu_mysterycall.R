@@ -204,7 +204,8 @@ dat$practice_id <- match(dat$practice_key, practice_levels)
 
 # Preflight health check via mysterycall package
 if (exists("mysterycall_preflight_check", where = "package:mysterycall")) {
-  preflight_res <- tryCatch(mysterycall_preflight_check(dat, output_dir = out_dir), error = function(e) NULL)
+  dat_chk <- dat; dat_chk$first <- dat_chk$practice; dat_chk$last <- dat_chk$practice
+  preflight_res <- tryCatch(mysterycall_preflight_check(dat_chk, output_dir = out_dir), error = function(e) NULL)
   if (!is.null(preflight_res)) {
     message("✔ [mysterycall] Preflight health check completed successfully.")
   }
