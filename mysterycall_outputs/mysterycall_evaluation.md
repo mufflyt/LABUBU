@@ -1,10 +1,10 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-08-19 19:45:30 MDT
+Generated: 2026-08-19 20:05:13 MDT
 
 ## Package
 
-- mysterycall version: 1.6.3
+- mysterycall version: 1.6.3.9000
 
 ## Denominators
 
@@ -168,7 +168,7 @@ Note: GEE (sensitivity). Coefficients are log-ORs vs. Straight couple.
       p_value significant
 1 0.001701222        TRUE
 2 0.544511965       FALSE
-3 0.477261369       FALSE
+3 0.486756622       FALSE
 4 0.526965892       FALSE
 5 0.008117469        TRUE
 ```
