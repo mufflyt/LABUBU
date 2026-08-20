@@ -1,0 +1,93 @@
+name: Nightly LABUBU Refresh & Manuscript Build
+
+on:
+  schedule:
+    # Runs nightly at 06:00 UTC (12:00 AM MDT)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+  push:
+    branches:
+      - main
+    paths:
+      - '**.R'
+      - '**.Rmd'
+      - '**.csv'
+      - '.github/workflows/*.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  nightly-refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Query R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::dplyr
+            any::ggplot2
+            any::ggbeeswarm
+            any::ggridges
+            any::patchwork
+            any::scales
+            any::forcats
+            any::lme4
+            any::geepack
+            any::knitr
+            any::rmarkdown
+            any::survival
+            any::readr
+            any::remotes
+            any::httr
+            any::jsonlite
+
+      - name: Install mysterycall package from GitHub
+        run: |
+          Rscript -e 'remotes::install_github("mufflyt/mysterycall", upgrade = "never")'
+
+      - name: Run LABUBU Refresh Pipeline
+        env:
+          REDCAP_LABUBU_TOKEN: ${{ secrets.REDCAP_LABUBU_TOKEN }}
+        run: |
+          if [ -n "$REDCAP_LABUBU_TOKEN" ]; then
+            echo "REDCAP_LABUBU_TOKEN secret found. Pulling latest export from REDCap API..."
+            Rscript refresh.R --pull
+          else
+            echo "No REDCap API secret found. Running refresh on newest repository export..."
+            Rscript refresh.R
+          fi
+
+      - name: Render Reproducible Manuscript (Word & HTML)
+        run: |
+          Rscript -e 'rmarkdown::render("labubu_mysterycall_manuscript.Rmd", output_format="all")'
+
+      - name: Check Git Status & Commit Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add mysterycall_outputs/ PROVENANCE.md labubu_mysterycall_manuscript.html labubu_mysterycall_manuscript.docx || true
+          
+          if git diff --staged --quiet; then
+            echo "No changes in output artifacts or provenance."
+          else
+            echo "Artifacts updated. Committing refreshed results..."
+            git commit -m "Nightly CI: auto-refresh pipeline outputs, figures, and manuscript [skip ci]"
+            git push origin main
+          fi
