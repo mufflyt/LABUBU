@@ -1,0 +1,66 @@
+name: Render Manuscript & Publish Artifacts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'labubu_mysterycall_manuscript.Rmd'
+      - 'evaluate_labubu_mysterycall.R'
+      - 'refresh.R'
+      - 'mysterycall_outputs/**'
+  workflow_dispatch:
+
+jobs:
+  render-manuscript:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Query R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::dplyr
+            any::ggplot2
+            any::ggbeeswarm
+            any::ggridges
+            any::patchwork
+            any::scales
+            any::forcats
+            any::lme4
+            any::geepack
+            any::knitr
+            any::rmarkdown
+            any::survival
+            any::readr
+            any::remotes
+
+      - name: Render Manuscript (HTML and Word)
+        run: |
+          Rscript -e 'rmarkdown::render("labubu_mysterycall_manuscript.Rmd", output_format="all")'
+
+      - name: Upload HTML Manuscript Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LABUBU_Manuscript_HTML
+          path: labubu_mysterycall_manuscript.html
+          if-no-files-found: error
+
+      - name: Upload Word Manuscript Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LABUBU_Manuscript_Word
+          path: labubu_mysterycall_manuscript.docx
+          if-no-files-found: error

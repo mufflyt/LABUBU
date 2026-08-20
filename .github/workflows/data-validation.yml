@@ -1,0 +1,62 @@
+name: Data Validation & PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Query R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::dplyr
+            any::ggplot2
+            any::ggbeeswarm
+            any::ggridges
+            any::patchwork
+            any::scales
+            any::forcats
+            any::lme4
+            any::geepack
+            any::knitr
+            any::rmarkdown
+            any::survival
+            any::readr
+            any::remotes
+            any::httr
+            any::jsonlite
+
+      - name: Install mysterycall package
+        run: |
+          Rscript -e 'remotes::install_github("mufflyt/mysterycall", upgrade = "never")'
+
+      - name: Run Data Cleaning & Model Evaluation
+        run: |
+          Rscript -e 'source("evaluate_labubu_mysterycall.R")'
+
+      - name: Check for Unresolved Near-Duplicate Practice Names
+        run: |
+          if [ -f "mysterycall_outputs/practice_name_review_nearduplicates.csv" ]; then
+            COUNT=$(wc -l < mysterycall_outputs/practice_name_review_nearduplicates.csv)
+            if [ "$COUNT" -gt 1 ]; then
+              echo "WARNING: $COUNT near-duplicate practice pairs detected."
+              cat mysterycall_outputs/practice_name_review_nearduplicates.csv
+            fi
+          fi

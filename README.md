@@ -5,6 +5,8 @@
 [![R 4.4+](https://img.shields.io/badge/R-4.4%2B-276DC3.svg)](https://www.r-project.org/)
 [![Package mysterycall](https://img.shields.io/badge/Package-mysterycall_v1.6.3-green.svg)](https://github.com/mufflyt/mysterycall)
 [![Nightly CI](https://github.com/mufflyt/LABUBU/actions/workflows/nightly.yml/badge.svg)](https://github.com/mufflyt/LABUBU/actions/workflows/nightly.yml)
+[![Data Validation](https://github.com/mufflyt/LABUBU/actions/workflows/data-validation.yml/badge.svg)](https://github.com/mufflyt/LABUBU/actions/workflows/data-validation.yml)
+[![Render Manuscript](https://github.com/mufflyt/LABUBU/actions/workflows/render-manuscript.yml/badge.svg)](https://github.com/mufflyt/LABUBU/actions/workflows/render-manuscript.yml)
 [![Provenance Generated](https://img.shields.io/badge/Provenance-Auto--Generated-orange.svg)](PROVENANCE.md)
 
 Secret-shopper (audit) study of Restorative Reproductive Medicine (RRM) practices across the United States. Each practice is called once per **scenario** — *straight couple*, *lesbian couple*, *single mother using donor sperm* — to evaluate whether willingness to schedule (appointment acceptance) and business-day wait times differ systematically by caller identity.
