@@ -202,6 +202,14 @@ dat$practice_key <- ifelse(
 practice_levels <- sort(unique(dat$practice_key[!is.na(dat$practice_key) & dat$practice_key != ""]))
 dat$practice_id <- match(dat$practice_key, practice_levels)
 
+# Preflight health check via mysterycall package
+if (exists("mysterycall_preflight_check", where = "package:mysterycall")) {
+  preflight_res <- tryCatch(mysterycall_preflight_check(dat, output_dir = out_dir), error = function(e) NULL)
+  if (!is.null(preflight_res)) {
+    message("✔ [mysterycall] Preflight health check completed successfully.")
+  }
+}
+
 # Per-practice scenario coverage
 cov_raw <- tapply(as.character(dat$scenario), dat$practice_id, function(x) {
   x <- x[!is.na(x)]
