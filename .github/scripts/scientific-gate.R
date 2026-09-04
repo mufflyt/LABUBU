@@ -13,14 +13,34 @@
 
 OUT <- "mysterycall_outputs"
 res <- list()
+
+# A check may PASS, FAIL, or SKIP. SKIP exists only for a check whose
+# PRECONDITION is legitimately absent in this environment -- not for a check
+# that errored, and never as a way to make red go green. Skips are printed,
+# recorded in the TSV, and counted in the summary so they cannot hide.
+SKIP <- function(detail) structure("skip", class = "gate_skip", detail = detail)
+
 check <- function(id, ok, detail = "") {
+  if (inherits(ok, "gate_skip")) {
+    res[[length(res) + 1]] <<- list(id = id, status = "skip",
+                                    detail = attr(ok, "detail"))
+    cat(sprintf("%-46s %s  -- %s\n", id, "SKIP", attr(ok, "detail")))
+    return(invisible(NULL))
+  }
   ok <- isTRUE(ok)
-  res[[length(res) + 1]] <<- list(id = id, ok = ok, detail = detail)
+  res[[length(res) + 1]] <<- list(id = id, status = if (ok) "pass" else "fail",
+                                  detail = detail)
   cat(sprintf("%-46s %s%s\n", id, if (ok) "PASS" else "FAIL",
               if (nzchar(detail)) paste0("  -- ", detail) else ""))
 }
+# The check body is turned into a real zero-argument function before it runs.
+# Evaluating it directly inside tryCatch() puts `return()` at top level, where
+# R raises "no function to return from" -- which then surfaced as a spurious
+# FAIL the first time any early-return branch was taken.
 try_check <- function(id, expr) {
-  r <- tryCatch(expr, error = function(e) structure(FALSE, detail = conditionMessage(e)))
+  fn <- as.function(c(alist(), substitute(expr)), envir = parent.frame())
+  r  <- tryCatch(fn(), error = function(e) structure(FALSE, detail = conditionMessage(e)))
+  if (inherits(r, "gate_skip")) return(check(id, r))
   check(id, r, if (!is.null(attr(r, "detail"))) attr(r, "detail") else "")
 }
 
@@ -125,15 +145,32 @@ try_check("manuscript/no-hardcoded-statistics", {
 })
 
 # ── 8. Provenance matches the export actually present ─────────────────────────
+# Raw exports are gitignored (they carry practice contact information), so a
+# CI runner checking out this repo has no export to hash. That is a missing
+# PRECONDITION, not a passing check and not a failure -- so it skips, loudly.
+# It still FAILS if an export IS present and disagrees with PROVENANCE.md,
+# which is the case the check exists for.
 try_check("provenance/md5-matches-repo-export", {
-  if (!file.exists("PROVENANCE.md")) return(structure(FALSE, detail = "PROVENANCE.md missing"))
+  if (!file.exists("PROVENANCE.md"))
+    return(structure(FALSE, detail = "PROVENANCE.md missing"))
   pv  <- readLines("PROVENANCE.md", warn = FALSE)
   row <- grep("REDCap export \\(labels\\)", pv, value = TRUE)
   md5 <- grep("MD5 \\(first 16\\)", pv, value = TRUE)
-  if (!length(row) || !length(md5)) return(structure(FALSE, detail = "provenance rows missing"))
+  if (!length(row) || !length(md5))
+    return(structure(FALSE, detail = "provenance rows missing or malformed"))
   named <- sub(".*`([^`]+)`.*", "\\1", row[1])
   want  <- sub(".*`([^`]+)`.*", "\\1", md5[1])
-  if (!file.exists(named)) return(structure(FALSE, detail = paste("export not in repo:", named)))
+
+  present <- list.files(".", pattern = "^LABUBU_DATA_LABELS_.*\\.csv$")
+  if (!file.exists(named)) {
+    # No export at all -> precondition absent -> skip.
+    if (length(present) == 0)
+      return(SKIP(paste0("no export in working tree (gitignored); provenance names ", named)))
+    # An export IS present but is not the one provenance names -> real drift.
+    return(structure(FALSE,
+      detail = paste0("provenance names ", named, " but working tree has ",
+                      paste(present, collapse = ", "))))
+  }
   got <- substr(tools::md5sum(named)[[1]], 1, 16)
   structure(identical(got, want), detail = paste0(named, ": ", got, " vs ", want))
 })
@@ -145,13 +182,17 @@ try_check("denominators/distinct-levels", {
 })
 
 # ── Gate ──────────────────────────────────────────────────────────────────────
-fails <- Filter(function(x) !x$ok, res)
+fails <- Filter(function(x) x$status == "fail", res)
+skips <- Filter(function(x) x$status == "skip", res)
 cat("\n", strrep("-", 72), "\n", sep = "")
-cat(sprintf("LABUBU scientific gate: %d checks, %d failed\n", length(res), length(fails)))
+cat(sprintf("LABUBU scientific gate: %d checks, %d passed, %d failed, %d skipped\n",
+            length(res), length(res) - length(fails) - length(skips),
+            length(fails), length(skips)))
+for (s_ in skips) cat(sprintf("  SKIPPED: %s (%s)\n", s_$id, s_$detail))
 
 dir.create("ci-results", showWarnings = FALSE)
-writeLines(vapply(res, function(x) sprintf("%s\t%s\t%s", x$id,
-                  if (x$ok) "pass" else "fail", x$detail), character(1)),
+writeLines(vapply(res, function(x) sprintf("%s\t%s\t%s", x$id, x$status, x$detail),
+                  character(1)),
            "ci-results/scientific-gate.tsv")
 
 if (length(fails)) {

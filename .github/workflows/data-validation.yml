@@ -42,8 +42,21 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      # `packages:` is set explicitly rather than left at its default
+      # (`deps::., any::sessioninfo`). The default scans the project, finds
+      # `library(mysterycall)`, and asks pak to resolve a GitHub-only package
+      # from CRAN; that single unsolvable node cascades "dependency conflict"
+      # onto every other package and the whole solve fails. mysterycall is
+      # installed separately below, at a pinned SHA.
+      #
+      # dependencies: hard keeps Suggests out of the solve. Pulling Suggests
+      # dragged in pbkrtest -> doBy (>= 4.6.22), which is newer than the RSPM
+      # snapshot for R 4.4.2 carries.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -93,13 +106,27 @@ jobs:
                  "would skip every package-backed check and report green")
           cat("mysterycall", as.character(utils::packageVersion("mysterycall")), "\n")
 
-      - name: Run the pipeline
-        run: Rscript -e 'source("evaluate_labubu_mysterycall.R")'
+      # Raw exports are gitignored (practice contact information), so a checkout
+      # has no data to run the pipeline against. Re-derive the outputs only when
+      # a REDCap token is available; otherwise validate the outputs that are
+      # committed, which is what the PR is actually proposing to merge.
+      - name: Re-run the pipeline (only if REDCap data is reachable)
+        id: pipeline
+        env:
+          REDCAP_LABUBU_TOKEN: ${{ secrets.REDCAP_LABUBU_TOKEN }}
+        run: |
+          if [ -n "$REDCAP_LABUBU_TOKEN" ]; then
+            echo "Token present: pulling and re-deriving outputs."
+            Rscript refresh.R --pull
+            Rscript provenance.R
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No REDCAP_LABUBU_TOKEN. Validating the committed outputs instead."
+            echo "ran=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Regenerate provenance
-        run: Rscript provenance.R
-
-      # "Did the gate work" and "did the study pass" are separate signals.
+      # "Did the gate work" and "did the study pass" are separate signals, so
+      # the self-test runs first and independently. It needs no study data.
       - name: Gate self-test
         run: Rscript .github/scripts/gate-selftest.R
 
