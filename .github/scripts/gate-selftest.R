@@ -218,10 +218,30 @@ EXEMPT <- c(
   # matching export look wrong beyond the two cases above.
 )
 
+# Gate check IDs come from the gate's SOURCE, not from an artifact of a
+# previous run. Reading ci-results/scientific-gate.tsv made this audit depend
+# on the gate having already executed -- which it has not, because the
+# self-test deliberately runs first ("did the gate work" before "did the study
+# pass"). Locally it only passed because a stale tsv was on disk, which is the
+# same stale-artifact trap the gate exists to prevent.
 gate_ids <- local({
+  src <- readLines(file.path(root, ".github", "scripts", "scientific-gate.R"),
+                   warn = FALSE)
+  m <- regmatches(src, regexpr('try_check\\("[^"]+"', src))
+  unique(sub('try_check\\("', "", sub('"$', "", m)))
+})
+
+# If a run of the gate happens to be present, cross-check it against the
+# source: a check defined but never reached at runtime is also a coverage hole.
+local({
   tsv <- file.path(root, "ci-results", "scientific-gate.tsv")
-  if (!file.exists(tsv)) return(character(0))
-  vapply(strsplit(readLines(tsv, warn = FALSE), "\t"), `[`, character(1), 1L)
+  if (!file.exists(tsv)) return(invisible(NULL))
+  ran <- vapply(strsplit(readLines(tsv, warn = FALSE), "\t"), `[`,
+                character(1), 1L)
+  defined_not_run <- setdiff(gate_ids, ran)
+  if (length(defined_not_run))
+    cat(sprintf("::error title=Check never executed::%s is defined but did not run\n",
+                defined_not_run))
 })
 
 cat("\n", strrep("-", 60), "\n", sep = "")
