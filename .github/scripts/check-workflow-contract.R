@@ -62,6 +62,23 @@ for (path in workflow_files) {
     note(name, ": pushes directly to main; open a review PR instead")
 }
 
+# Every file a workflow reads must actually be committed. .gitignore's privacy
+# rule `LABUBU_DATA_*.csv` is unanchored, so it silently swallowed
+# tests/fixtures/LABUBU_DATA_LABELS_fixture.csv; `git add -A` skipped it, the
+# commit claimed to add it, and CI failed on a file that was never there.
+tracked_files <- system2("git", c("ls-files"), stdout = TRUE)
+for (path in workflow_files) {
+  body <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  referenced <- unique(unlist(regmatches(
+    body,
+    gregexpr("(\\.github/scripts/[A-Za-z0-9_.-]+\\.R|tests/fixtures/[A-Za-z0-9_.-]+)",
+             body))))
+  untracked <- setdiff(referenced, tracked_files)
+  if (length(untracked))
+    note(basename(path), ": references file(s) not tracked by git: ",
+         paste(untracked, collapse = ", "))
+}
+
 # Every gate check must be reachable by a workflow that runs the gate.
 if (!any(vapply(workflow_files,
                 function(f) grepl("scientific-gate\\.R",

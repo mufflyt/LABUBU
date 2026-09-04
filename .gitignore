@@ -1,5 +1,9 @@
 # Raw REDCap exports — contain practice contact info, keep off GitHub
 LABUBU_DATA_*.csv
+# ...but the de-identified CI fixture must be committed. The rule above is
+# unanchored, so it silently swallowed tests/fixtures/ and the "committed
+# fixture" was never in the repo -- CI failed on a file that did not exist.
+!tests/fixtures/LABUBU_DATA_LABELS_fixture.csv
 Old_redcap/
 
 # Intermediate name-fix work products
