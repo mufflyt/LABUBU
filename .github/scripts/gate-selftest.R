@@ -115,6 +115,17 @@ ok <- c(
               file.path(dir, OUT, "practice_name_review_nearduplicates.csv"), row.names = FALSE)
   }),
 
+  # The defect an API pull introduced: checkbox columns parsed against the
+  # wrong encoding, zeroing every service and restriction variable.
+  mutate_and_test("detects zeroed checkbox parse", function(dir) {
+    dd <- read.csv(clean_of(dir), stringsAsFactors = FALSE)
+    for (v in c("service_cycle_tracking", "service_hormonal_timing",
+                "service_ovulation_induction", "service_iui", "service_ivf",
+                "restrict_lesbian", "restrict_straight", "restrict_single_mother"))
+      if (v %in% names(dd)) dd[[v]] <- FALSE
+    write.csv(dd, clean_of(dir), row.names = FALSE)
+  }),
+
   # The skip must not swallow real drift: provenance naming an export that is
   # not the one actually present is a FAILURE, not a skip.
   mutate_and_test("detects provenance naming wrong export", function(dir) {

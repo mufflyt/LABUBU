@@ -62,7 +62,22 @@ parse_transfers <- function(x) {
   out
 }
 
-checkbox <- function(x) trimws(x) == "Checked"
+# REDCap encodes checkbox fields differently depending on the export route,
+# and the two are not interchangeable:
+#
+#   browser "labels" export : "Checked" / "Unchecked"
+#   API export (label mode) : the option's own label when ticked, "" when not
+#                             e.g. "cycle tracking" / ""
+#
+# Matching only "Checked" silently turned every service and restriction
+# variable FALSE the first time the pipeline ran against an API pull, which
+# zeroed the study's headline result (cycle tracking 95%) without any error.
+# Treat anything non-empty that is not an explicit negative as ticked.
+checkbox <- function(x) {
+  x <- trimws(as.character(x))
+  x[is.na(x)] <- ""
+  nzchar(x) & !(x %in% c("Unchecked", "0", "FALSE", "No"))
+}
 
 
 # Reshape long -> wide by scenario, one row per practice.
