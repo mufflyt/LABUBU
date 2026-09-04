@@ -1,0 +1,11 @@
+"code","code_label","label_category","label_string","reached","in_logistic","in_waittime","label_included"
+0,"Included","included","Able to contact",TRUE,TRUE,TRUE,TRUE
+1,"Closed medical system",NA,NA,FALSE,FALSE,FALSE,FALSE
+2,">5 min on hold","on_hold","Greater than 5 minutes on hold",TRUE,FALSE,FALSE,FALSE
+3,"Wrong number/office","wrong_number","Number contacted did not correspond to expected office/specialty",FALSE,FALSE,FALSE,FALSE
+5,"Phone not answered/busy","phone_not_answered","Phone not answered or busy signal on repeat calls",FALSE,FALSE,FALSE,FALSE
+6,"Physician's personal phone",NA,NA,FALSE,FALSE,FALSE,FALSE
+7,"Referral required","referral_required","Physician referral required before scheduling appointment",TRUE,TRUE,FALSE,FALSE
+8,"Voicemail","voicemail","Went to voicemail",FALSE,FALSE,FALSE,FALSE
+9,"Not accepting new patients","not_accepting","Not accepting new patients",TRUE,TRUE,FALSE,FALSE
+10,"Must see midlevel first",NA,NA,TRUE,TRUE,FALSE,FALSE

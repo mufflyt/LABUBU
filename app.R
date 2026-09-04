@@ -18,7 +18,9 @@ dat_all <- dat_all |>
                       levels = c("Straight couple", "Lesbian couple", "Single mother")),
     call_date       = as.Date(call_date),
     first_appt_date = as.Date(first_appt_date),
-    contact_office  = as.logical(contact_office),
+    contact_office  = as.logical(contact_office),   # a live office answered
+    reached         = as.logical(reached),
+    appt_offered    = suppressWarnings(as.integer(appt_offered)),
     analytic_inclusion = as.logical(analytic_inclusion)
   )
 
@@ -43,8 +45,10 @@ ct_df <- dat_all |>
     Scenario = as.character(scenario),
     `Bus. days`    = business_days,
     `Cal. days`    = wait_days,
-    Offered        = ifelse(is.na(contact_office), "Unknown",
-                            ifelse(contact_office, "Yes", "No")),
+    Reached        = ifelse(is.na(reached), "Unknown",
+                            ifelse(reached, "Yes", "No")),
+    Offered        = ifelse(is.na(appt_offered), "Not eligible",
+                            ifelse(appt_offered == 1L, "Yes", "No")),
     `Call date`    = as.character(call_date),
     Included       = ifelse(is.na(analytic_inclusion), "Unknown",
                             ifelse(analytic_inclusion, "Yes", "No")),
@@ -244,10 +248,10 @@ server <- function(input, output, session) {
 
   output$bar_acceptance <- renderPlotly({
     df <- dat_all |>
-      filter(!is.na(scenario)) |>
+      filter(!is.na(scenario), !is.na(appt_offered)) |>
       group_by(scenario) |>
       summarise(
-        offered = sum(contact_office, na.rm = TRUE),
+        offered = sum(appt_offered == 1L, na.rm = TRUE),
         total   = n(),
         rate    = round(100 * offered / total, 1),
         .groups = "drop"

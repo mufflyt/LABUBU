@@ -1,0 +1,4 @@
+"scenario","calls_placed","reached","offer_eligible","offered_strict","offered_broad","pct_offered_strict","pct_offered_broad"
+"Straight couple",77,39,37,28,29,75.7,78.4
+"Lesbian couple",83,37,34,14,20,42.4,60.6
+"Single mother",74,32,31,15,18,50,60

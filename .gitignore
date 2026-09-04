@@ -24,3 +24,6 @@ phase1_needs*.csv
 .RData
 .Rproj.user/
 
+
+# CI gate scratch output
+ci-results/

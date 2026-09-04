@@ -1,0 +1,5 @@
+"group","measure","n","denominator","pct","ci_lower","ci_upper"
+"Access cascade","Calls placed",234,234,100,98.3848657674144,100
+"Access cascade","Reached a live office",108,234,46.1538461538462,39.8800934706152,52.5518399318914
+"Access cascade","Eligible for offer model",102,108,94.4444444444444,88.4065632056689,97.4292270390816
+"Access cascade","Appointment offered",57,102,55.8823529411765,46.2070448342802,65.1306673757614

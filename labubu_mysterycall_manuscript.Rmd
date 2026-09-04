@@ -177,52 +177,123 @@ code {
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-suppressMessages({library(dplyr); library(knitr); library(lme4)})
+suppressMessages({library(dplyr); library(knitr); library(lme4); library(mysterycall)})
 
 OUT <- "mysterycall_outputs"
+rd  <- function(f) read.csv(file.path(OUT, f), stringsAsFactors = FALSE)
 
-d    <- read.csv(file.path(OUT, "labubu_cleaned_analysis.csv"), stringsAsFactors = FALSE)
-mc   <- read.csv(file.path(OUT, "mysterycall_paired_acceptance_mcnemar.csv"), stringsAsFactors = FALSE)
-cov  <- read.csv(file.path(OUT, "practice_scenario_coverage.csv"), stringsAsFactors = FALSE)
-pw   <- read.csv(file.path(OUT, "mysterycall_paired_wait_within_practice.csv"), stringsAsFactors = FALSE)
-wide <- read.csv(file.path(OUT, "matched_acceptance_wide.csv"), stringsAsFactors = FALSE)
+d    <- rd("labubu_cleaned_analysis.csv")
+mc   <- rd("mysterycall_paired_acceptance_mcnemar.csv")     # paired OFFER
+mcr  <- rd("mysterycall_paired_reached_mcnemar.csv")        # paired REACHABILITY
+cov  <- rd("practice_scenario_coverage.csv")
+casc <- rd("mysterycall_access_cascade_by_scenario.csv")
+cdom <- rd("caller_dominance_by_scenario.csv")
+crat <- rd("caller_rates.csv")
+wide <- rd("matched_acceptance_wide.csv")
 
-tf   <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
-inc  <- d[tf(d$analytic_inclusion), ]
+tf <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+d$scenario <- factor(d$scenario, levels = c("Straight couple", "Lesbian couple", "Single mother"))
+d$appt_offered <- suppressWarnings(as.integer(d$appt_offered))
+d$appt_offered_broad <- suppressWarnings(as.integer(d$appt_offered_broad))
+
+inc  <- d[tf(d$analytic_inclusion), ]                     # reached staff, asked the service items
+rch  <- d[tf(d$reached), ]                                # a live office answered
+oa   <- d[tf(d$in_offer_den) & !is.na(d$appt_offered) & !is.na(d$scenario), ]
 wsub <- d |> filter(tf(analytic_inclusion), !is.na(business_days), business_days >= 0)
-pair <- wsub |> group_by(practice_id) |> filter(n_distinct(scenario) >= 2) |> ungroup()
 
-wilson <- function(x, n, digits = 1) {
-  p <- x / n; z <- 1.96; den <- 1 + z^2 / n
-  c0 <- (p + z^2 / (2 * n)) / den
-  h  <- z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2)) / den
-  sprintf(paste0("%.", digits, "f%% (95%% CI %.", digits, "f-%.", digits, "f%%)"),
-          100 * p, 100 * max(0, c0 - h), 100 * min(1, c0 + h))
+# ── Formatting helpers, all package-backed so nothing is hand-typed ───────────
+# Wilson CI for a single proportion, via mysterycall_prevalence_ci().
+pci <- function(data, var, digits = 1) {
+  tb <- as.data.frame(mysterycall_prevalence_ci(data, var = var))
+  r  <- tb[tb$category %in% c("TRUE", "1"), ][1, ]
+  if (nrow(r) == 0 || is.na(r$proportion))
+    return(sprintf("0.0%% (0/%d)", nrow(data)))
+  sprintf("%.*f%% (95%% CI %.*f-%.*f%%; %d/%d)",
+          digits, 100 * r$proportion, digits, 100 * r$ci_lower,
+          digits, 100 * r$ci_upper, r$n, r$total)
 }
-pctn <- function(x, n) sprintf("%.1f%% (%d/%d)", 100 * x / n, x, n)
-svc  <- function(v) wilson(sum(tf(inc[[v]])), nrow(inc))
+svc <- function(v) pci(inc, v)
 
 N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
-N_INC   <- nrow(inc); N_WAIT <- nrow(wsub)
+N_RCH   <- nrow(rch); N_INC <- nrow(inc); N_OFFER <- nrow(oa); N_WAIT <- nrow(wsub)
 N_TRIAD <- sum(cov$n_scenarios == 3)
-SM_YES  <- sum(tf(cov$has_sm)); SM_NO <- sum(!tf(cov$has_sm))
+N_DECL  <- sum(tf(d$reached) & !tf(d$analytic_inclusion))
 
-# Complete-triad GLMER model
+# ── Primary model: appointment offered, complete practice triads ──────────────
 triad_ids <- cov$practice_id[cov$n_scenarios == 3]
-d_triad   <- d[d$practice_id %in% triad_ids & !is.na(d$scenario), ]
-d_triad$scenario <- factor(d_triad$scenario, levels = c("Straight couple", "Lesbian couple", "Single mother"))
-fit_glmer_triad  <- tryCatch(glmer(contact_office ~ scenario + (1 | practice_id), data = d_triad, family = binomial), error = function(e) NULL)
+oa_triad  <- oa[oa$practice_id %in% triad_ids & !is.na(oa$practice_id), ]
+oa_triad$scenario <- droplevels(factor(oa_triad$scenario,
+                     levels = c("Straight couple", "Lesbian couple", "Single mother")))
 
-# Paired proportion differences with 95% CIs
+fit_offer_triad <- tryCatch(
+  mysterycall_logistic_model(oa_triad, outcome = "appt_offered",
+                             predictors = "scenario", random_intercept = "practice_id"),
+  error = function(e) NULL)
+
+fit_offer_broad <- tryCatch(
+  mysterycall_logistic_model(
+    d[tf(d$in_offer_den) & !is.na(d$appt_offered_broad) & !is.na(d$scenario) &
+      !is.na(d$practice_id), ],
+    outcome = "appt_offered_broad", predictors = "scenario",
+    random_intercept = "practice_id"),
+  error = function(e) NULL)
+
+# OR (95% CI), p — generated from the fit, never typed in.
+AB <- function(fit, term, what = c("or_ci", "or_p")) {
+  what <- match.arg(what)
+  if (is.null(fit)) return("not estimable")
+  a <- tryCatch(mysterycall_abstract_numbers(logistic_fit = fit, exposure_term = term),
+                error = function(e) NULL)
+  if (is.null(a)) return("not estimable")
+  as.character(a[[what]])
+}
+orci <- function(fit, term) AB(fit, term, "or_ci")
+orp  <- function(fit, term) AB(fit, term, "or_p")
+
+# Paired proportion differences with 95% CIs (offer outcome).
 paired_diff_ci <- function(col_a, col_b) {
   ok <- !is.na(wide[[col_a]]) & !is.na(wide[[col_b]])
   a <- tf(wide[[col_a]][ok]); b <- tf(wide[[col_b]][ok])
-  n <- length(a); diff <- mean(a) - mean(b)
+  n <- length(a)
+  if (n == 0) return("no paired practices")
+  diff <- mean(a) - mean(b)
   f10 <- sum(a & !b); f01 <- sum(!a & b)
   se <- sqrt((f10 + f01 - (f10 - f01)^2 / n) / n^2)
-  ci_lo <- diff - 1.96 * se; ci_hi <- diff + 1.96 * se
-  sprintf("%+.1f percentage points (95%% CI %+.1f to %+.1f)", 100 * diff, 100 * ci_lo, 100 * ci_hi)
+  sprintf("%+.1f percentage points (95%% CI %+.1f to %+.1f; n = %d practices)",
+          100 * diff, 100 * (diff - 1.96 * se), 100 * (diff + 1.96 * se), n)
 }
+
+# Wait time: the package log-transforms, so report geometric mean ratios.
+fit_wait <- tryCatch(
+  mysterycall_lmm(d[!is.na(d$business_days) & !is.na(d$practice_id) & !is.na(d$scenario), ],
+                  outcome = "business_days", predictors = "scenario",
+                  random_intercept = "practice_id"),
+  error = function(e) NULL)
+gmr <- function(term, what = c("est", "ci")) {
+  what <- match.arg(what)
+  if (is.null(fit_wait) || is.null(fit_wait$gmr_table)) return("not estimable")
+  g <- as.data.frame(fit_wait$gmr_table); r <- g[g$term == term, ][1, ]
+  if (nrow(r) == 0 || is.na(r$GMR)) return("not estimable")
+  if (what == "est") sprintf("%.2f", r$GMR)
+  else sprintf("%.2f (95%% CI %.2f-%.2f)", r$GMR, r$GMR_lo, r$GMR_hi)
+}
+
+# Median (IQR) business-day wait by scenario, computed not typed.
+wait_med <- function(s) {
+  x <- wsub$business_days[wsub$scenario == s]
+  if (!length(x)) return("no observations")
+  sprintf("%.0f business days (IQR %.0f-%.0f; n = %d)",
+          median(x), quantile(x, .25), quantile(x, .75), length(x))
+}
+
+conc_range <- sprintf("%.0f%%-%.0f%%",
+                      100 * min(mcr$concordant / mcr$n_paired),
+                      100 * max(mcr$concordant / mcr$n_paired))
+mde_range  <- sprintf("OR %.1f to OR %.1f", min(mc$mde_or_80power, na.rm = TRUE),
+                      max(mc$mde_or_80power, na.rm = TRUE))
+cram <- tryCatch(round(mysterycall_test_categorical(
+          d[!is.na(d$scenario), ], row_var = "caller", col_var = "scenario")$cramers_v, 2),
+        error = function(e) NA)
 ```
 
 <div class="journal-header">
@@ -245,13 +316,13 @@ paired_diff_ci <- function(col_a, col_b) {
 
 ## ABSTRACT
 
-OBJECTIVE: To characterize reproductive health services offered by Restorative Reproductive Medicine (RRM) practices in the United States and evaluate whether patient scheduling availability differs by caller family structure.
+OBJECTIVE: To characterize reproductive health services offered by Restorative Reproductive Medicine (RRM) practices in the United States and to examine whether appointment access differs by caller family structure.
 
-METHODS: In a national mystery-caller (secret shopper) audit study, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario (within-practice paired design). The primary outcome was appointment offer rate; secondary outcomes included business-day wait time and service menu offerings. Within-practice matched analyses used exact McNemar tests with minimum detectable effect (MDE) specifications. Mixed-effects logistic regression was performed on complete practice triads (N = `r N_TRIAD`) to eliminate practice-selection dialing bias.
+METHODS: In a national mystery-caller (secret shopper) audit, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario. Because the data-collection instrument contained no explicit "was an appointment offered" item, the offer outcome was derived: a call was scored as offered when a first-available appointment date was recorded, and as not offered when the practice stated it was not accepting new patients; a sensitivity definition additionally counted a concrete scheduling timeframe as an offer. Reaching a live office and being offered an appointment were analyzed as separate cascade stages. Mixed-effects logistic regression with a practice random intercept was fitted to complete practice triads; within-practice matched contrasts used exact McNemar tests with minimum detectable effect (MDE) specifications.
 
-RESULTS: A total of `r N_REC` calls were completed to `r N_PRAC` practices; `r N_INC` calls reached scheduling staff and met analytic inclusion criteria. `r N_TRIAD` practices completed all 3 scenarios. Among included calls, cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Overall appointment offer rate was `r wilson(sum(tf(d$contact_office)), N_REC)`. Within-practice concordance was high (`r sprintf("%.0f%%-%.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))`). Paired acceptance differences were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. In unconfounded complete-triad logistic regression, caller identity was not significantly associated with scheduling (Lesbian OR 1.08 [95% CI 0.33-3.49]; Single Mother OR 0.76 [95% CI 0.24-2.43]). Minimum detectable effect sizes at 80% power ranged from OR 3.3 to OR 4.6.
+RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices. A live office was reached on `r pci(d, "reached")` of calls; `r N_OFFER` calls were eligible for the offer analysis and `r N_TRIAD` practices completed all three scenarios. Among calls reaching staff (N = `r N_INC`), cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Appointment-offer rates were `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Straight couple"])` for straight couples, `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Lesbian couple"])` for lesbian couples, and `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Single mother"])` for single mothers. In complete-triad mixed-effects logistic regression, relative to straight couples, the odds of an appointment offer were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples (p = `r orp(fit_offer_triad, "scenarioLesbian couple")`) and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers (p = `r orp(fit_offer_triad, "scenarioSingle mother")`). Under the broader offer definition these attenuated to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` and OR `r orci(fit_offer_broad, "scenarioSingle mother")` respectively. Caller identity was strongly associated with scenario (Cramér's V = `r cram`), so scenario and caller effects are not separately identifiable.
 
-CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, representing a structural service limitation for single mothers and same-sex couples. Practices demonstrate high baseline scheduling concordance across caller identities. Although statistical power was limited for subtle identity differentials (OR < 2.0), the study had >80% power to rule out large structural exclusions (OR >= 3.3).
+CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, a structural service limitation for single mothers and same-sex couples that does not depend on staff attitudes. Apparent differences in appointment offers by caller identity were sensitive to the outcome definition and confounded with caller assignment, and should be regarded as hypothesis-generating.
 
 ---
 
@@ -261,7 +332,7 @@ Restorative Reproductive Medicine (RRM) is an approach to reproductive healthcar
 
 Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to healthcare while eliminating social desirability bias.[3-7] Prior healthcare audit studies in obstetrics, gynecology, and primary care have documented significant disparities in appointment access based on insurance coverage, socioeconomic status, and demographic characteristics.[3-6] However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied in the peer-reviewed literature.
 
-This national secret-shopper audit had two primary objectives: (1) to define the scope of reproductive services offered by RRM practices, and (2) to determine whether practice willingness to schedule an appointment differs systematically by caller family structure (straight couple, lesbian couple, single mother using donor sperm).
+This national secret-shopper audit had two objectives: (1) to define the scope of reproductive services offered by RRM practices, and (2) to explore whether practice willingness to schedule an appointment differs by caller family structure (straight couple, lesbian couple, single mother using donor sperm).
 
 ---
 
@@ -274,127 +345,150 @@ Trained callers telephoned each eligible practice during standard business hours
 
 ### Standardized Caller Scenarios
 Three standardized clinical scenarios were designed:
+
 - Straight Couple: A female caller seeking fertility evaluation with a male partner.
 - Lesbian Couple: A female caller seeking fertility evaluation with a female partner.
 - Single Mother: A single female caller seeking fertility evaluation using donor sperm.
 
 Call scripts were strictly standardized across scenarios, differing only in the caller's stated partner status and clinical inquiry regarding donor sperm care.
 
-### Main Outcome Measures
-The primary outcome was appointment offering, defined as the practice staff agreeing to schedule a new patient consultation. Secondary outcomes included:
-- Service menu availability: Specific inquiry regarding availability of cycle tracking, hormonal lab monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and donor sperm services.
-- Wait time to appointment: Business days from initial call to first available consultation date (excluding weekends and US federal holidays).
+### Outcome Definitions
+Call dispositions were mapped to the standard access-audit exclusion codes, which distinguish three nested constructs that are frequently conflated: whether a live office was **reached**, whether the call was **eligible** for the offer analysis, and whether an appointment was **offered**.
 
-### Statistical Analysis & Power Specifications
-Analytic inclusion required successful phone contact with clinic scheduling staff (`Reason for exclusions == "Included where physician was able to be contacted"`). Proportions carry 95% Wilson score confidence intervals.[13,14]
+- **Reached a live office**: staff engaged with the caller (including calls that ended in a stated refusal or an extended hold). Voicemail, wrong numbers, unanswered lines, personal phones, and closed systems were not reached.
+- **Appointment offered (primary, strict)**: among offer-eligible calls, a first-available appointment date was recorded. A stated "not accepting new patients" was scored as not offered.
+- **Appointment offered (sensitivity, broad)**: as above, but a concrete scheduling timeframe reported by staff without a specific date was also counted as an offer.
 
-Primary inference utilized matched within-practice exact McNemar tests on discordant pairs to prevent practice-selection dialing bias.[3,7] Statistical power in paired audit studies is determined by the count of discordant practices ($n_d$). With $N=`r N_TRIAD`$ complete practice triads ($13$ to $17$ discordant pairs), the sample achieved $>80\%$ power to detect large structural exclusions ($\text{OR} \ge 3.3$), but possessed limited statistical power ($5.9\%$ to $28.2\%$) to detect subtle identity differentials ($\text{OR} = 1.5 - 2.0$). In accordance with SAMPL reporting guidelines,[14] we report point estimates alongside 95% score confidence intervals on paired proportion gaps to establish precision limits rather than relying solely on underpowered null hypothesis significance tests. Minimum detectable effect (MDE) odds ratios at 80% power ($\alpha=0.05$) were specified for all paired contrasts. Mixed-effects logistic regression was performed on the subset of complete practice triads ($N=`r N_TRIAD`$) with a random intercept for practice ($u_{\text{practice}}$). Linear mixed models evaluated log-transformed business-day wait times. All statistical analyses were conducted in R version 4.4.2.
+The data-collection instrument did not contain an explicit item asking whether staff agreed to schedule the caller. The offer outcome is therefore a derived proxy, and this is the study's principal measurement limitation (see Limitations). Wait time was the number of business days (Monday–Friday, excluding US federal holidays) between the call and the first available appointment, with same-day appointments retained as a wait of zero.
+
+### Statistical Analysis and Power
+Proportions carry 95% Wilson score confidence intervals.[13,14] The access cascade reports each stage with its own denominator, nested within the preceding stage.
+
+Mixed-effects logistic regression with a practice random intercept was fitted to the offer outcome, first on the subset of complete practice triads (N = `r N_TRIAD` practices) to remove practice-selection dialing bias, then on the full offer sample, and finally under the broad offer definition as a sensitivity analysis. Because the appointment date was missing for a scenario-dependent share of calls, a two-part hurdle model estimated the obtainment and wait-given-obtainment steps jointly rather than conditioning on complete cases. Wait time was additionally modeled with a linear mixed model; because the wait distribution is right-skewed, the outcome was log-transformed and estimates are reported as back-transformed geometric mean ratios (GMR), not as differences in days.
+
+Within-practice matched contrasts used exact McNemar tests. Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect (MDE) odds ratios at 80% power (α = 0.05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with SAMPL reporting guidelines,[14] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
 
 ---
 
 ## RESULTS
 
-### Sample Characteristics
-A total of `r N_REC` telephone calls were placed to `r N_PRAC` unique RRM practices. Overall, `r N_INC` calls met analytic inclusion criteria by reaching clinic scheduling staff. A total of `r N_TRIAD` practices completed all three scenario calls (complete practice triads), `r sum(cov$n_scenarios == 2)` completed two scenarios (dyads), and `r sum(cov$n_scenarios == 1)` completed one scenario.
+### Access Cascade
+A total of `r N_REC` telephone calls were placed to `r N_PRAC` unique RRM practices. A live office was reached on `r N_RCH` calls (`r pci(d, "reached")`). Of these, `r N_DECL` reached calls ended in a stated refusal or extended hold, and `r N_INC` proceeded to the full interview. `r N_TRIAD` practices completed all three scenario calls (complete triads), `r sum(cov$n_scenarios == 2)` completed two, and `r sum(cov$n_scenarios == 1)` completed one.
+
+```{r strobe, fig.cap="Figure 1. STROBE flow diagram. Reaching a live office and being offered an appointment are separate stages with separate denominators.", out.width="85%", fig.align="center"}
+strobe_png <- file.path(OUT, "figures", "fig0_strobe_flow.png")
+if (file.exists(strobe_png)) knitr::include_graphics(strobe_png)
+```
 
 ```{r Table1}
-t1 <- data.frame(
-  `Scenario` = c("Straight couple", "Lesbian couple", "Single mother", "Total"),
-  `Calls Placed` = c(sum(d$scenario == "Straight couple", na.rm=TRUE),
-                    sum(d$scenario == "Lesbian couple", na.rm=TRUE),
-                    sum(d$scenario == "Single mother", na.rm=TRUE), N_REC),
-  `Analytic Inclusions` = c(sum(inc$scenario == "Straight couple", na.rm=TRUE),
-                           sum(inc$scenario == "Lesbian couple", na.rm=TRUE),
-                           sum(inc$scenario == "Single mother", na.rm=TRUE), N_INC),
-  `Appointments Offered` = c(sum(tf(inc$contact_office[inc$scenario == "Straight couple"])),
-                             sum(tf(inc$contact_office[inc$scenario == "Lesbian couple"])),
-                             sum(tf(inc$contact_office[inc$scenario == "Single mother"])),
-                             sum(tf(inc$contact_office))),
-  check.names = FALSE
-)
-kable(t1, caption = "Table 1. Distribution of Mystery Calls and Appointment Offers by Scenario")
+t1 <- casc |>
+  transmute(
+    Scenario                       = scenario,
+    `Calls placed`                 = calls_placed,
+    `Reached live office`          = reached,
+    `Offer-eligible`               = offer_eligible,
+    `Offered (strict)`             = sprintf("%d (%.1f%%)", offered_strict, pct_offered_strict),
+    `Offered (broad)`              = sprintf("%d (%.1f%%)", offered_broad,  pct_offered_broad)
+  )
+kable(t1, caption = "Table 1. Access cascade by caller scenario. Each stage is nested within the preceding one.")
 ```
 
 ### Reproductive Services Offered
-Among analytically included calls (N = `r N_INC`), RRM practices almost uniformly offered natural cycle tracking and basic fertility timing, but rarely provided ART or donor gamete services (Table 2).
+Among calls that reached staff and completed the service interview (N = `r N_INC`), RRM practices almost uniformly offered natural cycle tracking but rarely provided ART or donor gamete services (Table 2).
 
 ```{r Table2}
 t2 <- data.frame(
   `Reproductive Service` = c(
-    "Cycle tracking",
-    "Hormonal labs / fertility timing",
-    "Ovulation induction",
-    "Intrauterine insemination (IUI)",
-    "In vitro fertilization (IVF)",
-    "Works with donor sperm"
-  ),
+    "Cycle tracking", "Hormonal labs / fertility timing", "Ovulation induction",
+    "Intrauterine insemination (IUI)", "In vitro fertilization (IVF)",
+    "Works with donor sperm"),
   `Proportion Offered (95% CI)` = c(
-    svc("service_cycle_tracking"),
-    svc("service_hormonal_timing"),
-    svc("service_ovulation_induction"),
-    svc("service_iui"),
-    svc("service_ivf"),
-    svc("donor_sperm_yes")
-  ),
-  check.names = FALSE
-)
-kable(t2, caption = "Table 2. Reproductive Healthcare Services Offered by RRM Practices (N = 98 Included Calls)")
+    svc("service_cycle_tracking"), svc("service_hormonal_timing"),
+    svc("service_ovulation_induction"), svc("service_iui"),
+    svc("service_ivf"), svc("donor_sperm_yes")),
+  check.names = FALSE)
+kable(t2, caption = sprintf("Table 2. Reproductive healthcare services offered by RRM practices (N = %d calls reaching staff)", N_INC))
 ```
 
-Overall, cycle tracking was offered in `r svc("service_cycle_tracking")` of encounters. In contrast, IUI was offered in only `r svc("service_iui")`, IVF in `r svc("service_iui")`, and donor sperm management in `r svc("donor_sperm_yes")`. The overall appointment offer rate across all placed calls was `r wilson(sum(tf(d$contact_office)), N_REC)`.
+Cycle tracking was offered in `r svc("service_cycle_tracking")` of encounters. In contrast, IUI was offered in `r svc("service_iui")`, IVF in `r svc("service_ivf")`, and donor sperm management in `r svc("donor_sperm_yes")`. The IUI and IVF counts each reflect a single practice and should be read as an upper bound on availability rather than a stable rate estimate.
 
-### Appointment Acceptance by Caller Identity
-Within-practice concordance was high: practices treated callers identically in `r sprintf("%.0f%% to %.0f%%", 100*min(mc$concordant/mc$n_paired), 100*max(mc$concordant/mc$n_paired))` of paired comparisons.
+### Appointment Offers by Caller Identity
+Appointment-offer rates among offer-eligible calls were `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Straight couple"])` for straight couples, `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Lesbian couple"])` for lesbian couples, and `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Single mother"])` for single mothers (Table 1).
+
+In complete-triad mixed-effects logistic regression (N = `r N_TRIAD` practices), relative to straight-couple callers, the odds of an appointment offer were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples (p = `r orp(fit_offer_triad, "scenarioLesbian couple")`) and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers (p = `r orp(fit_offer_triad, "scenarioSingle mother")`). The confidence intervals span orders of magnitude, reflecting near-separation at this sample size; direction is interpretable, magnitude is not.
+
+Under the broad offer definition, which additionally credits a stated scheduling timeframe, the same contrasts attenuated to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` and OR `r orci(fit_offer_broad, "scenarioSingle mother")`. The dependence of the estimate on the outcome definition is material and is discussed below.
 
 ```{r Table3}
 t3 <- mc |>
   transmute(
-    `Paired Comparison` = contrast,
+    `Paired Comparison`    = contrast,
     `Paired Practices (n)` = n_paired,
-    `Concordant Pairs` = concordant,
-    `Discordant Pairs` = discordant,
-    `Exact McNemar P` = sprintf("%.3f", mcnemar_p),
-    `MDE (80% Power)` = sprintf("OR %.1f", mde_or_80power)
-  )
-kable(t3, caption = "Table 3. Matched Within-Practice Paired Acceptance Analysis")
+    `Concordant`           = concordant,
+    `Discordant`           = discordant,
+    `Exact McNemar P`      = sprintf("%.3f", mcnemar_p),
+    `MDE (80% Power)`      = sprintf("OR %.1f", mde_or_80power))
+kable(t3, caption = "Table 3. Within-practice matched paired appointment-offer analysis. Only discordant practices contribute information.")
 ```
 
-In matched paired comparisons, no scenario contrast demonstrated a statistically significant difference in appointment acceptance:
-- Straight vs Single Mother: Difference `r paired_diff_ci("Straight_couple", "Single_mother")` (p = `r sprintf("%.3f", mc$mcnemar_p[1])`, MDE OR = 3.3).
-- Lesbian vs Single Mother: Difference `r paired_diff_ci("Lesbian_couple", "Single_mother")` (p = 1.000, MDE OR = 4.6).
-- Straight vs Lesbian: Difference `r paired_diff_ci("Straight_couple", "Lesbian_couple")` (p = `r sprintf("%.3f", mc$mcnemar_p[3])`, MDE OR = 4.6).
+Within-practice paired differences in offer rate were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. Practices treated callers identically in `r conc_range` of paired reachability comparisons.
 
-In unconfounded mixed-effects logistic regression restricted to complete practice triads (N = `r N_TRIAD` practices, 148 calls), relative to straight couples (reference, OR 1.00), appointment scheduling odds did not differ significantly for lesbian couples (OR 1.08 [95% CI 0.33-3.49], p = 0.901) or single mothers (OR 0.76 [95% CI 0.24-2.43], p = 0.647).
+### Caller Assignment
+Scenarios were not randomized across callers (Table 4). Caller identity was strongly associated with scenario (Cramér's V = `r cram`), and per-caller offer rates varied widely. Consequently, a scenario contrast and a caller contrast are numerically the same comparison, and within-practice pairing does not separate them because the paired calls were placed by different callers.
 
-<div class="alert-callout">
-  Methodological Note on Confounding: Unmatched marginal acceptance rates (Single Mother 67.4% vs Straight 44.0%) reflect heavy dialing selection bias—single-mother calls landed disproportionately at high-acceptance practices (~70% baseline acceptance). Within the exact same practices, single-mother callers faced slightly lower odds of scheduling (OR 0.76).
-</div>
+```{r Table4}
+t4 <- cdom |>
+  transmute(
+    Scenario                    = scenario,
+    `Calls placed`              = n_calls,
+    `Largest single caller`     = top_caller,
+    `Their share of the arm`    = sprintf("%d (%.1f%%)", top_caller_n, top_caller_pct))
+kable(t4, caption = "Table 4. Concentration of each scenario arm in a single caller.")
+```
 
 ### Wait Time to First Available Appointment
-Among included calls that reached scheduling (N = `r N_WAIT`), the median business-day wait time to the first appointment was 23 business days (IQR 9–60.5) for straight couples, 29 business days (IQR 7–55.2) for lesbian couples, and 15 business days (IQR 5.25–29.8) for single mothers. Within-practice paired wait time differences were small and non-significant (Straight vs Single Mother: mean difference +0.8 business days, p = 0.928).
+Among calls with an observed appointment date (N = `r N_WAIT`), the median wait was `r wait_med("Straight couple")` for straight couples, `r wait_med("Lesbian couple")` for lesbian couples, and `r wait_med("Single mother")` for single mothers. In the log-transformed mixed model, waits relative to straight-couple callers had a geometric mean ratio of `r gmr("scenarioLesbian couple", "ci")` for lesbian couples and `r gmr("scenarioSingle mother", "ci")` for single mothers; a ratio below 1.00 indicates a shorter wait. Because appointment dates are missing for a scenario-dependent share of calls, these complete-case estimates condition on having been offered an appointment and are reported as descriptive.
 
 ---
 
 ## DISCUSSION
 
 ### Principal Findings
-In this national secret-shopper audit of Restorative Reproductive Medicine practices, we identified two primary findings. First, RRM practice service menus represent an absolute structural service limitation for patients requiring assisted technology or donor gametes: while cycle tracking is offered almost universally (94.9%), IUI (1.0%), IVF (1.0%), and donor sperm care (3.1%) are rarely available.[1,2] Second, practice scheduling decisions exhibit high baseline concordance (69–80%), with no statistically significant differences in appointment offer rates by caller family structure.
+This national secret-shopper audit produced one well-powered finding and one hypothesis-generating signal.
 
-### Interpretation and Literature Context
-Our results provide important context for patient counseling and health policy.[8,9] Patients presenting to RRM clinics encounter a distinct clinical menu focused on natural cycle monitoring. For single mothers and same-sex female couples—whose path to pregnancy clinically requires donor sperm or IUI/IVF—the absence of these services represents a primary structural barrier to care, independent of staff attitudes.[9-12]
+The well-powered finding is structural. RRM practice service menus almost universally include cycle tracking (`r svc("service_cycle_tracking")`) while rarely including IUI (`r svc("service_iui")`), IVF (`r svc("service_ivf")`), or donor sperm care (`r svc("donor_sperm_yes")`). For single mothers and same-sex female couples, whose path to pregnancy clinically requires donor sperm or IUI/IVF, the absence of these services is a barrier to care that operates independently of any staff attitude or scheduling decision.[9-12] This result rests on directly observed service responses, not on a derived outcome, and is unaffected by how calls were assigned to callers.
 
-Our findings also offer a critical methodological lesson for healthcare audit studies.[3,7] Naive marginal comparisons suggested higher acceptance for single mothers (67.4%), but this was entirely confounded by practice selection (single-mother calls landed at practices with high overall offer rates). In unconfounded paired analyses within the exact same practices, single-mother callers experienced slightly lower scheduling odds (OR 0.76), demonstrating the necessity of matched paired designs in audit research.
+The hypothesis-generating signal is that appointment-offer rates differed across caller scenarios in the observed direction of disadvantage for lesbian couples and single mothers. We do not present this as an established effect, for the reasons below.
+
+### Why the Offer Difference Is Not Yet a Finding
+Three features of the design prevent a causal reading.
+
+First, the outcome is a proxy. The instrument recorded no explicit "did the practice agree to schedule you?" item, so an offer had to be inferred from whether an appointment date was written down. A call in which staff offered an appointment that the caller did not date is scored as a refusal. When the definition is broadened to credit a concrete scheduling timeframe, the contrasts attenuate substantially (OR `r orci(fit_offer_triad, "scenarioLesbian couple")` to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` for lesbian couples). An effect that moves this much with the coding rule is not yet separable from a documentation artifact.
+
+Second, caller and scenario are confounded. Callers were not randomized across scenarios; each arm was dominated by a small number of callers (Table 4; Cramér's V = `r cram`), and per-caller offer rates ranged widely. Because the paired within-practice design compares scenarios that were dialed by different people, matching removes practice-level confounding but not caller-level confounding. In a model adjusting for caller, the scenario standard errors inflate to the point of non-identifiability, which is itself the evidence that the two cannot be separated in these data.
+
+Third, the matched analysis is underpowered. Discordant practices number `r paste(mc$discordant, collapse = ", ")` across the three contrasts, giving minimum detectable effects of `r mde_range` at 80% power. Plausible audit-study effects are well below this floor.
+
+### Methodological Implications for Audit Studies
+Two design lessons generalize.[3,7] Reaching a live office and being offered an appointment are distinct constructs with different denominators; collapsing them into a single "acceptance" variable makes the analytic inclusion criterion and the outcome the same measurement, which forces acceptance to 100% within the analytic sample and discards stated refusals — the only unambiguous negative outcomes. Reporting the cascade stage by stage avoids this. Separately, an audit design that assigns caller identity non-randomly across the very conditions it means to contrast cannot recover the contrast, regardless of how sophisticated the within-unit matching is; caller assignment should be randomized or blocked at design time.
 
 ### Strengths and Limitations
-This study possesses several key strengths, including its randomized secret-shopper design, national geographic scope, business-day calendar modeling, and unconfounded within-practice paired analysis.[3,5,7]
+Strengths include the national scope, the within-practice design, business-day calendar modeling, and explicit cascade reporting with stage-specific denominators.
 
-Limitations must also be explicitly considered:
-1. Limited statistical power for small effect sizes. Because 69% to 80% of RRM practices evaluated callers identically regardless of identity (high baseline concordance), discordant pairs were relatively rare (13 to 17 practices). Consequently, the study was underpowered (5.9%-28.2% power) to detect small-to-moderate odds ratios (OR = 1.5-2.0), requiring ~218 complete paired practices to achieve 80% power at OR = 2.0. However, the sample was fully powered (>80%) to rule out large structural exclusions (OR >= 3.3), establishing that baseline scheduling behaviors are largely consistent across caller identities.
-2. Wait-time missingness is informative. Only 42.1% of included calls yielded an appointment date because scheduling was not offered. Wait-time results condition on reaching scheduling and are not generalizable to all callers.
-3. Single-call design per scenario. Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
+Limitations:
+
+1. **The offer outcome is derived, not measured.** No instrument item recorded whether staff agreed to schedule the caller. Results are sensitive to the coding rule, as shown by the strict versus broad comparison.
+2. **Caller is confounded with scenario.** Scenario arms were dominated by different callers, and caller-level offer rates vary widely. Scenario effects cannot be distinguished from caller effects.
+3. **Limited statistical power for matched contrasts.** With `r paste(mc$discordant, collapse = ", ")` discordant practices, only very large effects (`r mde_range`) are detectable.
+4. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
+5. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
+6. **Single call per scenario.** Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
+
+### Recommendations for the Next Wave
+Adding an explicit appointment-offer item to the data-collection instrument, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The three "restrictions on the individuals you would provide care to" checkboxes already in the instrument are the only directly measured discrimination item; their coding is currently ambiguous and should be adjudicated against the codebook before use.
 
 ### Conclusion
-Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management. Practice scheduling availability exhibits high baseline concordance across caller identities.
+Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management, a structural limitation for patients who require donor gametes. Observed differences in appointment offers by caller family structure were sensitive to outcome definition and confounded with caller assignment, and require a randomized-caller design with an explicit offer measure to evaluate.
 
 ---
 
