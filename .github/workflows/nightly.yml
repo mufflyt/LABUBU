@@ -48,9 +48,17 @@ jobs:
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
+      # Explicit `packages:` (not the default `deps::.`, which tries to resolve
+      # the GitHub-only mysterycall from CRAN) and hard deps only (Suggests
+      # drag in pbkrtest -> doBy -> Deriv, and Deriv is archived from CRAN).
+      # glmmTMB is therefore absent; mysterycall_hurdle_wait() is wrapped in
+      # tryCatch and degrades to "hurdle model not run".
       - name: Query R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -60,7 +68,6 @@ jobs:
             any::scales
             any::forcats
             any::lme4
-            any::glmmTMB
             any::geepack
             any::knitr
             any::rmarkdown

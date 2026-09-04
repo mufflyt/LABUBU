@@ -39,9 +39,13 @@ jobs:
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
+      # See nightly.yml for why `packages:` is explicit and glmmTMB is absent.
       - name: Query R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -51,7 +55,6 @@ jobs:
             any::scales
             any::forcats
             any::lme4
-            any::glmmTMB
             any::geepack
             any::knitr
             any::rmarkdown
