@@ -21,7 +21,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write        # push a branch (never main directly)
+  pull-requests: write   # open the review PR
 
 env:
   # Pinned. An unpinned mysterycall means a package commit can silently change
@@ -77,6 +78,41 @@ jobs:
             any::httr
             any::jsonlite
 
+      # Deriv was archived from CRAN, which takes glmmTMB down with it:
+      #   glmmTMB -> pbkrtest -> doBy (>= 4.6.22) -> Deriv
+      #
+      # Pinned to 4.2.0, NOT the newest archived 4.3.0. 4.3.0 calls
+      # R_ClosureFormals(), a C API entry point added in R 4.5.0, so it fails
+      # to compile on the R 4.4.2 this project pins:
+      #   derive_simplif.cpp:376: error: 'R_ClosureFormals' was not declared
+      # That R requirement is why the package left CRAN in the first place.
+      # 4.2.0 is the version already proven against R 4.4.2 in the analysis
+      # environment this pipeline is meant to reproduce.
+      #
+      # Without glmmTMB the pipeline still runs, but mysterycall_hurdle_wait()
+      # degrades to "hurdle model not run" and the nightly commits a report
+      # with the two-part model missing.
+      # Single source of truth for the pinned analytical dependency. A SHA
+      # copied by hand into three workflows drifts, and a drifted SHA silently
+      # changes results. check-workflow-contract.R enforces that they agree.
+      - name: Resolve pinned mysterycall SHA
+        run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
+
+      - name: Install archived Deriv, then glmmTMB
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            install.packages(
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.2.0.tar.gz",
+              repos = NULL, type = "source")
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            stop("Deriv failed to install; glmmTMB cannot be built")
+          install.packages("glmmTMB")
+          if (!requireNamespace("glmmTMB", quietly = TRUE))
+            stop("glmmTMB failed to install; the hurdle model would be silently ",
+                 "dropped from the committed report")
+          cat("glmmTMB", as.character(utils::packageVersion("glmmTMB")), "\n")
+
       - name: Install mysterycall at the pinned SHA
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -87,6 +123,9 @@ jobs:
           if (!requireNamespace("mysterycall", quietly = TRUE))
             stop("mysterycall failed to install; refusing to auto-commit results ",
                  "produced without it")
+
+      - name: Environment preflight
+        run: Rscript .github/scripts/preflight-env.R
 
       - name: Run LABUBU Refresh Pipeline
         env:
@@ -104,6 +143,9 @@ jobs:
       # unvalidated auto-commit to main is how a defective analysis stayed
       # publishable-looking for months; the nightly must not push results that
       # fail the structural invariants.
+      - name: Pipeline completion receipt
+        run: Rscript .github/scripts/pipeline-receipt.R
+
       - name: Scientific gate
         run: Rscript .github/scripts/scientific-gate.R
 
@@ -111,25 +153,53 @@ jobs:
         run: |
           Rscript -e 'rmarkdown::render("labubu_mysterycall_manuscript.Rmd", output_format="all")'
 
-      - name: Check Git Status & Commit Changes
+      # A scheduled job must never rewrite main because a fresh run produced
+      # different numbers. It did exactly that once (f1b3fb6), and the commit
+      # silently dropped the two-part model from the report because glmmTMB was
+      # missing -- a scientific change, merged with no review.
+      #
+      # Drift now opens a pull request instead. Automation still does the work;
+      # a human still approves the science.
+      - name: Detect drift and open a review PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name "github-actions[bot]"
+          git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add mysterycall_outputs/ PROVENANCE.md CLAUDE.md \
-                  labubu_mysterycall_manuscript.html labubu_mysterycall_manuscript.docx || true
-          
+
+          git add mysterycall_outputs/ PROVENANCE.md \
+                  labubu_mysterycall_manuscript.html \
+                  labubu_mysterycall_manuscript.docx || true
+
           if git diff --staged --quiet; then
-            echo "No changes in output artifacts or provenance."
-          else
-            echo "Artifacts updated. Committing refreshed results..."
-            git commit -m "Nightly CI: auto-refresh pipeline outputs, figures, and manuscript
-
-            Scientific gate passed at mysterycall@${MYSTERYCALL_SHA}.
-
-            [skip ci]"
-            git push origin main
+            echo "No drift: regenerated artifacts match main."
+            echo "DRIFT=none" >> "$GITHUB_ENV"
+            exit 0
           fi
+
+          BRANCH="nightly/refresh-$(date -u +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+          git commit -m "Nightly refresh: regenerated outputs differ from main
+
+          Scientific gate passed at mysterycall@${MYSTERYCALL_SHA}.
+          Review the diff before merging: a change here is a change to the
+          study's reported results."
+          git push origin "$BRANCH"
+
+          gh pr create --base main --head "$BRANCH" \
+            --title "Nightly refresh: regenerated outputs differ from main" \
+            --body "Automated nightly run regenerated the analysis and the outputs differ from \`main\`.
+
+          The scientific gate passed, so this is drift rather than breakage — but it is still a change to reported results and needs review.
+
+          Check before merging:
+          - \`ci-results/denominator-audit.csv\` for cohort changes
+          - \`mysterycall_outputs/mysterycall_evaluation.md\` for estimate changes
+          - that no model reads \"not run\"
+
+          Generated by the nightly workflow at mysterycall@\`${MYSTERYCALL_SHA}\`."
+
+          echo "DRIFT=pr-opened" >> "$GITHUB_ENV"
 
       - name: Upload CI artifacts
         if: always()

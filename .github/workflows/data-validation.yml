@@ -60,6 +60,11 @@ jobs:
 
       # "Did the gate work" and "did the study pass" are separate signals, so
       # the self-test runs first and independently.
+      # Does any workflow reach the science, and can one go green while
+      # skipping it? Base R only, so it runs even if the environment is broken.
+      - name: CI contract
+        run: Rscript .github/scripts/check-workflow-contract.R
+
       - name: Gate self-test
         run: Rscript .github/scripts/gate-selftest.R
 
@@ -74,6 +79,115 @@ jobs:
           path: ci-results/
           retention-days: 14
           if-no-files-found: error
+
+  # Proves the analysis CODE runs and REGENERATES its outputs, on every PR,
+  # with no external API. Outputs are wiped first, so a committed CSV cannot
+  # masquerade as a freshly generated one -- the failure mode where code
+  # changes, the analysis silently does not run, and CI validates last week's
+  # files. Runs against a committed de-identified fixture whose denominators
+  # match the real export.
+  execute:
+    name: pipeline execution
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
+          extra-packages: |
+            any::dplyr
+            any::ggplot2
+            any::ggbeeswarm
+            any::ggridges
+            any::patchwork
+            any::scales
+            any::forcats
+            any::lme4
+            any::geepack
+            any::knitr
+            any::rmarkdown
+            any::survival
+            any::readr
+            any::remotes
+            any::jsonlite
+            any::openssl
+
+      - name: Resolve pinned mysterycall SHA
+        run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
+
+      - name: Install archived Deriv, then glmmTMB
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            install.packages(
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.2.0.tar.gz",
+              repos = NULL, type = "source")
+          install.packages("glmmTMB")
+          if (!requireNamespace("glmmTMB", quietly = TRUE))
+            stop("glmmTMB failed to install; the hurdle model would be dropped")
+
+      - name: Install mysterycall at the pinned SHA
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          remotes::install_github(paste0("mufflyt/mysterycall@",
+                                         Sys.getenv("MYSTERYCALL_SHA")),
+                                  upgrade = "never")
+          if (!requireNamespace("mysterycall", quietly = TRUE))
+            stop("mysterycall failed to install")
+
+      - name: Environment preflight
+        run: Rscript .github/scripts/preflight-env.R
+
+      # Phase 7: destroy the outputs the pipeline is supposed to recreate.
+      - name: Wipe generated outputs
+        run: |
+          rm -rf mysterycall_outputs
+          mkdir -p mysterycall_outputs
+          cp tests/fixtures/LABUBU_DATA_LABELS_fixture.csv .
+
+      - name: Execute the pipeline
+        run: |
+          Rscript -e 'input_file <- "LABUBU_DATA_LABELS_fixture.csv"; source("evaluate_labubu_mysterycall.R")'
+
+      # Exit 0 is not proof. The receipt is written only after every expected
+      # artifact exists, is non-empty, and the denominator cascade nests.
+      # Provenance must describe the file this run actually read. Without this
+      # the committed PROVENANCE.md still names the real export while the tree
+      # holds the fixture, and provenance/md5-matches-repo-export correctly
+      # fails -- a harness gap, not a scientific one.
+      - name: Regenerate provenance for the fixture run
+        run: Rscript provenance.R
+
+      - name: Pipeline completion receipt
+        run: Rscript .github/scripts/pipeline-receipt.R
+
+      - name: Scientific gate on freshly generated outputs
+        run: Rscript .github/scripts/scientific-gate.R
+
+      - name: Upload execution artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labubu-execution-${{ github.run_id }}
+          path: |
+            ci-results/
+            mysterycall_outputs/
+          retention-days: 14
+          if-no-files-found: warn
 
   pipeline:
     name: re-derive from REDCap
@@ -123,6 +237,41 @@ jobs:
             any::httr
             any::jsonlite
 
+      # Deriv was archived from CRAN, which takes glmmTMB down with it:
+      #   glmmTMB -> pbkrtest -> doBy (>= 4.6.22) -> Deriv
+      #
+      # Pinned to 4.2.0, NOT the newest archived 4.3.0. 4.3.0 calls
+      # R_ClosureFormals(), a C API entry point added in R 4.5.0, so it fails
+      # to compile on the R 4.4.2 this project pins:
+      #   derive_simplif.cpp:376: error: 'R_ClosureFormals' was not declared
+      # That R requirement is why the package left CRAN in the first place.
+      # 4.2.0 is the version already proven against R 4.4.2 in the analysis
+      # environment this pipeline is meant to reproduce.
+      #
+      # Without glmmTMB the pipeline still runs, but mysterycall_hurdle_wait()
+      # degrades to "hurdle model not run" and the nightly commits a report
+      # with the two-part model missing.
+      # Single source of truth for the pinned analytical dependency. A SHA
+      # copied by hand into three workflows drifts, and a drifted SHA silently
+      # changes results. check-workflow-contract.R enforces that they agree.
+      - name: Resolve pinned mysterycall SHA
+        run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
+
+      - name: Install archived Deriv, then glmmTMB
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            install.packages(
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.2.0.tar.gz",
+              repos = NULL, type = "source")
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            stop("Deriv failed to install; glmmTMB cannot be built")
+          install.packages("glmmTMB")
+          if (!requireNamespace("glmmTMB", quietly = TRUE))
+            stop("glmmTMB failed to install; the hurdle model would be silently ",
+                 "dropped from the committed report")
+          cat("glmmTMB", as.character(utils::packageVersion("glmmTMB")), "\n")
+
       - name: Install mysterycall at the pinned SHA
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -133,6 +282,11 @@ jobs:
           if (!requireNamespace("mysterycall", quietly = TRUE))
             stop("mysterycall failed to install; refusing to run a pipeline that ",
                  "would skip every package-backed check and report green")
+
+      # Fail here, in seconds, rather than after the pipeline has written a
+      # thinned report that report/models-present then has to catch.
+      - name: Environment preflight
+        run: Rscript .github/scripts/preflight-env.R
 
       - name: Re-derive outputs
         env:
