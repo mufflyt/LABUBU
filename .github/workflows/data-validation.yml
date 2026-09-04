@@ -125,16 +125,24 @@ jobs:
 
       # Deriv was archived from CRAN, which takes glmmTMB down with it:
       #   glmmTMB -> pbkrtest -> doBy (>= 4.6.22) -> Deriv
-      # Install the archived tarball first, pinned by version, so the rest of
-      # the chain resolves. Without glmmTMB the pipeline still runs, but
-      # mysterycall_hurdle_wait() degrades to "hurdle model not run" and the
-      # nightly then commits a report with the two-part model missing.
+      #
+      # Pinned to 4.2.0, NOT the newest archived 4.3.0. 4.3.0 calls
+      # R_ClosureFormals(), a C API entry point added in R 4.5.0, so it fails
+      # to compile on the R 4.4.2 this project pins:
+      #   derive_simplif.cpp:376: error: 'R_ClosureFormals' was not declared
+      # That R requirement is why the package left CRAN in the first place.
+      # 4.2.0 is the version already proven against R 4.4.2 in the analysis
+      # environment this pipeline is meant to reproduce.
+      #
+      # Without glmmTMB the pipeline still runs, but mysterycall_hurdle_wait()
+      # degrades to "hurdle model not run" and the nightly commits a report
+      # with the two-part model missing.
       - name: Install archived Deriv, then glmmTMB
         shell: Rscript {0}
         run: |
           if (!requireNamespace("Deriv", quietly = TRUE))
             install.packages(
-              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.3.0.tar.gz",
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.2.0.tar.gz",
               repos = NULL, type = "source")
           if (!requireNamespace("Deriv", quietly = TRUE))
             stop("Deriv failed to install; glmmTMB cannot be built")
