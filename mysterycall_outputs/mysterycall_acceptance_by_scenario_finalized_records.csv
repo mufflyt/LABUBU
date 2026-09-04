@@ -1,4 +1,0 @@
-"scenario","n_total","n_missing","n_accepted","n_rejected","rate","ci_lower","ci_upper"
-"Straight couple",34,0,34,0,1,0.898485445846676,1
-"Lesbian couple",33,0,33,0,1,0.895730002457548,1
-"Single mother",31,0,31,0,1,0.889744604539564,1

@@ -1,8 +1,8 @@
 "practice_id","practice_key","has_straight","has_lesbian","has_sm","n_scenarios"
 1,"(440) 823-9827",FALSE,TRUE,FALSE,1
 2,"(603) 860-9942",FALSE,TRUE,FALSE,1
-3,"Abiding FertilityCare Center (TX)",TRUE,TRUE,TRUE,3
-4,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,TRUE,2
+3,"Abiding FertilityCare Center (practice in TX)",TRUE,FALSE,TRUE,2
+4,"Abiding FertilityCare Center (TX)",TRUE,TRUE,TRUE,3
 5,"Angelus FertilityCare Center (Brazil)",TRUE,FALSE,FALSE,1
 6,"Anna Lacey (SD, virtual)",TRUE,TRUE,FALSE,2
 7,"Archdiocese of San Francisco FertilityCare Center",TRUE,TRUE,TRUE,3
@@ -44,25 +44,25 @@
 43,"Family FertilityCare Services, LLC (NH)",TRUE,FALSE,TRUE,2
 44,"Faustina FertilityCare Center (WI)",FALSE,TRUE,TRUE,2
 45,"Femme Health",FALSE,FALSE,TRUE,1
-46,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,TRUE,2
-47,"FertilityCare Center of Chicago (IL)",TRUE,TRUE,TRUE,3
-48,"FertilityCare Center of Colorado Springs (CO)",TRUE,TRUE,TRUE,3
-49,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,TRUE,2
-50,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,TRUE,2
-51,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,TRUE,2
-52,"FertilityCare Center of Omaha (NE)",TRUE,TRUE,TRUE,3
-53,"FertilityCare Center of Reno (NV)",FALSE,TRUE,TRUE,2
-54,"FertilityCare Center of Rochester (NY)",TRUE,TRUE,TRUE,3
-55,"FertilityCare Center of Rockville Centre (NY)",FALSE,TRUE,TRUE,2
-56,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE,1
-57,"FertilityCare Center of the Big Horns (WY)",TRUE,TRUE,TRUE,3
-58,"FertilityCare Center of the Diocese of Phoenix (AZ)",TRUE,TRUE,FALSE,2
-59,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE,1
-60,"FertilityCare Services Catholic Diocese of Wichita (KS)",TRUE,TRUE,TRUE,3
-61,"FertilityCare Services of Denver through Bella Health + Wellness (CO)",TRUE,TRUE,TRUE,3
-62,"FertilityCare Services of the Heartland (ND)",TRUE,TRUE,TRUE,3
-63,"FertilityCare at FMCC-Fertility and Midwifery Care Center (IN)",FALSE,TRUE,TRUE,2
-64,"FertilityCare of the Palouse (ID)",FALSE,TRUE,TRUE,2
+46,"FertilityCare at FMCC-Fertility and Midwifery Care Center (IN)",FALSE,TRUE,TRUE,2
+47,"FertilityCare Center of Baltimore (MD)",FALSE,TRUE,TRUE,2
+48,"FertilityCare Center of Chicago (IL)",TRUE,TRUE,TRUE,3
+49,"FertilityCare Center of Colorado Springs (CO)",TRUE,TRUE,TRUE,3
+50,"FertilityCare Center of Delaware County (PA)",FALSE,TRUE,TRUE,2
+51,"FertilityCare Center of Greater Chicago (IL)",FALSE,TRUE,TRUE,2
+52,"FertilityCare Center of Kansas City (MO)",FALSE,TRUE,TRUE,2
+53,"FertilityCare Center of Omaha (NE)",TRUE,TRUE,TRUE,3
+54,"FertilityCare Center of Reno (NV)",FALSE,TRUE,TRUE,2
+55,"FertilityCare Center of Rochester (NY)",TRUE,TRUE,TRUE,3
+56,"FertilityCare Center of Rockville Centre (NY)",FALSE,TRUE,TRUE,2
+57,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE,1
+58,"FertilityCare Center of the Big Horns (WY)",TRUE,TRUE,TRUE,3
+59,"FertilityCare Center of the Diocese of Phoenix (AZ)",TRUE,TRUE,FALSE,2
+60,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE,1
+61,"FertilityCare of the Palouse (ID)",FALSE,TRUE,TRUE,2
+62,"FertilityCare Services Catholic Diocese of Wichita (KS)",TRUE,TRUE,TRUE,3
+63,"FertilityCare Services of Denver through Bella Health + Wellness (CO)",TRUE,TRUE,TRUE,3
+64,"FertilityCare Services of the Heartland (ND)",TRUE,TRUE,TRUE,3
 65,"Fidem FertilityCare Center (IA)",TRUE,TRUE,TRUE,3
 66,"Flourish FertilityCare (AL)",TRUE,TRUE,TRUE,3
 67,"Helena FertilityCare (MT)",TRUE,TRUE,TRUE,3

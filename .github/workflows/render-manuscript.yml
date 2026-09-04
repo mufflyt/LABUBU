@@ -11,9 +11,20 @@ on:
       - 'mysterycall_outputs/**'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MYSTERYCALL_SHA: 42d66d92ef52a0f85d1f7c61208c2ddd79d9c06e
+
 jobs:
   render-manuscript:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Check out repository
@@ -28,9 +39,13 @@ jobs:
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
+      # See nightly.yml for why `packages:` is explicit and glmmTMB is absent.
       - name: Query R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -46,6 +61,19 @@ jobs:
             any::survival
             any::readr
             any::remotes
+
+      # The manuscript now computes every number inline via mysterycall
+      # (prevalence_ci, abstract_numbers, logistic_model, lmm), so this
+      # workflow needs the package -- it previously rendered without it.
+      - name: Install mysterycall at the pinned SHA
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          remotes::install_github(paste0("mufflyt/mysterycall@", Sys.getenv("MYSTERYCALL_SHA")),
+                                  upgrade = "never")
+          if (!requireNamespace("mysterycall", quietly = TRUE))
+            stop("mysterycall failed to install; the manuscript cannot render its numbers")
 
       - name: Render Manuscript (HTML and Word)
         run: |

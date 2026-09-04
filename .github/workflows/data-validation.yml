@@ -1,30 +1,110 @@
-name: Data Validation & PR Check
+name: Data Validation & Scientific Gate
+
+# Two tiers, following mufflyt/isochrones-ci:
+#
+#   gate     -- base R only, no package solve, runs on every PR in ~1 minute.
+#               Validates the outputs the PR actually proposes to merge.
+#   pipeline -- re-derives those outputs from REDCap. Requires a token, so it
+#               skips unless REDCAP_LABUBU_TOKEN is configured.
+#
+# The gate deliberately depends on nothing installable. A validation job that
+# can be taken down by an unrelated CRAN archival is not a validation job.
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Pinned, not floating. The analysis depends on package behaviour that can
+  # change silently under `main` -- mysterycall_exclusion_crosswalk() contents
+  # and mysterycall_lmm(auto_log=) in particular.
+  MYSTERYCALL_SHA: 42d66d92ef52a0f85d1f7c61208c2ddd79d9c06e
 
 jobs:
-  validate-data:
+  gate:
+    name: scientific gate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
+      # No setup-r-dependencies. scientific-gate.R and gate-selftest.R use only
+      # base R plus tools::md5sum, so there is no package solve to fail. This
+      # matters: glmmTMB -> pbkrtest -> doBy -> Deriv is currently unsolvable
+      # because Deriv was archived from CRAN, and that has nothing to do with
+      # whether this study's outputs are valid.
+      - uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.4.2'
           use-public-rspm: true
 
-      - name: Set up Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+      - name: Record the environment
+        if: always()
+        shell: Rscript {0}
+        run: |
+          dir.create("ci-results", showWarnings = FALSE)
+          writeLines(utils::capture.output(utils::sessionInfo()), "ci-results/sessionInfo.txt")
+          writeLines(c(paste0("mysterycall_sha=", Sys.getenv("MYSTERYCALL_SHA")),
+                       paste0("r_version=", as.character(getRversion())),
+                       paste0("commit=", Sys.getenv("GITHUB_SHA"))),
+                     "ci-results/run-parameters.txt")
 
-      - name: Query R dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+      # "Did the gate work" and "did the study pass" are separate signals, so
+      # the self-test runs first and independently.
+      - name: Gate self-test
+        run: Rscript .github/scripts/gate-selftest.R
+
+      - name: Scientific gate
+        run: Rscript .github/scripts/scientific-gate.R
+
+      - name: Upload CI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
+          name: labubu-gate-${{ github.run_id }}
+          path: ci-results/
+          retention-days: 14
+          if-no-files-found: error
+
+  pipeline:
+    name: re-derive from REDCap
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Raw exports are gitignored, so this can only run where a token exists.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      # `packages:` is explicit rather than the default `deps::.`, which scans
+      # the project, finds library(mysterycall), and asks pak to resolve a
+      # GitHub-only package from CRAN -- one unsolvable node that cascades
+      # "dependency conflict" onto everything else.
+      #
+      # glmmTMB is deliberately absent: its dependency Deriv is archived from
+      # CRAN. mysterycall_hurdle_wait() is wrapped in tryCatch, so the report
+      # degrades to "hurdle model not run" rather than failing the build.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -43,20 +123,38 @@ jobs:
             any::httr
             any::jsonlite
 
-      - name: Install mysterycall package
+      - name: Install mysterycall at the pinned SHA
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
         run: |
-          Rscript -e 'remotes::install_github("mufflyt/mysterycall", upgrade = "never")'
+          remotes::install_github(paste0("mufflyt/mysterycall@", Sys.getenv("MYSTERYCALL_SHA")),
+                                  upgrade = "never")
+          if (!requireNamespace("mysterycall", quietly = TRUE))
+            stop("mysterycall failed to install; refusing to run a pipeline that ",
+                 "would skip every package-backed check and report green")
 
-      - name: Run Data Cleaning & Model Evaluation
+      - name: Re-derive outputs
+        env:
+          REDCAP_LABUBU_TOKEN: ${{ secrets.REDCAP_LABUBU_TOKEN }}
         run: |
-          Rscript -e 'source("evaluate_labubu_mysterycall.R")'
-
-      - name: Check for Unresolved Near-Duplicate Practice Names
-        run: |
-          if [ -f "mysterycall_outputs/practice_name_review_nearduplicates.csv" ]; then
-            COUNT=$(wc -l < mysterycall_outputs/practice_name_review_nearduplicates.csv)
-            if [ "$COUNT" -gt 1 ]; then
-              echo "WARNING: $COUNT near-duplicate practice pairs detected."
-              cat mysterycall_outputs/practice_name_review_nearduplicates.csv
-            fi
+          if [ -z "$REDCAP_LABUBU_TOKEN" ]; then
+            echo "::error title=No REDCap token::REDCAP_LABUBU_TOKEN is not configured, so outputs cannot be re-derived."
+            exit 1
           fi
+          Rscript refresh.R --pull
+          Rscript provenance.R
+
+      - name: Scientific gate on re-derived outputs
+        run: Rscript .github/scripts/scientific-gate.R
+
+      - name: Upload CI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labubu-pipeline-${{ github.run_id }}
+          path: |
+            ci-results/
+            mysterycall_outputs/
+          retention-days: 14
+          if-no-files-found: warn

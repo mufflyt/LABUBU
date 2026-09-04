@@ -1,0 +1,6 @@
+"variable","label","missingness_type","n_total","n_missing","pct_missing","n_unknown","n_informative","pct_informative"
+"first_appt_date","first_appt_date","item-level",98,41,41.8,0,57,58.2
+"wait_category","wait_category","item-level",98,36,36.7,0,62,63.3
+"pregnancy_time","pregnancy_time","item-level",98,29,29.6,0,69,70.4
+"cost_estimate","cost_estimate","item-level",98,27,27.6,0,71,72.4
+"insurance","insurance","item-level",98,22,22.4,0,76,77.6

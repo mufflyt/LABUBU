@@ -83,14 +83,22 @@ if (file.exists(clean_path)) {
   d <- read.csv(clean_path, stringsAsFactors = FALSE)
   w <- d |> filter(analytic_inclusion == TRUE, !is.na(business_days), business_days >= 0)
   m <- w |> group_by(practice_id) |> filter(n_distinct(scenario) >= 2) |> ungroup()
+  tfp <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+  offer <- d[tfp(d$in_offer_den) & !is.na(d$appt_offered), ]
   den <- list(
     all_records = list(
       n = nrow(d), practices = n_distinct(d$practice_id),
       rule = "every row in the REDCap export"),
+    reached = list(
+      n = sum(tfp(d$reached)), practices = n_distinct(d$practice_id[tfp(d$reached)]),
+      rule = "a live office answered (exclusion codes 0, 2, 7, 9, 10)"),
+    offer_analytic = list(
+      n = nrow(offer), practices = n_distinct(offer$practice_id),
+      rule = "offer-eligible (codes 0, 7, 9, 10) with a derived appt_offered value"),
     analytic_inclusion = list(
       n = sum(d$analytic_inclusion == TRUE, na.rm = TRUE),
       practices = n_distinct(d$practice_id[d$analytic_inclusion == TRUE]),
-      rule = "Reason for exclusions == 'Included where physician was able to be contacted'"),
+      rule = "Reason for exclusions == 'Included where physician was able to be contacted' (code 0 only)"),
     wait_subset = list(
       n = nrow(w), practices = n_distinct(w$practice_id),
       rule = "analytic_inclusion & non-missing, non-negative business_days"),
@@ -188,6 +196,8 @@ for (k in names(den)) {
   L <- c(L, sprintf("| `%s` | %s | %s | %s |", k, z(x$n), z(x$practices), x$rule))
 }
 L <- c(L, "",
+  "`reached` and `offer_analytic` are the outcome denominators; `analytic_inclusion`",
+  "is the narrower historical flag (code 0 only) that the figures still use.",
   "The gap between levels is not attrition to be explained away: `analytic_inclusion`",
   "drops non-contacts, and the wait subset additionally requires an observed",
   "appointment date, which most included calls never produced.",

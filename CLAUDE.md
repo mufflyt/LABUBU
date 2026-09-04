@@ -30,29 +30,72 @@ Rscript call_progress.R    # how many single-mother calls remain / triads comple
   models via the `mysterycall` package. Reads the file named in `input_file`
   (guarded: `refresh.R` overrides it; otherwise a default filename is used).
   Writes ~15 CSVs + `mysterycall_outputs/mysterycall_evaluation.md`.
-  - Primary: mixed-effects logistic regression (`glmer`), acceptance ~ scenario.
-  - Secondary: LMM, business-days wait ~ scenario.
-  - Matched: exact McNemar (acceptance) + paired t/Wilcoxon (wait), each with a
-    power/MDE statement — these are the **unconfounded** comparisons.
-  - Sensitivity: GEE.
+  - Access cascade: `mysterycall_access_cascade()`, stage-by-stage denominators.
+  - Primary: mixed-effects logistic regression (`glmer`), `appt_offered` ~
+    scenario, on complete triads; plus a broad-definition sensitivity model.
+  - Secondary: the same model on `reached` (what the pipeline used to call
+    "acceptance").
+  - Two-part: `mysterycall_hurdle_wait()` — offer and wait estimated jointly,
+    instead of a complete-case wait model that conditions on scenario-dependent
+    missingness.
+  - Wait: LMM reported as geometric mean ratios (`$gmr_table`).
+  - Matched: exact McNemar on the offer outcome and on reachability, each with a
+    power/MDE statement. These remove practice selection but **not** caller
+    confounding.
+  - Caller diagnostics: caller x scenario crosstab, Cramér's V, per-caller
+    rates, caller-adjusted model, `mysterycall_caller_drift()`.
+  - Sensitivity: GEE. QC: `mysterycall_guard_contaminated_wait()`,
+    Little's MCAR, `mysterycall_flag_*()`.
+  - Figure: `mysterycall_strobe_flow()` -> `figures/fig0_strobe_flow.png`.
 - **`figures_wait_time.R`** — raincloud / ridge / ECDF / within-practice-pair plots.
 - **`app.R`** — Shiny explorer over `mysterycall_outputs/labubu_cleaned_analysis.csv`.
 
 ## Settled analytical decisions (don't relitigate)
 
-1. **The unmatched marginal acceptance comparison is confounded — do not report
-   it.** Single-mother calls landed disproportionately at high-acceptance
-   practices (~70% accept-everyone vs ~14% at practices never called for SM),
-   inflating single-mother acceptance to a misleading 64%. Within-practice,
-   single mothers do slightly *worse* (~7 pts). Report only the paired analysis.
-2. **Scenario comparisons are underpowered** (9–11 discordant practices; only a
-   ~5–6× OR is detectable). Frame as exploratory with an explicit power floor.
-3. **Lead the paper with the well-powered descriptives:** IUI 1%, IVF 1%, donor
-   sperm 3%, cycle tracking 94%, overall offer rate 45%, concordance 69–77%.
-4. **Finishing the single-mother arm is the highest-value action** — it
-   de-confounds the comparison and roughly doubles the effective sample
-   (targeted lists: `mysterycall_outputs/single_mother_calls_priority1_triads.csv`
-   and `..._priority2_pairs.csv`).
+1. **REACHED is not OFFERED — never collapse them.** `contact_office` used to
+   alias `analytic_inclusion`, which made the "appointment offered" outcome the
+   same variable as the inclusion filter: acceptance was 100% inside the
+   analytic sample by construction, and the 10 reached-but-declined calls (the
+   only unambiguous offered = 0 events) were discarded. The pipeline now uses
+   `mysterycall_exclusion_crosswalk()` to keep three denominators apart —
+   `reached` (108), `in_offer_den` (102), `analytic_inclusion` (98) — and
+   reports them as an access cascade. `contact_office` now means "a live office
+   answered".
+2. **The offer outcome is a derived proxy, and that is the study's biggest
+   measurement limitation.** REDCap has no "did they agree to schedule you?"
+   item. `appt_offered` (strict) = an appointment date was recorded, with
+   "Not accepting new patients" scored 0. `appt_offered_broad` (sensitivity)
+   also credits a concrete scheduling timeframe. The strict/broad gap is large
+   (triad OR 0.04 vs 0.31 for lesbian couples), so always report both.
+   **Adding an explicit offer field to REDCap is the highest-value fix.**
+3. **Caller is confounded with scenario and within-practice pairing does NOT
+   fix it.** Cramér's V = 0.66; one caller placed 53/77 straight-couple calls
+   and zero single-mother calls. Paired calls were dialled by different people,
+   so a scenario contrast is also a caller contrast. Adjusting for caller
+   inflates the scenario SEs to non-identifiability — report that as the
+   evidence, not as a corrected estimate. **Randomize or block caller across
+   scenarios in the next wave.**
+4. **Scenario comparisons are underpowered** (2–8 discordant practices on the
+   offer outcome; MDE OR 8.1–9.0). Frame as exploratory with an explicit power
+   floor.
+5. **Lead the paper with the well-powered descriptives:** IUI 1%, IVF 1%, donor
+   sperm 3%, cycle tracking 95%, reach rate 46%. These rest on directly observed
+   responses, not on the derived outcome, and are unaffected by caller
+   assignment. IUI and IVF are each a single practice — say so.
+6. **Wait-time estimates are geometric mean ratios, not days.**
+   `mysterycall_lmm(auto_log = TRUE)` log-transforms a right-skewed outcome and
+   returns log-scale coefficients; the back-transform is in `$gmr_table`. An
+   intercept of 2.9 is 2.9 log-units (≈18 business days), not 2.9 days.
+7. **The three "restrictions on the individuals you would provide care to"
+   checkboxes are the only directly measured discrimination item and are not
+   yet analysable** — the straight-couple box is ticked on straight-couple
+   calls, so "checked" may mean restricted or served. Adjudicate against the
+   codebook (`restriction_checkbox_review.csv`), then reconsider as a primary
+   outcome.
+8. **Finishing the single-mother arm remains worthwhile** but does not fix
+   items 1–3 (targeted lists:
+   `mysterycall_outputs/single_mother_calls_priority1_triads.csv` and
+   `..._priority2_pairs.csv`).
 
 ## Gotchas
 

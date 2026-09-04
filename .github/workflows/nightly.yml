@@ -14,12 +14,24 @@ on:
       - '**.csv'
       - '.github/workflows/*.yml'
 
+# A nightly that auto-commits must not race with itself or with a manual run;
+# without this two runs can both push to main.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
+
+env:
+  # Pinned. An unpinned mysterycall means a package commit can silently change
+  # the auto-committed manuscript with no diff in this repo.
+  MYSTERYCALL_SHA: 42d66d92ef52a0f85d1f7c61208c2ddd79d9c06e
 
 jobs:
   nightly-refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Check out repository
@@ -36,9 +48,17 @@ jobs:
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
+      # Explicit `packages:` (not the default `deps::.`, which tries to resolve
+      # the GitHub-only mysterycall from CRAN) and hard deps only (Suggests
+      # drag in pbkrtest -> doBy -> Deriv, and Deriv is archived from CRAN).
+      # glmmTMB is therefore absent; mysterycall_hurdle_wait() is wrapped in
+      # tryCatch and degrades to "hurdle model not run".
       - name: Query R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
           extra-packages: |
             any::dplyr
             any::ggplot2
@@ -57,9 +77,16 @@ jobs:
             any::httr
             any::jsonlite
 
-      - name: Install mysterycall package from GitHub
+      - name: Install mysterycall at the pinned SHA
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
         run: |
-          Rscript -e 'remotes::install_github("mufflyt/mysterycall", upgrade = "never")'
+          remotes::install_github(paste0("mufflyt/mysterycall@", Sys.getenv("MYSTERYCALL_SHA")),
+                                  upgrade = "never")
+          if (!requireNamespace("mysterycall", quietly = TRUE))
+            stop("mysterycall failed to install; refusing to auto-commit results ",
+                 "produced without it")
 
       - name: Run LABUBU Refresh Pipeline
         env:
@@ -73,6 +100,13 @@ jobs:
             Rscript refresh.R
           fi
 
+      # The gate runs BEFORE the manuscript is rendered and committed. An
+      # unvalidated auto-commit to main is how a defective analysis stayed
+      # publishable-looking for months; the nightly must not push results that
+      # fail the structural invariants.
+      - name: Scientific gate
+        run: Rscript .github/scripts/scientific-gate.R
+
       - name: Render Reproducible Manuscript (Word & HTML)
         run: |
           Rscript -e 'rmarkdown::render("labubu_mysterycall_manuscript.Rmd", output_format="all")'
@@ -82,12 +116,28 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add mysterycall_outputs/ PROVENANCE.md labubu_mysterycall_manuscript.html labubu_mysterycall_manuscript.docx || true
+          git add mysterycall_outputs/ PROVENANCE.md CLAUDE.md \
+                  labubu_mysterycall_manuscript.html labubu_mysterycall_manuscript.docx || true
           
           if git diff --staged --quiet; then
             echo "No changes in output artifacts or provenance."
           else
             echo "Artifacts updated. Committing refreshed results..."
-            git commit -m "Nightly CI: auto-refresh pipeline outputs, figures, and manuscript [skip ci]"
+            git commit -m "Nightly CI: auto-refresh pipeline outputs, figures, and manuscript
+
+            Scientific gate passed at mysterycall@${MYSTERYCALL_SHA}.
+
+            [skip ci]"
             git push origin main
           fi
+
+      - name: Upload CI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ github.run_id }}
+          path: |
+            ci-results/
+            mysterycall_outputs/
+          retention-days: 14
+          if-no-files-found: warn

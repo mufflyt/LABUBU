@@ -35,6 +35,7 @@ col_cost      <- "How much do these services typically cost?"
 col_rei       <- "Do you refer to an REI if we aren't successful?"
 col_donor     <- "Do you work with donor sperm?"
 col_notes     <- "notes"
+col_completer <- "Name of person completing form.  THANK YOU!"
 col_complete  <- "Complete?"
 
 # ── Helper functions ──────────────────────────────────────────────────────────
@@ -125,6 +126,7 @@ dat <- data.frame(
   restrict_straight      = checkbox(raw[["Are there any restrictions to the individuals you would provide care to?  (choice=Straight couple)"]]),
   restrict_single_mother = checkbox(raw[["Are there any restrictions to the individuals you would provide care to?  (choice=Single mother)"]]),
   notes_present          = !is.na(raw[[col_notes]]) & trimws(raw[[col_notes]]) != "",
+  caller_raw             = trimws(raw[[col_completer]]),
   stringsAsFactors       = FALSE
 )
 
@@ -133,8 +135,41 @@ dat$scenario[dat$scenario == ""] <- NA_character_
 dat$exclusion_code     <- exclusion_code_map[dat$exclusion_reason]
 dat$analytic_inclusion <- !is.na(dat$exclusion_reason) & dat$exclusion_reason == included_value
 dat$form_finalized     <- !is.na(dat$complete) & dat$complete == "Complete"
-dat$contact_office     <- dat$analytic_inclusion
 dat$wait_days          <- as.numeric(dat$first_appt_date - dat$call_date)
+
+# ── Caller identity (for the confounding diagnostics) ─────────────────────────
+# REDCap free-texts the form completer; collapse casing/spelling variants so the
+# caller-by-scenario crosstab is not fragmented across the same person.
+dat$caller <- dat$caller_raw
+dat$caller[is.na(dat$caller) | dat$caller == ""] <- "Unrecorded"
+dat$caller <- sub("^Mufflly$", "Muffly", dat$caller)
+dat$caller <- sub("^sr$",      "SR",     dat$caller)
+dat$caller <- sub("^sofie$",   "Sofie",  dat$caller)
+
+# ── Outcome architecture: REACHED is not OFFERED ──────────────────────────────
+# mysterycall_exclusion_crosswalk() is the package's canonical mapping and keeps
+# three distinct concepts apart. Collapsing them (the previous
+# `contact_office <- analytic_inclusion`) made the "appointment offered" outcome
+# identical to the analytic-inclusion filter, so acceptance was 100% inside the
+# analytic sample by construction and the only true refusals were thrown away.
+#
+#   reached      a human answered and engaged                     (codes 0,2,7,9,10)
+#   in_logistic  eligible for the appointment-offer model         (codes 0,7,9,10)
+#   label_included  the historical "included" flag                (code 0)
+#
+# Code 9 ("Not accepting new patients") is a REACHED REFUSAL: the only
+# unambiguous offered = 0 events in the study. They were previously excluded.
+exclusion_xw <- as.data.frame(mysterycall_exclusion_crosswalk())
+xw_i <- match(dat$exclusion_code, exclusion_xw$code)
+na_false <- function(x) { x[is.na(x)] <- FALSE; x }
+dat$reached          <- na_false(exclusion_xw$reached[xw_i])
+dat$in_offer_den     <- na_false(exclusion_xw$in_logistic[xw_i])
+dat$explicit_refusal <- !is.na(dat$exclusion_code) & dat$exclusion_code == 9L
+
+# `contact_office` now carries its honest meaning (a live office was reached),
+# NOT "an appointment was offered". Downstream code that wants the offer
+# outcome must use `appt_offered`.
+dat$contact_office <- dat$reached
 # Business days (Mon–Fri, excluding US federal holidays) via the package helper.
 # Falls back to calendar days if bizdays is not installed.
 dat <- tryCatch(
@@ -147,6 +182,43 @@ dat <- tryCatch(
   error = function(e) { dat$business_days <- dat$wait_days; dat }
 )
 dat$first_appt_missing <- is.na(dat$first_appt_date)
+
+# ── The appointment-offer outcome ─────────────────────────────────────────────
+# The REDCap instrument has no "did they agree to schedule you?" item, so the
+# offer outcome has to be derived. mysterycall_appointment_obtained() builds the
+# binary indicator and the business-day wait together and, critically, keeps
+# same-day appointments as wait = 0 instead of dropping them to NA (which would
+# silently recode the strongest-access calls as "not obtained").
+dat <- tryCatch(
+  mysterycall_appointment_obtained(
+    dat,
+    call_col     = "call_date",
+    appt_col     = "first_appt_date",
+    obtained_col = "appt_obtained",
+    wait_col     = "biz_wait",
+    add_wait     = TRUE
+  ),
+  error = function(e) { dat$appt_obtained <- NA_integer_; dat$biz_wait <- NA_real_; dat }
+)
+
+# STRICT definition (primary): among calls eligible for the offer model, a
+# concrete appointment date was obtained. An explicit "not accepting new
+# patients" is a hard 0 regardless of dates.
+dat$appt_offered <- NA_integer_
+den <- dat$in_offer_den
+dat$appt_offered[den] <- ifelse(dat$explicit_refusal[den], 0L, dat$appt_obtained[den])
+
+# BROAD definition (sensitivity): a date OR a concrete scheduling timeframe
+# ("Less than 1 mo" / "1-2 mo" / "3+ mo"). Ten reached calls gave a timeframe but
+# no date; the strict definition scores those as refusals, which is arguably too
+# harsh, so both are reported.
+dat$scheduling_timeframe_given <- !is.na(dat$wait_category) & dat$wait_category != ""
+dat$appt_offered_broad <- dat$appt_offered
+dat$appt_offered_broad[den & !dat$explicit_refusal &
+                       dat$scheduling_timeframe_given &
+                       (is.na(dat$appt_offered) | dat$appt_offered == 0L)] <- 1L
+
+dat$call_placed        <- TRUE
 dat$insurance_accepts  <- !is.na(dat$insurance) & dat$insurance == "Yes they accept insurance"
 dat$blue_cross_bcbs_response <- dat$insurance
 dat$cost_provided      <- !is.na(dat$cost_estimate) & dat$cost_estimate != "" &
@@ -275,6 +347,10 @@ if (nrow(name_near_dupes) > 0)
 # ── Analytic subsets ──────────────────────────────────────────────────────────
 included          <- dat[dat$analytic_inclusion, ]
 included_complete <- dat[dat$analytic_inclusion & dat$form_finalized, ]
+reached_calls     <- dat[dat$reached, ]                       # a live office answered
+offer_den         <- dat[dat$in_offer_den, ]                  # eligible for the offer model
+offer_analytic    <- dat[dat$in_offer_den & !is.na(dat$appt_offered) &
+                         !is.na(dat$scenario), ]
 
 # ── Required columns for completeness check ───────────────────────────────────
 required_cols <- c(
@@ -293,17 +369,28 @@ quality <- mysterycall_assess_data_quality(
   required_columns = c("record_id", "scenario", "practice", "exclusion_reason", "complete")
 )
 
-acceptance_all <- mysterycall_acceptance_rate(
+# Reachability by scenario (denominator = every call placed). This is what the
+# old "acceptance_all" table reported; it is now named for what it measures.
+reach_all <- mysterycall_acceptance_rate(
   dat[!is.na(dat$scenario), ],
-  accepted_col = "contact_office",
+  accepted_col = "reached",
   group_by     = "scenario"
 )
 
-acceptance_finalized <- mysterycall_acceptance_rate(
-  dat[dat$analytic_inclusion & dat$form_finalized & !is.na(dat$scenario), ],
-  accepted_col = "contact_office",
-  group_by     = "scenario"
-)
+# Appointment-offer rate by scenario (denominator = offer-eligible calls).
+offer_by_scenario <- tryCatch(
+  mysterycall_acceptance_rate(
+    offer_analytic,
+    accepted_col = "appt_offered",
+    group_by     = "scenario"
+  ), error = function(e) NULL)
+
+offer_by_scenario_broad <- tryCatch(
+  mysterycall_acceptance_rate(
+    dat[dat$in_offer_den & !is.na(dat$appt_offered_broad) & !is.na(dat$scenario), ],
+    accepted_col = "appt_offered_broad",
+    group_by     = "scenario"
+  ), error = function(e) NULL)
 
 wait_included          <- mysterycall_wait_time_summary(included,          wait_col = "wait_days", group_by = "scenario")
 wait_included_complete <- mysterycall_wait_time_summary(included_complete, wait_col = "wait_days", group_by = "scenario")
@@ -328,6 +415,162 @@ table1 <- mysterycall_table1(
   include_overall = TRUE
 )
 
+# ── ACCESS CASCADE — reachability and offer are separate stages ──────────────
+# Replaces the single "acceptance" number, which silently mixed "nobody picked
+# up" with "they picked up and said no".
+cascade <- tryCatch(
+  mysterycall_access_cascade(
+    dat,
+    list(
+      mysterycall_cascade_stage("Calls placed",              "call_placed",   TRUE),
+      mysterycall_cascade_stage("Reached a live office",     "reached",       TRUE,
+                                denominator = "previous"),
+      mysterycall_cascade_stage("Eligible for offer model",  "in_offer_den",  TRUE,
+                                denominator = "previous"),
+      mysterycall_cascade_stage("Appointment offered",       "appt_offered",  1L,
+                                denominator = "previous")
+    )
+  ),
+  error = function(e) structure(list(error = conditionMessage(e)), class = "cascade_error")
+)
+
+# By-scenario version of the same cascade (counts, not a model).
+cascade_by_scenario <- local({
+  sc <- levels(dat$scenario)
+  do.call(rbind, lapply(sc, function(s) {
+    x  <- dat[!is.na(dat$scenario) & dat$scenario == s, ]
+    ob <- x$appt_offered_broad
+    data.frame(
+      scenario              = s,
+      calls_placed          = nrow(x),
+      reached               = sum(x$reached),
+      offer_eligible        = sum(x$in_offer_den),
+      offered_strict        = sum(x$appt_offered == 1L, na.rm = TRUE),
+      offered_broad         = sum(ob == 1L, na.rm = TRUE),
+      pct_offered_strict    = round(100 * mean(x$appt_offered == 1L, na.rm = TRUE), 1),
+      pct_offered_broad     = round(100 * mean(ob == 1L, na.rm = TRUE), 1),
+      stringsAsFactors = FALSE
+    )
+  }))
+})
+
+# ── CALLER CONFOUNDING DIAGNOSTICS ───────────────────────────────────────────
+# Scenario was not randomised across callers. If one caller placed most of one
+# scenario's calls, a "scenario effect" and a "caller effect" are the same
+# number and no amount of within-practice pairing separates them.
+caller_scenario_tab <- table(dat$caller, dat$scenario)
+
+caller_scenario_test <- tryCatch(
+  mysterycall_test_categorical(dat[!is.na(dat$scenario), ],
+                               row_var = "caller", col_var = "scenario",
+                               method = "auto"),
+  error = function(e) NULL
+)
+
+caller_rates <- local({
+  cs <- sort(unique(dat$caller))
+  do.call(rbind, lapply(cs, function(cc) {
+    x <- dat[dat$caller == cc, ]
+    data.frame(
+      caller         = cc,
+      n_calls        = nrow(x),
+      pct_reached    = round(100 * mean(x$reached), 1),
+      n_offer_eligible = sum(x$in_offer_den),
+      pct_offered    = round(100 * mean(x$appt_offered == 1L, na.rm = TRUE), 1),
+      stringsAsFactors = FALSE
+    )
+  }))
+})
+
+# Largest share any single caller holds of a scenario's calls — the headline
+# number for the limitations paragraph.
+caller_dominance <- local({
+  m <- as.matrix(caller_scenario_tab)
+  do.call(rbind, lapply(colnames(m), function(s) {
+    col <- m[, s]; top <- which.max(col)
+    data.frame(scenario = s, n_calls = sum(col),
+               top_caller = rownames(m)[top], top_caller_n = col[top],
+               top_caller_pct = round(100 * col[top] / sum(col), 1),
+               stringsAsFactors = FALSE)
+  }))
+})
+
+# Can scenario and caller be separated in one model? Fit both and compare.
+caller_adjusted_glmer <- tryCatch({
+  dd <- offer_analytic[!is.na(offer_analytic$practice_id), ]
+  dd$caller <- factor(dd$caller)
+  if (nlevels(dd$caller) < 2) stop("only one caller level in the offer sample")
+  fit <- lme4::glmer(appt_offered ~ scenario + caller + (1 | practice_id),
+                     data = dd, family = binomial)
+  list(ok = TRUE, fit = fit,
+       text = paste(capture.output(print(summary(fit)$coefficients)), collapse = "\n"))
+}, error = function(e) list(ok = FALSE, text = conditionMessage(e)))
+
+drift <- tryCatch({
+  dd <- offer_analytic
+  dd$offered <- dd$appt_offered
+  mysterycall_caller_drift(dd, outcome_col = "offered", date_col = "call_date",
+                           caller_col = "caller", plot = FALSE)
+}, error = function(e) NULL)
+
+# ── SERVICE MENU — Wilson CIs via the package ────────────────────────────────
+service_vars <- c("service_cycle_tracking", "service_hormonal_timing",
+                  "service_ovulation_induction", "service_iui", "service_ivf")
+included$services_multi <- apply(included[service_vars], 1, function(r)
+  paste(sub("^service_", "", service_vars)[as.logical(r)], collapse = ";"))
+service_prev <- tryCatch(
+  as.data.frame(mysterycall_multiresponse_tabulate(included, var = "services_multi",
+                                                   sep = ";")$prevalence),
+  error = function(e) NULL)
+donor_prev <- tryCatch(
+  as.data.frame(mysterycall_prevalence_ci(included, var = "donor_sperm_yes")),
+  error = function(e) NULL)
+
+# The three "restrictions to the individuals you would provide care to"
+# checkboxes are the only directly measured discrimination item. Their coding is
+# ambiguous (the straight-couple box is ticked on straight-couple calls), so they
+# are tabulated for adjudication, not analysed.
+restrict_vars <- c("restrict_lesbian", "restrict_straight", "restrict_single_mother")
+restrict_tab <- do.call(rbind, lapply(restrict_vars, function(v)
+  data.frame(item = v,
+             checked_all = sum(dat[[v]]),
+             checked_included = sum(included[[v]]),
+             paste(paste0(levels(dat$scenario), "=",
+                          tapply(included[[v]], included$scenario, sum)[levels(dat$scenario)]),
+                   collapse = ", "),
+             stringsAsFactors = FALSE)))
+names(restrict_tab)[4] <- "by_scenario_included"
+
+# ── MISSINGNESS — Little's MCAR instead of an asserted MAR ───────────────────
+mcar <- tryCatch(
+  build_missingness_mcar_table(
+    included,
+    item_vars = c("first_appt_date", "wait_category", "insurance",
+                  "cost_estimate", "pregnancy_time")
+  ),
+  error = function(e) NULL)
+
+# ── QC: wait-time contamination and inclusion/outcome discrepancies ──────────
+qc <- local({
+  dq <- dat
+  dq$business_days_until_appointment <- dq$business_days
+  dq$reason_for_exclusions <- ifelse(dq$analytic_inclusion, "Able to contact",
+                                     dq$exclusion_reason)
+  dq$physician_information <- dq$practice
+  dq$id_number             <- dq$record_id
+  dq$notes                 <- ""
+  guard <- tryCatch(
+    { mysterycall_guard_contaminated_wait(dq, wait_col = "business_days_until_appointment",
+        appointment_col = "first_appt_date", exclusion_col = "reason_for_exclusions",
+        action = "warn"); "clean" },
+    error = function(e) paste("CONTAMINATED:", conditionMessage(e)))
+  inc_na  <- tryCatch(nrow(mysterycall_flag_included_na_appointments(dq, output_dir = out_dir)),
+                      error = function(e) NA_integer_)
+  exc_ap  <- tryCatch(nrow(mysterycall_flag_excluded_with_appointments(dq, output_dir = out_dir)),
+                      error = function(e) NA_integer_)
+  list(guard = guard, included_na_appt = inc_na, excluded_with_appt = exc_ap)
+})
+
 scenario_counts <- as.data.frame.matrix(table(dat$scenario, dat$complete, useNA = "ifany"))
 scenario_counts$scenario <- rownames(scenario_counts)
 rownames(scenario_counts) <- NULL
@@ -345,10 +588,12 @@ fmt_p <- function(p) if (is.na(p)) "NA" else if (p < 0.001) "< 0.001" else signi
 # Complete triad practice IDs (for unconfounded paired GLMER)
 triad_practice_ids <- coverage_df$practice_id[coverage_df$n_scenarios == 3]
 
-glmer_acceptance <- tryCatch(
+# PRIMARY: appointment offered, among calls that reached an office and are
+# eligible for the offer model. This is the outcome the protocol describes.
+glmer_offer <- tryCatch(
   mysterycall_logistic_model(
-    data             = dat[!is.na(dat$practice_id) & !is.na(dat$scenario), ],
-    outcome          = "contact_office",
+    data             = offer_analytic[!is.na(offer_analytic$practice_id), ],
+    outcome          = "appt_offered",
     predictors       = "scenario",
     random_intercept = "practice_id"
   ),
@@ -356,17 +601,68 @@ glmer_acceptance <- tryCatch(
                                 class = "mysterycall_logistic_model_error")
 )
 
-# Unconfounded GLMER (restricted to practices with all 3 scenarios complete)
-glmer_acceptance_triads <- tryCatch(
+glmer_offer_triads <- tryCatch(
   mysterycall_logistic_model(
-    data             = dat[!is.na(dat$practice_id) & dat$practice_id %in% triad_practice_ids & !is.na(dat$scenario), ],
-    outcome          = "contact_office",
+    data             = offer_analytic[!is.na(offer_analytic$practice_id) &
+                                      offer_analytic$practice_id %in% triad_practice_ids, ],
+    outcome          = "appt_offered",
     predictors       = "scenario",
     random_intercept = "practice_id"
   ),
   error = function(e) structure(list(error = conditionMessage(e)),
                                 class = "mysterycall_logistic_model_error")
 )
+
+# Sensitivity: broad offer definition (date OR a concrete scheduling timeframe).
+glmer_offer_broad <- tryCatch(
+  mysterycall_logistic_model(
+    data             = dat[dat$in_offer_den & !is.na(dat$appt_offered_broad) &
+                           !is.na(dat$scenario) & !is.na(dat$practice_id), ],
+    outcome          = "appt_offered_broad",
+    predictors       = "scenario",
+    random_intercept = "practice_id"
+  ),
+  error = function(e) structure(list(error = conditionMessage(e)),
+                                class = "mysterycall_logistic_model_error")
+)
+
+# SECONDARY (relabelled, not removed): reachability. This is what the previous
+# "acceptance" model actually estimated — whether a live office answered — and
+# it is a legitimate access outcome in its own right, just not "was an
+# appointment offered".
+glmer_reached <- tryCatch(
+  mysterycall_logistic_model(
+    data             = dat[!is.na(dat$practice_id) & !is.na(dat$scenario), ],
+    outcome          = "reached",
+    predictors       = "scenario",
+    random_intercept = "practice_id"
+  ),
+  error = function(e) structure(list(error = conditionMessage(e)),
+                                class = "mysterycall_logistic_model_error")
+)
+
+glmer_reached_triads <- tryCatch(
+  mysterycall_logistic_model(
+    data             = dat[!is.na(dat$practice_id) & dat$practice_id %in% triad_practice_ids & !is.na(dat$scenario), ],
+    outcome          = "reached",
+    predictors       = "scenario",
+    random_intercept = "practice_id"
+  ),
+  error = function(e) structure(list(error = conditionMessage(e)),
+                                class = "mysterycall_logistic_model_error")
+)
+
+# ── Two-part (hurdle) model — offer and wait estimated jointly ────────────────
+# The complete-case LMM below conditions on having an appointment date, and that
+# missingness is strongly scenario-dependent. The hurdle model estimates the
+# obtainment step and the wait-given-obtained step together instead of
+# discarding the first.
+hurdle_fit <- tryCatch({
+  hd <- offer_analytic[!is.na(offer_analytic$practice_id), ]
+  hd$obtained <- hd$appt_offered
+  mysterycall_hurdle_wait(hd, obtained_col = "obtained", wait_col = "biz_wait",
+                          predictors = "scenario", random_intercept = "practice_id")
+}, error = function(e) structure(list(error = conditionMessage(e)), class = "hurdle_error"))
 
 # ── Secondary analysis: mysterycall_lmm() ────────────────────────────────────
 # Linear mixed model for wait time (days); same random-intercept structure.
@@ -409,7 +705,7 @@ fmt_glmer_result <- function(res) {
     text = paste(capture.output(print(ot_fmt, row.names = FALSE)), collapse = "\n"),
     note = paste0(
       "mysterycall_logistic_model() [lme4::glmer]. ",
-      "Reference: Straight couple. OR < 1 = lower odds of appointment offer. ",
+      "Reference: Straight couple. OR < 1 = lower odds of the modelled outcome. ",
       "n = ", res$n, " records across ", res$n_clusters, " practices. ",
       "Practice random-intercept variance: ", round(re_var, 3), ". ",
       if (!conv$converged) "WARNING: convergence issue — interpret cautiously. " else "",
@@ -424,15 +720,32 @@ fmt_lmm_result <- function(res) {
   if (inherits(res, "mysterycall_lmm_error"))
     return(list(ok = FALSE, text = res$error, note = "", n = 0L))
 
-  ct <- as.data.frame(res$coef_table)
-  ct_fmt <- data.frame(
-    Term               = ct$term,
-    Est_business_days  = round(ct$estimate,  1),
-    CI_lo              = round(ct$ci_lower,  1),
-    CI_hi              = round(ct$ci_upper,  1),
-    p                  = ct$p_value_fmt,
-    stringsAsFactors   = FALSE
-  )
+  # mysterycall_lmm(auto_log = TRUE) log-transforms a right-skewed outcome and
+  # returns coefficients on the LOG scale, with the back-transform in
+  # $gmr_table. Labelling $coef_table as "business days" (the previous
+  # behaviour) misreported an intercept of 2.9 log-units as 2.9 days.
+  logged <- isTRUE(res$log_transformed)
+  if (logged && !is.null(res$gmr_table)) {
+    gt <- as.data.frame(res$gmr_table)
+    ct_fmt <- data.frame(
+      Term  = gt$term,
+      GMR   = round(gt$GMR,    2),
+      CI_lo = round(gt$GMR_lo, 2),
+      CI_hi = round(gt$GMR_hi, 2),
+      p     = gt$p_value_fmt,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    ct <- as.data.frame(res$coef_table)
+    ct_fmt <- data.frame(
+      Term              = ct$term,
+      Est_business_days = round(ct$estimate, 1),
+      CI_lo             = round(ct$ci_lower, 1),
+      CI_hi             = round(ct$ci_upper, 1),
+      p                 = ct$p_value_fmt,
+      stringsAsFactors  = FALSE
+    )
+  }
 
   sw_p      <- res$normality$p_value
   sw_str    <- fmt_p(sw_p)
@@ -449,10 +762,17 @@ fmt_lmm_result <- function(res) {
     ok   = TRUE,
     text = paste(capture.output(print(ct_fmt, row.names = FALSE)), collapse = "\n"),
     note = paste0(
-      "mysterycall_lmm() [lme4::lmer]. Outcome: business days until appointment ",
-      "(Mon-Fri, excluding US federal holidays). ",
-      "Estimates are mean difference in business days vs. Straight couple (reference); ",
-      "negative = shorter wait. ",
+      "mysterycall_lmm() [lme4::lmer]. Outcome: ", res$outcome_used, ". ",
+      if (logged)
+        paste0("auto_log applied log1p() to the right-skewed wait; the table is ",
+               "the back-transformed GEOMETRIC MEAN RATIO from $gmr_table. The ",
+               "intercept is the reference group's geometric-mean wait in ",
+               "business days; each scenario row is a multiplicative ratio vs. ",
+               "Straight couple (GMR < 1 = shorter wait). These are NOT ",
+               "differences in days. ")
+      else
+        paste0("Estimates are mean difference in business days vs. Straight ",
+               "couple (reference); negative = shorter wait. "),
       "n = ", res$n, " records with observed appointment date. ",
       norm_flag, " ",
       "Marginal R² = ", round(res$r_squared$marginal, 3), ", ",
@@ -462,23 +782,27 @@ fmt_lmm_result <- function(res) {
   )
 }
 
-glmer_fmt        <- fmt_glmer_result(glmer_acceptance)
-glmer_fmt_triads <- fmt_glmer_result(glmer_acceptance_triads)
-lmm_fmt          <- fmt_lmm_result(lmer_wait)
+offer_fmt         <- fmt_glmer_result(glmer_offer)
+offer_fmt_triads  <- fmt_glmer_result(glmer_offer_triads)
+offer_fmt_broad   <- fmt_glmer_result(glmer_offer_broad)
+reached_fmt       <- fmt_glmer_result(glmer_reached)
+reached_fmt_triads<- fmt_glmer_result(glmer_reached_triads)
+lmm_fmt           <- fmt_lmm_result(lmer_wait)
 
 # ── Sensitivity analysis: GEE ─────────────────────────────────────────────────
 # Population-average model (vs. the subject-specific glmer). Uses all records
 # including singletons and dyads; exchangeable correlation within practice.
-wide_acc  <- make_wide(dat, "contact_office")
-wide_wait <- make_wide(dat, "wait_days")
+wide_acc     <- make_wide(dat, "appt_offered")   # PRIMARY: appointment offered
+wide_reached <- make_wide(dat, "reached")        # SECONDARY: a live office answered
+wide_wait    <- make_wide(dat, "wait_days")
 
 gee_output <- tryCatch({
   if (!has_geepack) stop("geepack not installed; run install.packages('geepack')")
-  dat_gee          <- dat[!is.na(dat$practice_id) & !is.na(dat$scenario), ]
+  dat_gee          <- offer_analytic[!is.na(offer_analytic$practice_id), ]
   dat_gee          <- dat_gee[order(dat_gee$practice_id), ]
-  dat_gee$scenario <- relevel(dat_gee$scenario, ref = "Straight couple")
+  dat_gee$scenario <- relevel(droplevels(dat_gee$scenario), ref = "Straight couple")
   fit <- geepack::geeglm(
-    as.integer(contact_office) ~ scenario,
+    as.integer(appt_offered) ~ scenario,
     data   = dat_gee,
     family = binomial(link = "logit"),
     id     = practice_id,
@@ -524,22 +848,29 @@ mcnemar_mde_or <- function(n_d) {
   NA_real_
 }
 
-paired_acc_df <- do.call(rbind, lapply(paired_contrasts, function(cc) {
-  a <- wide_acc[[cc[1]]]; b <- wide_acc[[cc[2]]]
-  ok <- !is.na(a) & !is.na(b); a <- a[ok]; b <- b[ok]
-  yn <- sum(a & !b); ny <- sum(!a & b); disc <- yn + ny
-  data.frame(
-    contrast       = paste(gsub("_", " ", cc), collapse = " vs "),
-    n_paired       = length(a),
-    concordant     = sum(a == b),
-    discordant     = disc,
-    disc_favor_A   = yn,   # yes to 1st scenario, no to 2nd
-    disc_favor_B   = ny,   # no to 1st scenario, yes to 2nd
-    mcnemar_p      = if (disc > 0) round(binom.test(min(yn, ny), disc)$p.value, 3) else NA_real_,
-    mde_or_80power = round(mcnemar_mde_or(disc), 1),
-    stringsAsFactors = FALSE
-  )
-}))
+paired_mcnemar <- function(wide) {
+  do.call(rbind, lapply(paired_contrasts, function(cc) {
+    a <- as.logical(wide[[cc[1]]]); b <- as.logical(wide[[cc[2]]])
+    ok <- !is.na(a) & !is.na(b); a <- a[ok]; b <- b[ok]
+    yn <- sum(a & !b); ny <- sum(!a & b); disc <- yn + ny
+    data.frame(
+      contrast       = paste(gsub("_", " ", cc), collapse = " vs "),
+      n_paired       = length(a),
+      concordant     = sum(a == b),
+      discordant     = disc,
+      disc_favor_A   = yn,   # yes to 1st scenario, no to 2nd
+      disc_favor_B   = ny,   # no to 1st scenario, yes to 2nd
+      mcnemar_p      = if (disc > 0) round(binom.test(min(yn, ny), disc)$p.value, 3) else NA_real_,
+      mde_or_80power = round(mcnemar_mde_or(disc), 1),
+      stringsAsFactors = FALSE
+    )
+  }))
+}
+
+# PRIMARY paired contrast: appointment offered, within practice.
+paired_acc_df     <- paired_mcnemar(wide_acc)
+# SECONDARY: reachability, within practice (what the old table reported).
+paired_reached_df <- paired_mcnemar(wide_reached)
 
 paired_wait_df <- do.call(rbind, lapply(paired_contrasts, function(cc) {
   a <- wide_wait[[cc[1]]]; b <- wide_wait[[cc[2]]]
@@ -562,8 +893,26 @@ write.csv(dat,                          file.path(out_dir, "labubu_cleaned_analy
 write.csv(paired_acc_df,                file.path(out_dir, "mysterycall_paired_acceptance_mcnemar.csv"),                   row.names = FALSE)
 write.csv(paired_wait_df,               file.path(out_dir, "mysterycall_paired_wait_within_practice.csv"),                 row.names = FALSE)
 write.csv(completeness$summary,         file.path(out_dir, "mysterycall_completeness.csv"),                               row.names = FALSE)
-write.csv(acceptance_all$summary,       file.path(out_dir, "mysterycall_acceptance_by_scenario_all_records.csv"),         row.names = FALSE)
-write.csv(acceptance_finalized$summary, file.path(out_dir, "mysterycall_acceptance_by_scenario_finalized_records.csv"),   row.names = FALSE)
+write.csv(reach_all$summary,            file.path(out_dir, "mysterycall_reach_by_scenario.csv"),                       row.names = FALSE)
+if (!is.null(offer_by_scenario))
+  write.csv(offer_by_scenario$summary,  file.path(out_dir, "mysterycall_offer_by_scenario.csv"),                       row.names = FALSE)
+if (!is.null(offer_by_scenario_broad))
+  write.csv(offer_by_scenario_broad$summary, file.path(out_dir, "mysterycall_offer_by_scenario_broad.csv"),            row.names = FALSE)
+write.csv(cascade_by_scenario,          file.path(out_dir, "mysterycall_access_cascade_by_scenario.csv"),              row.names = FALSE)
+if (!inherits(cascade, "cascade_error"))
+  write.csv(as.data.frame(cascade$table), file.path(out_dir, "mysterycall_access_cascade.csv"),                        row.names = FALSE)
+write.csv(paired_reached_df,            file.path(out_dir, "mysterycall_paired_reached_mcnemar.csv"),                  row.names = FALSE)
+write.csv(as.data.frame.matrix(caller_scenario_tab),
+                                        file.path(out_dir, "caller_by_scenario.csv"))
+write.csv(caller_rates,                 file.path(out_dir, "caller_rates.csv"),                                        row.names = FALSE)
+write.csv(caller_dominance,             file.path(out_dir, "caller_dominance_by_scenario.csv"),                         row.names = FALSE)
+write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
+write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
+if (!is.null(service_prev))
+  write.csv(service_prev,               file.path(out_dir, "mysterycall_service_prevalence.csv"),                       row.names = FALSE)
+if (!is.null(mcar) && !is.null(mcar$missingness))
+  write.csv(as.data.frame(mcar$missingness), file.path(out_dir, "mysterycall_missingness_mcar.csv"),                    row.names = FALSE)
+write.csv(wide_reached,                 file.path(out_dir, "matched_reached_wide.csv"),                                 row.names = FALSE)
 write.csv(wait_included$summary,        file.path(out_dir, "mysterycall_wait_by_scenario_included.csv"),                  row.names = FALSE)
 write.csv(wait_included_complete$summary, file.path(out_dir, "mysterycall_wait_by_scenario_included_complete.csv"),       row.names = FALSE)
 write.csv(missing_appt$summary,         file.path(out_dir, "mysterycall_missing_appt_summary.csv"),                       row.names = FALSE)
@@ -573,6 +922,33 @@ write.csv(inclusion_counts,             file.path(out_dir, "scenario_counts_by_i
 write.csv(coverage_df,                  file.path(out_dir, "practice_scenario_coverage.csv"),                             row.names = FALSE)
 write.csv(wide_acc,                     file.path(out_dir, "matched_acceptance_wide.csv"),                                row.names = FALSE)
 write.csv(wide_wait,                    file.path(out_dir, "matched_wait_wide.csv"),                                      row.names = FALSE)
+
+# ── STROBE flow diagram (Green Journal requires one) ──────────────────────────
+fig_dir <- file.path(out_dir, "figures")
+dir.create(fig_dir, showWarnings = FALSE)
+strobe <- tryCatch(
+  mysterycall_strobe_flow(
+    n_total     = nrow(dat),
+    n_calldate  = sum(!is.na(dat$call_date)),
+    n_included  = sum(dat$reached),
+    n_logistic  = nrow(offer_analytic),
+    n_waittime  = sum(!is.na(dat$biz_wait)),
+    excl_no_calldate = sum(is.na(dat$call_date)),
+    # Named by exclusion CODE (as character), which is what the function's
+    # internal code_labels lookup keys on; naming by free-text reason silently
+    # renders an "Excluded (n = ...)" box with no breakdown.
+    excl_detail = local({
+      not_reached <- dat$exclusion_code[!dat$reached & !is.na(dat$call_date)]
+      tb <- table(ifelse(is.na(not_reached), "NA", as.character(not_reached)))
+      setNames(as.integer(tb), names(tb))
+    }),
+    label_included = "Reached a live office\n(exclusion codes 0, 2, 7, 9, 10)",
+    label_logistic = "Offer analysis\nOutcome: appointment offered (yes/no)",
+    label_waittime = "Wait-time analysis\nBusiness days to first appointment",
+    title       = "LABUBU STROBE Flow - RRM Mystery-Caller Study",
+    output_path = file.path(fig_dir, "fig0_strobe_flow.png")
+  ),
+  error = function(e) { message("STROBE flow not drawn: ", conditionMessage(e)); NULL })
 
 # ── Issue IDs ─────────────────────────────────────────────────────────────────
 issue_ids <- list(
@@ -601,9 +977,25 @@ report <- c(
   "",
   "## Denominators",
   "",
-  paste0("- All records: ", nrow(dat)),
-  paste0("- Analytic inclusion (exclusion field): ", nrow(included)),
-  paste0("- Analytic inclusion AND finalized form: ", nrow(included_complete)),
+  "Each analysis uses a different denominator. Quote none of these without its rule.",
+  "",
+  paste0("- Calls placed (all records): ", nrow(dat)),
+  paste0("- Reached a live office (codes 0, 2, 7, 9, 10): ", nrow(reached_calls)),
+  paste0("- Eligible for the offer model (codes 0, 7, 9, 10): ", nrow(offer_den)),
+  paste0("- Offer model analytic sample (eligible, scenario + outcome present): ", nrow(offer_analytic)),
+  paste0("- Historical 'analytic inclusion' flag (code 0 only): ", nrow(included)),
+  paste0("- Historical inclusion AND finalized form: ", nrow(included_complete)),
+  paste0("- Wait-time subset (appointment date observed): ", sum(!is.na(dat$biz_wait))),
+  "",
+  paste0("> Note on a corrected definition: `contact_office` previously aliased the ",
+         "analytic-inclusion flag, which made 'appointment offered' the same ",
+         "variable as 'was this call included'. Acceptance was therefore 100% ",
+         "inside the analytic sample by construction, and the ",
+         sum(dat$reached & !dat$analytic_inclusion), " reached-but-declined calls ",
+         "(", paste(sort(unique(dat$exclusion_reason[dat$reached & !dat$analytic_inclusion])), collapse = "; "),
+         ") were discarded — the only unambiguous 'offered = 0' events in the study. ",
+         "`contact_office` now means 'a live office answered'; the offer outcome ",
+         "is `appt_offered`."),
   "",
   "## Data Quality",
   "",
@@ -617,7 +1009,7 @@ report <- c(
   "",
   paste0("Study design: each RRM practice called once per scenario (straight couple, ",
          "lesbian couple, single mother using donor sperm). Primary analysis: ",
-         "mixed-effects logistic regression with practice random intercept (lme4::glmer). ",
+         "mixed-effects logistic regression on the appointment-offer outcome with a practice random intercept (lme4::glmer). ",
          "Note: REI comparison arm removed from scope; analysis is within-RRM only."),
   "",
   paste0("- Total unique practices: ", n_practices),
@@ -631,38 +1023,128 @@ report <- c(
   paste0("  - Missing single-mother call:   ", n_missing_sm,       " practices"),
   "",
 
-  # ── Unmatched acceptance (descriptive) ──────────────────────────────────────
-  "## Acceptance Rate by Scenario — Descriptive (unmatched)",
+  # ── ACCESS CASCADE ──────────────────────────────────────────────────────────
+  "## ACCESS CASCADE — reachability and offer are different things",
   "",
-  "`accepted` = analytic inclusion flag (practice successfully scheduled the caller).",
+  paste0("Every stage has its own denominator (each nested in the previous). ",
+         "The single 'acceptance rate' this replaces mixed 'nobody picked up the ",
+         "phone' with 'someone picked up and said no'."),
+  "",
+  if (!inherits(cascade, "cascade_error"))
+    c("```", capture(cascade), "```")
+  else paste0("cascade not run: ", cascade$error),
+  "",
+  "By scenario (strict offer = appointment date obtained; broad = date OR a concrete scheduling timeframe):",
   "",
   "```",
-  capture(acceptance_all$summary),
+  capture(cascade_by_scenario),
   "```",
   "",
-  paste0("- Chi-square (independent groups, descriptive only): ",
-         acceptance_all$test_name, "; p = ", fmt_p(acceptance_all$p_value)),
+  "### Appointment-offer rate by scenario",
   "",
-  paste0("> **CONFOUNDING CAUTION — do not report this chi-square as a result.** ",
-         "The three scenarios were not called at the same practices: single-mother ",
-         "calls landed disproportionately at high-acceptance practices (practices ",
-         "that received a single-mother call accept ~70% of *all* callers vs ~14% ",
-         "at practices that did not). The marginal rate therefore reflects *which ",
-         "practices were dialed*, not how callers were treated. Use the within-",
-         "practice paired analysis below."),
+  if (!is.null(offer_by_scenario))
+    c("```", capture(offer_by_scenario$summary), "```", "",
+      paste0("- Unmatched test (descriptive only): ", offer_by_scenario$test_name,
+             "; p = ", fmt_p(offer_by_scenario$p_value)))
+  else "offer rate by scenario not computed",
+  "",
+  "Sensitivity — broad offer definition:",
+  "",
+  if (!is.null(offer_by_scenario_broad))
+    c("```", capture(offer_by_scenario_broad$summary), "```")
+  else "broad offer rate not computed",
+  "",
+  paste0("> **The offer outcome is a derived proxy, and this is the study's ",
+         "principal measurement limitation.** The REDCap instrument has no ",
+         "'did the practice agree to schedule you?' item. 'Offered' is therefore ",
+         "read off the appointment date (strict) or the date plus a concrete ",
+         "scheduling timeframe (broad), with an explicit 'not accepting new ",
+         "patients' scored as a refusal. A call where staff offered an ",
+         "appointment but the caller recorded no date is misclassified as a ",
+         "refusal. Adding an explicit offer field to REDCap is the single ",
+         "highest-value fix to the instrument."),
+  "",
+
+  # ── Reachability (relabelled, still reported) ───────────────────────────────
+  "### Reachability by scenario (secondary — a live office answered)",
+  "",
+  "```",
+  capture(reach_all$summary),
+  "```",
+  "",
+  paste0("- Descriptive test only: ", reach_all$test_name, "; p = ", fmt_p(reach_all$p_value)),
+  "",
+
+  # ── CALLER CONFOUNDING ──────────────────────────────────────────────────────
+  "## CALLER CONFOUNDING — read this before interpreting any scenario contrast",
+  "",
+  paste0("Scenario was not randomised across callers. Where one caller placed ",
+         "most of a scenario's calls, 'scenario effect' and 'caller effect' are ",
+         "the same number, and within-practice pairing does NOT separate them: ",
+         "the pair compares two scenarios dialled by two different people."),
+  "",
+  "Calls by caller and scenario:",
+  "",
+  "```",
+  capture(caller_scenario_tab),
+  "```",
+  "",
+  if (!is.null(caller_scenario_test))
+    paste0("- Caller x scenario association: ", caller_scenario_test$method,
+           ", p = ", fmt_p(caller_scenario_test$p_value),
+           ", Cramer's V = ", round(caller_scenario_test$cramers_v, 3),
+           " (", caller_scenario_test$effect_size, ").")
+  else "- Caller x scenario association test not run.",
+  "",
+  "Single-caller dominance of each scenario:",
+  "",
+  "```",
+  capture(caller_dominance),
+  "```",
+  "",
+  "Per-caller reach and offer rates (callers differ substantially, which is the mechanism):",
+  "",
+  "```",
+  capture(caller_rates),
+  "```",
+  "",
+  if (caller_adjusted_glmer$ok)
+    c("Offer model adjusted for caller (scenario + caller + practice random intercept):",
+      "", "```", caller_adjusted_glmer$text, "```", "",
+      paste0("> Inspect the standard errors above. Where they are very large, ",
+             "scenario and caller are not jointly identifiable and the adjusted ",
+             "estimate should not be reported as a corrected effect — it is ",
+             "evidence that the design cannot separate the two."))
+  else paste0("Caller-adjusted model not estimable: ", caller_adjusted_glmer$text,
+              " — which is itself the finding: scenario and caller are confounded."),
+  "",
+  if (!is.null(drift))
+    c("Drift checks (a distinct threat: rates changing over the study period or over a caller's call sequence):",
+      "",
+      paste0("- Calendar: ", if (!is.null(drift$calendar)) drift$calendar$sentence else "not computed"),
+      paste0("- Sequence: ", if (!is.null(drift$sequence)) drift$sequence$sentence else "not computed"))
+  else "- Drift checks not run.",
   "",
 
   # ── MATCHED: within-practice paired acceptance (McNemar) ─────────────────────
-  "## MATCHED ANALYSIS — Within-Practice Paired Acceptance (exact McNemar)",
+  "## MATCHED ANALYSIS — Within-Practice Paired Appointment Offer (exact McNemar)",
   "",
   paste0("Each contrast uses only practices called for BOTH scenarios; only ",
          "DISCORDANT practices (different answer to the two callers) carry ",
          "information, so effective n = the discordant count. Concordant practices ",
          "(same answer to both) are the substantive majority — most practices do ",
-         "not differentiate — but contribute nothing to the test."),
+         "not differentiate — but contribute nothing to the test. ",
+         "Outcome = `appt_offered`. Caller confounding (above) is NOT removed by ",
+         "this pairing."),
   "",
   "```",
   capture(paired_acc_df),
+  "```",
+  "",
+  "Secondary — same pairing on reachability (a live office answered):",
+  "",
+  "```",
+  capture(paired_reached_df),
   "```",
   "",
   paste0("**Power / precision:** discordant practices number only ",
@@ -677,41 +1159,93 @@ report <- c(
   "",
 
   # ── PRIMARY: GLMER ──────────────────────────────────────────────────────────
-  "## PRIMARY ANALYSIS — Mixed-Effects Logistic Regression (glmer)",
+  "## PRIMARY ANALYSIS — Appointment Offered (mixed-effects logistic regression)",
   "",
-  paste0("Protocol-specified analysis via mysterycall_logistic_model(). ",
+  paste0("Outcome: `appt_offered` among offer-eligible calls. ",
          "Random intercept for practice accounts for within-practice correlation ",
-         "across the scenario calls."),
+         "across the scenario calls. Read every estimate below alongside the ",
+         "caller-confounding section."),
   "",
-  "### Unconfounded Model — Complete Practice Triads Only (n = ", glmer_fmt_triads$n, " records)",
-  "Restricted to practices called for ALL 3 scenarios to eliminate practice-selection dialing bias.",
+  paste0("### Complete Practice Triads Only (n = ", offer_fmt_triads$n, " records)"),
+  "Restricted to practices called for ALL 3 scenarios, removing practice-selection dialing bias (but not caller confounding).",
   "",
-  if (glmer_fmt_triads$ok) {
-    c("```", glmer_fmt_triads$text, "```", "", paste0("Note: ", glmer_fmt_triads$note))
+  if (offer_fmt_triads$ok) {
+    c("```", offer_fmt_triads$text, "```", "", paste0("Note: ", offer_fmt_triads$note))
   } else {
-    paste0("glmer triads not run: ", glmer_fmt_triads$text)
+    paste0("glmer triads not run: ", offer_fmt_triads$text)
   },
   "",
-  "### Full-Sample Model — All Records (n = ", glmer_fmt$n, " records)",
-  "> **CONFOUNDING WARNING:** Includes unbalanced singletons/dyads. Single-mother calls landed ",
-  "> disproportionately at high-acceptance practices, causing this full-sample GLMER to reflect ",
-  "> practice selection rather than scenario effects. Use the complete-triads model above.",
+  paste0("### Full Offer Sample (n = ", offer_fmt$n, " records)"),
+  "> Includes unbalanced singletons/dyads, so practice selection is not removed. The triad model above is the primary estimate.",
   "",
-  if (glmer_fmt$ok) {
-    c("```", glmer_fmt$text, "```", "", paste0("Note: ", glmer_fmt$note))
+  if (offer_fmt$ok) {
+    c("```", offer_fmt$text, "```", "", paste0("Note: ", offer_fmt$note))
   } else {
-    paste0("glmer not run: ", glmer_fmt$text)
+    paste0("glmer not run: ", offer_fmt$text)
+  },
+  "",
+  paste0("### Sensitivity — Broad Offer Definition (n = ", offer_fmt_broad$n, " records)"),
+  "Offer = appointment date OR a concrete scheduling timeframe. Tests whether the strict definition drives the result.",
+  "",
+  if (offer_fmt_broad$ok) {
+    c("```", offer_fmt_broad$text, "```", "", paste0("Note: ", offer_fmt_broad$note))
+  } else {
+    paste0("broad glmer not run: ", offer_fmt_broad$text)
   },
   "",
 
-  # ── SECONDARY: LMM wait time ────────────────────────────────────────────────
-  "## SECONDARY ANALYSIS — Mixed-Effects Linear Model for Wait Time in Business Days (lmm)",
+  # ── Reachability model (relabelled) ─────────────────────────────────────────
+  "## SECONDARY ANALYSIS — Reachability (a live office answered)",
   "",
-  paste0("Via mysterycall_lmm(). Outcome: business days (Mon–Fri, US federal holidays excluded). ",
-         "Estimates report the mean difference in business days relative to straight-couple callers ",
-         "(reference). n = ", lmm_fmt$n, " records with an observed appointment date. ",
-         "Note: wait-time distributions are typically right-skewed; ",
-         "see normality caveat in the model note below."),
+  paste0("This is the model the pipeline previously reported as 'acceptance'. ",
+         "It is a real access outcome — whether the phone gets answered — but it ",
+         "is not the appointment-offer outcome the protocol specifies."),
+  "",
+  paste0("### Complete Practice Triads Only (n = ", reached_fmt_triads$n, " records)"),
+  "",
+  if (reached_fmt_triads$ok) {
+    c("```", reached_fmt_triads$text, "```", "", paste0("Note: ", reached_fmt_triads$note))
+  } else {
+    paste0("reachability triad glmer not run: ", reached_fmt_triads$text)
+  },
+  "",
+  paste0("### Full Sample (n = ", reached_fmt$n, " records)"),
+  "",
+  if (reached_fmt$ok) {
+    c("```", reached_fmt$text, "```", "", paste0("Note: ", reached_fmt$note))
+  } else {
+    paste0("reachability glmer not run: ", reached_fmt$text)
+  },
+  "",
+
+  # ── Hurdle model ────────────────────────────────────────────────────────────
+  "## TWO-PART (HURDLE) MODEL — offer and wait estimated jointly",
+  "",
+  paste0("The complete-case wait model below conditions on having an appointment ",
+         "date, and that missingness is strongly scenario-dependent — so it ",
+         "silently drops the selection step that carries most of the signal. ",
+         "mysterycall_hurdle_wait() estimates both parts: obtainment (odds ratios) ",
+         "and wait-given-obtained (incidence rate ratios)."),
+  "",
+  if (!inherits(hurdle_fit, "hurdle_error"))
+    c("```", capture(hurdle_fit), "```", "",
+      paste0("> Check the confidence intervals on the hurdle part. Extremely wide ",
+             "intervals indicate near-separation with this sample size: the ",
+             "direction is informative, the magnitude is not."))
+  else paste0("hurdle model not run: ", hurdle_fit$error),
+  "",
+
+  # ── SECONDARY: LMM wait time ────────────────────────────────────────────────
+  "## WAIT TIME — Mixed-Effects Linear Model (complete cases)",
+  "",
+  paste0("Via mysterycall_lmm(). The wait is right-skewed, so the package's ",
+         "auto_log applies log1p() and the table below is the back-transformed ",
+         "GEOMETRIC MEAN RATIO (GMR), not a difference in days. The intercept is ",
+         "the reference group's geometric-mean wait in business days; scenario ",
+         "rows are multiplicative (GMR < 1 = shorter wait). ",
+         "n = ", lmm_fmt$n, " records with an observed appointment date. ",
+         "Complete-case only — see the hurdle model above for the version that ",
+         "keeps the selection step."),
   "",
   if (lmm_fmt$ok) {
     c("```", lmm_fmt$text, "```", "", paste0("Note: ", lmm_fmt$note))
@@ -752,6 +1286,32 @@ report <- c(
          "and should be reported as descriptive only."),
   "",
 
+  # ── Synthesis ───────────────────────────────────────────────────────────────
+  "## HOW TO READ THE OFFER RESULT",
+  "",
+  paste0("The appointment-offer contrast is the study's headline candidate, and ",
+         "it is fragile in three specific ways. State all three or do not report ",
+         "the effect."),
+  "",
+  paste0("1. **Outcome definition.** Strict (appointment date) and broad (date or ",
+         "a scheduling timeframe) give materially different answers. Compare the ",
+         "triad/full-sample models with the broad sensitivity model above. If the ",
+         "effect survives only under the strict definition, what is being measured ",
+         "may be whether the caller wrote a date down."),
+  paste0("2. **Caller.** Cramer's V for caller x scenario is ",
+         if (!is.null(caller_scenario_test)) round(caller_scenario_test$cramers_v, 2) else NA,
+         ". In the caller-adjusted model the scenario standard errors inflate, ",
+         "which means the design cannot attribute the difference to caller ",
+         "identity rather than to scenario."),
+  paste0("3. **Separation.** The practice random-intercept variance is large and ",
+         "several intervals span orders of magnitude. Odds-ratio magnitudes are ",
+         "not interpretable at this sample size; only direction is."),
+  "",
+  paste0("The well-powered, unconfounded results are the service-menu ",
+         "prevalences and the access cascade. Those do not depend on the derived ",
+         "offer outcome, on caller identity, or on the matched design."),
+  "",
+
   # ── SENSITIVITY: GEE ────────────────────────────────────────────────────────
   "## SENSITIVITY ANALYSIS — GEE (exchangeable correlation, logit link)",
   "",
@@ -767,6 +1327,34 @@ report <- c(
   "",
 
   # ── Missing data ─────────────────────────────────────────────────────────────
+  "## SERVICE MENU — the well-powered descriptive result",
+  "",
+  paste0("Denominator: ", nrow(included), " calls that reached staff and were asked ",
+         "the service questions. Wilson intervals via the package."),
+  "",
+  if (!is.null(service_prev)) c("```", capture(service_prev), "```")
+  else "service prevalence not computed",
+  "",
+  if (!is.null(donor_prev)) c("Works with donor sperm:", "", "```", capture(donor_prev), "```")
+  else "",
+  "",
+  paste0("> IUI and IVF are each a single practice. Report the proportion with ",
+         "its interval and say so explicitly; do not describe a 1/", nrow(included),
+         " count as a rate estimate."),
+  "",
+  "### Restriction checkboxes — needs adjudication before use",
+  "",
+  paste0("The only directly measured discrimination item. Currently unanalysable ",
+         "because the coding is ambiguous: the straight-couple box is ticked on ",
+         "straight-couple calls, so 'checked' may mean 'restricted' or 'served'. ",
+         "Resolve against the REDCap codebook, then this becomes a candidate ",
+         "primary outcome."),
+  "",
+  "```",
+  capture(restrict_tab),
+  "```",
+  "",
+
   "## Missing Appointment Date Analysis",
   "",
   "```",
@@ -774,6 +1362,20 @@ report <- c(
   "```",
   "",
   missing_appt$interpretation,
+  "",
+  "### Little's MCAR test",
+  "",
+  if (!is.null(mcar)) c(
+    "```", capture(as.data.frame(mcar$missingness)), "```", "",
+    if (!is.null(mcar$interpretation)) paste0("- ", paste(mcar$interpretation, collapse = " ")) else ""
+  ) else "MCAR table not computed",
+  "",
+  "## Data-Quality Guards",
+  "",
+  paste0("- Wait-time contamination guard (mysterycall_guard_contaminated_wait): ", qc$guard),
+  paste0("- Reached but no appointment date recorded: ", qc$included_na_appt, " calls ",
+         "(these are the rows the strict offer definition scores as refusals)"),
+  paste0("- Excluded but carrying an appointment date: ", qc$excluded_with_appt, " calls"),
   "",
 
   # ── Record IDs for review ────────────────────────────────────────────────────
@@ -797,8 +1399,20 @@ report <- c(
   "- `practice_name_review_nearduplicates.csv`",
   "- `practice_name_review_singletons.csv`",
   "- `mysterycall_completeness.csv`",
-  "- `mysterycall_acceptance_by_scenario_all_records.csv`",
-  "- `mysterycall_acceptance_by_scenario_finalized_records.csv`",
+  "- `mysterycall_access_cascade.csv`",
+  "- `mysterycall_access_cascade_by_scenario.csv`",
+  "- `mysterycall_reach_by_scenario.csv`",
+  "- `mysterycall_offer_by_scenario.csv`",
+  "- `mysterycall_offer_by_scenario_broad.csv`",
+  "- `mysterycall_paired_reached_mcnemar.csv`",
+  "- `mysterycall_service_prevalence.csv`",
+  "- `mysterycall_missingness_mcar.csv`",
+  "- `caller_by_scenario.csv`",
+  "- `caller_rates.csv`",
+  "- `caller_dominance_by_scenario.csv`",
+  "- `exclusion_crosswalk.csv`",
+  "- `restriction_checkbox_review.csv`",
+  "- `matched_reached_wide.csv`",
   "- `mysterycall_wait_by_scenario_included.csv`",
   "- `mysterycall_wait_by_scenario_included_complete.csv`",
   "- `mysterycall_missing_appt_summary.csv`",

@@ -1,4 +1,4 @@
 "contrast","n_paired","concordant","discordant","disc_favor_A","disc_favor_B","mcnemar_p","mde_or_80power"
-"Straight couple vs Single mother",54,37,17,11,6,0.332,3.3
-"Lesbian couple vs Single mother",65,52,13,7,6,1,4.6
-"Straight couple vs Lesbian couple",50,37,13,8,5,0.581,4.6
+"Straight couple vs Single mother",16,9,7,6,1,0.125,8.1
+"Lesbian couple vs Single mother",21,19,2,0,2,0.5,8.1
+"Straight couple vs Lesbian couple",21,13,8,8,0,0.008,9

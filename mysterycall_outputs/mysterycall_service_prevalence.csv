@@ -1,0 +1,6 @@
+"option","n","total","prevalence","ci_lower","ci_upper"
+"cycle_tracking",93,98,0.949,0.886,0.978
+"hormonal_timing",62,98,0.633,0.534,0.721
+"ovulation_induction",11,98,0.112,0.064,0.19
+"iui",1,98,0.01,0.002,0.056
+"ivf",1,98,0.01,0.002,0.056
