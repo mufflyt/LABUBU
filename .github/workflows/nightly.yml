@@ -91,6 +91,12 @@ jobs:
       # Without glmmTMB the pipeline still runs, but mysterycall_hurdle_wait()
       # degrades to "hurdle model not run" and the nightly commits a report
       # with the two-part model missing.
+      # Single source of truth for the pinned analytical dependency. A SHA
+      # copied by hand into three workflows drifts, and a drifted SHA silently
+      # changes results. check-workflow-contract.R enforces that they agree.
+      - name: Resolve pinned mysterycall SHA
+        run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
+
       - name: Install archived Deriv, then glmmTMB
         shell: Rscript {0}
         run: |
@@ -116,6 +122,9 @@ jobs:
           if (!requireNamespace("mysterycall", quietly = TRUE))
             stop("mysterycall failed to install; refusing to auto-commit results ",
                  "produced without it")
+
+      - name: Environment preflight
+        run: Rscript .github/scripts/preflight-env.R
 
       - name: Run LABUBU Refresh Pipeline
         env:
