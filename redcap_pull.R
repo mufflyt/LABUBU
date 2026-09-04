@@ -66,7 +66,12 @@ redcap_pull <- function(dest_dir = ".",
     path <- file.path(dest_dir, f$file)
     writeLines(txt, path, useBytes = TRUE)
 
-    n <- max(0L, length(readLines(path, warn = FALSE)) - 1L)
+    # Parse the CSV rather than counting lines: `notes` and several headers
+    # contain embedded newlines, which made a line count over-report (235 for
+    # a 234-record export).
+    n <- tryCatch(nrow(readr::read_csv(path, show_col_types = FALSE,
+                                       progress = FALSE)),
+                  error = function(e) max(0L, length(readLines(path, warn = FALSE)) - 1L))
     cat(sprintf("  %-7s %s  (%d data rows)\n", nm, f$file, n))
     written[nm] <- path
   }

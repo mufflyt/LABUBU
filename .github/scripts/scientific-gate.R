@@ -94,6 +94,31 @@ try_check("data/all-exclusion-reasons-mapped", {
             detail = if (length(unmapped)) paste(unmapped, collapse = " | ") else "none")
 })
 
+# ── 3b. Checkbox encoding ─────────────────────────────────────────────────────
+# REDCap writes checkboxes as "Checked"/"Unchecked" from the browser export but
+# as the option label / "" from the API. A parser that knows only one encoding
+# turns every service and restriction variable FALSE against the other, which
+# silently zeroes the study's headline descriptive with no error anywhere.
+# Cycle tracking is near-universal (~95%), so a zero here means a parse failure,
+# not a finding.
+try_check("data/checkbox-encoding-parsed", {
+  svc <- c("service_cycle_tracking", "service_hormonal_timing",
+           "service_ovulation_induction", "service_iui", "service_ivf")
+  rst <- c("restrict_lesbian", "restrict_straight", "restrict_single_mother")
+  missing <- setdiff(c(svc, rst), names(d))
+  if (length(missing))
+    return(structure(FALSE, detail = paste("columns absent:", paste(missing, collapse = ", "))))
+  inc <- d[tf(d$analytic_inclusion), ]
+  n_ct  <- sum(tf(inc$service_cycle_tracking))
+  n_svc <- sum(vapply(svc, function(v) sum(tf(inc[[v]])), integer(1)))
+  n_rst <- sum(vapply(rst, function(v) sum(tf(d[[v]])),   integer(1)))
+  ok <- n_ct > 0 && n_svc > 0 && n_rst > 0
+  structure(ok, detail = sprintf(
+    "cycle tracking %d/%d, all services %d ticks, restrictions %d ticks%s",
+    n_ct, nrow(inc), n_svc, n_rst,
+    if (!ok) " -- looks like a checkbox-encoding mismatch" else ""))
+})
+
 # ── 4. Practice-name normalization ────────────────────────────────────────────
 # A new spelling variant silently becomes a singleton and deflates the triad
 # count. The old CI only printed a warning; unresolved pairs now fail.
