@@ -80,6 +80,108 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  # Proves the analysis CODE runs and REGENERATES its outputs, on every PR,
+  # with no external API. Outputs are wiped first, so a committed CSV cannot
+  # masquerade as a freshly generated one -- the failure mode where code
+  # changes, the analysis silently does not run, and CI validates last week's
+  # files. Runs against a committed de-identified fixture whose denominators
+  # match the real export.
+  execute:
+    name: pipeline execution
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          packages: |
+            any::sessioninfo
+          extra-packages: |
+            any::dplyr
+            any::ggplot2
+            any::ggbeeswarm
+            any::ggridges
+            any::patchwork
+            any::scales
+            any::forcats
+            any::lme4
+            any::geepack
+            any::knitr
+            any::rmarkdown
+            any::survival
+            any::readr
+            any::remotes
+            any::jsonlite
+            any::openssl
+
+      - name: Resolve pinned mysterycall SHA
+        run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
+
+      - name: Install archived Deriv, then glmmTMB
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            install.packages(
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.2.0.tar.gz",
+              repos = NULL, type = "source")
+          install.packages("glmmTMB")
+          if (!requireNamespace("glmmTMB", quietly = TRUE))
+            stop("glmmTMB failed to install; the hurdle model would be dropped")
+
+      - name: Install mysterycall at the pinned SHA
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          remotes::install_github(paste0("mufflyt/mysterycall@",
+                                         Sys.getenv("MYSTERYCALL_SHA")),
+                                  upgrade = "never")
+          if (!requireNamespace("mysterycall", quietly = TRUE))
+            stop("mysterycall failed to install")
+
+      - name: Environment preflight
+        run: Rscript .github/scripts/preflight-env.R
+
+      # Phase 7: destroy the outputs the pipeline is supposed to recreate.
+      - name: Wipe generated outputs
+        run: |
+          rm -rf mysterycall_outputs
+          mkdir -p mysterycall_outputs
+          cp tests/fixtures/LABUBU_DATA_LABELS_fixture.csv .
+
+      - name: Execute the pipeline
+        run: |
+          Rscript -e 'input_file <- "LABUBU_DATA_LABELS_fixture.csv"; source("evaluate_labubu_mysterycall.R")'
+
+      # Exit 0 is not proof. The receipt is written only after every expected
+      # artifact exists, is non-empty, and the denominator cascade nests.
+      - name: Pipeline completion receipt
+        run: Rscript .github/scripts/pipeline-receipt.R
+
+      - name: Scientific gate on freshly generated outputs
+        run: Rscript .github/scripts/scientific-gate.R
+
+      - name: Upload execution artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labubu-execution-${{ github.run_id }}
+          path: |
+            ci-results/
+            mysterycall_outputs/
+          retention-days: 14
+          if-no-files-found: warn
+
   pipeline:
     name: re-derive from REDCap
     runs-on: ubuntu-latest

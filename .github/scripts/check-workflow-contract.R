@@ -55,6 +55,11 @@ for (path in workflow_files) {
   }
   if (grepl("git push", body) && !grepl("scientific-gate\\.R", body))
     note(name, ": pushes to the repo without running the scientific gate")
+
+  # A scheduled job must never rewrite main because a run produced different
+  # numbers. Drift belongs in a reviewable pull request.
+  if (grepl("git push\\s+origin\\s+main", body))
+    note(name, ": pushes directly to main; open a review PR instead")
 }
 
 # Every gate check must be reachable by a workflow that runs the gate.
