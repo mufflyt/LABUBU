@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-04 23:01:07 UTC
+Generated: 2026-09-04 17:06:06 MDT
 
 ## Package
 
@@ -154,17 +154,17 @@ Per-caller reach and offer rates (callers differ substantially, which is the mec
 Offer model adjusted for caller (scenario + caller + practice random intercept):
 
 ```
-                          Estimate Std. Error      z value   Pr(>|z|)
-(Intercept)             3.33110370   4.454503  0.747805851 0.45457727
-scenarioLesbian couple -4.74267636   4.532108 -1.046461552 0.29534799
-scenarioSingle mother  -5.03361238   4.306319 -1.168889842 0.24244802
-callerBS               11.10956303  46.341987  0.239729965 0.81053960
-callerMelanie           3.10105360   1.737986  1.784280094 0.07437816
-callerMuffly            0.03363366   3.754880  0.008957319 0.99285319
-callerSam               4.74534772  15.952128  0.297474278 0.76610444
-callerSofie            -1.46048962   2.269331 -0.643577049 0.51984974
-callerSR               -0.77662224   3.769595 -0.206022742 0.83677315
-callerUnrecorded       -9.59466092   8.791756 -1.091324742 0.27513001
+                         Estimate Std. Error      z value  Pr(>|z|)
+(Intercept)             3.3310729   4.454300  0.747833011 0.4545609
+scenarioLesbian couple -4.7426485   4.531931 -1.046496246 0.2953320
+scenarioSingle mother  -5.0336075   4.306174 -1.168928047 0.2424326
+callerBS               11.1099901  46.437168  0.239247796 0.8109134
+callerMelanie           3.1010438   1.737978  1.784282305 0.0743778
+callerMuffly            0.0336122   3.754765  0.008951879 0.9928575
+callerSam               4.7459294  15.957413  0.297412204 0.7661518
+callerSofie            -1.4604792   2.269238 -0.643598889 0.5198356
+callerSR               -0.7766047   3.769480 -0.206024359 0.8367719
+callerUnrecorded       -9.5947732   8.791394 -1.091382409 0.2751046
 ```
 
 > Inspect the standard errors above. Where they are very large, scenario and caller are not jointly identifiable and the adjusted estimate should not be reported as a corrected effect — it is evidence that the design cannot separate the two.
@@ -274,7 +274,27 @@ Note: mysterycall_logistic_model() [lme4::glmer]. Reference: Straight couple. OR
 
 The complete-case wait model below conditions on having an appointment date, and that missingness is strongly scenario-dependent — so it silently drops the selection step that carries most of the signal. mysterycall_hurdle_wait() estimates both parts: obtainment (odds ratios) and wait-given-obtained (incidence rate ratios).
 
-hurdle model not run: mysterycall_hurdle_wait() needs the glmmTMB package (in Suggests).
+```
+<mysterycall hurdle wait model: hurdle n=100, count n=54 (zero-truncated nbinom2)>
+
+Hurdle part -- appointment obtained (odds ratios):
+# A tibble: 3 × 5
+  term                    estimate   conf_low conf_high p_value
+  <chr>                      <dbl>      <dbl>     <dbl>   <dbl>
+1 (Intercept)            122.      2.27         6511.    0.0181
+2 scenarioLesbian couple   0.00132 0.00000161      1.09  0.0530
+3 scenarioSingle mother    0.00389 0.0000104       1.46  0.0665
+
+Count part -- wait days | obtained (incidence rate ratios):
+# A tibble: 3 × 5
+  term                   estimate conf_low conf_high  p_value
+  <chr>                     <dbl>    <dbl>     <dbl>    <dbl>
+1 (Intercept)              24.0     16.1       35.9  2.42e-54
+2 scenarioLesbian couple    0.778    0.471      1.29 3.28e- 1
+3 scenarioSingle mother     0.869    0.497      1.52 6.24e- 1
+```
+
+> Check the confidence intervals on the hurdle part. Extremely wide intervals indicate near-separation with this sample size: the direction is informative, the magnitude is not.
 
 ## WAIT TIME — Mixed-Effects Linear Model (complete cases)
 
@@ -282,9 +302,9 @@ Via mysterycall_lmm(). The wait is right-skewed, so the package's auto_log appli
 
 ```
                    Term   GMR CI_lo CI_hi       p
-            (Intercept) 17.64 11.28 27.57 < 0.001
- scenarioLesbian couple  0.83  0.48  1.43   0.490
-  scenarioSingle mother  0.82  0.47  1.43   0.475
+            (Intercept) 17.64 11.26 27.61 < 0.001
+ scenarioLesbian couple  0.83  0.47  1.46   0.494
+  scenarioSingle mother  0.82  0.46  1.45   0.479
 ```
 
 Note: mysterycall_lmm() [lme4::lmer]. Outcome: log1p_business_days. auto_log applied log1p() to the right-skewed wait; the table is the back-transformed GEOMETRIC MEAN RATIO from $gmr_table. The intercept is the reference group's geometric-mean wait in business days; each scenario row is a multiplicative ratio vs. Straight couple (GMR < 1 = shorter wait). These are NOT differences in days. n = 57 records with observed appointment date. Shapiro-Wilk on residuals: p = 0.208 (normality satisfied). Marginal R² = 0.006, Conditional R² = 0.702.
@@ -392,7 +412,7 @@ The only directly measured discrimination item. Currently unanalysable because t
       p_value significant
 1 0.001701222        TRUE
 2 0.544511965       FALSE
-3 0.452273863       FALSE
+3 0.471264368       FALSE
 4 0.526965892       FALSE
 5 0.008117469        TRUE
 ```
@@ -416,7 +436,7 @@ The only directly measured discrimination item. Currently unanalysable because t
 5        22.4         0            76            77.6
 ```
 
-- Missingness was assessed for 5 analytic variables across 98 units, separated into item-level (n=5) and structural, missing-by-design (n=0) mechanisms. Item-level missingness ranged from 22.4% to 41.8% (greatest for first_appt_date) and reflects source non-linkage that is independent of the subgroup structure, rather than missingness conditioned on a unit's subgroup or observation status. Little's MCAR test not evaluated: naniar not installed; cannot run Little's MCAR test. Install with install.packages('naniar').
+- Missingness was assessed for 5 analytic variables across 98 units, separated into item-level (n=5) and structural, missing-by-design (n=0) mechanisms. Item-level missingness ranged from 22.4% to 41.8% (greatest for first_appt_date) and reflects source non-linkage that is independent of the subgroup structure, rather than missingness conditioned on a unit's subgroup or observation status. Little's MCAR test not evaluated: Fewer than 2 numeric item-level variables; Little's test not defined.
 
 ## Data-Quality Guards
 

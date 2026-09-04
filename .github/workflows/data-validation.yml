@@ -123,6 +123,27 @@ jobs:
             any::httr
             any::jsonlite
 
+      # Deriv was archived from CRAN, which takes glmmTMB down with it:
+      #   glmmTMB -> pbkrtest -> doBy (>= 4.6.22) -> Deriv
+      # Install the archived tarball first, pinned by version, so the rest of
+      # the chain resolves. Without glmmTMB the pipeline still runs, but
+      # mysterycall_hurdle_wait() degrades to "hurdle model not run" and the
+      # nightly then commits a report with the two-part model missing.
+      - name: Install archived Deriv, then glmmTMB
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            install.packages(
+              "https://cran.r-project.org/src/contrib/Archive/Deriv/Deriv_4.3.0.tar.gz",
+              repos = NULL, type = "source")
+          if (!requireNamespace("Deriv", quietly = TRUE))
+            stop("Deriv failed to install; glmmTMB cannot be built")
+          install.packages("glmmTMB")
+          if (!requireNamespace("glmmTMB", quietly = TRUE))
+            stop("glmmTMB failed to install; the hurdle model would be silently ",
+                 "dropped from the committed report")
+          cat("glmmTMB", as.character(utils::packageVersion("glmmTMB")), "\n")
+
       - name: Install mysterycall at the pinned SHA
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

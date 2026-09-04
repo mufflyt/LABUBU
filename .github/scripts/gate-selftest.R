@@ -126,6 +126,14 @@ ok <- c(
     write.csv(dd, clean_of(dir), row.names = FALSE)
   }),
 
+  # A model quietly dropped from the report (a missing optional dependency)
+  # must fail rather than be committed over the good version.
+  mutate_and_test("detects model dropped from report", function(dir) {
+    f <- file.path(dir, OUT, "mysterycall_evaluation.md")
+    writeLines(c(readLines(f, warn = FALSE),
+                 "hurdle model not run: there is no package called 'glmmTMB'"), f)
+  }),
+
   # The skip must not swallow real drift: provenance naming an export that is
   # not the one actually present is a FAILURE, not a skip.
   mutate_and_test("detects provenance naming wrong export", function(dir) {

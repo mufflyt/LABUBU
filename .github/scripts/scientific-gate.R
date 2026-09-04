@@ -142,6 +142,28 @@ try_check("report/wait-reported-as-gmr-not-days", {
             detail = if (bad) "still labels log-scale estimates as day differences" else "GMR reported")
 })
 
+# ── 5b. Models that are supposed to be in the report are in the report ────────
+# Every model is wrapped in tryCatch so a missing optional dependency degrades
+# instead of failing the build. That is right for build survival and wrong for
+# an artifact the nightly commits over the good version: when glmmTMB went
+# missing in CI, the two-part model silently vanished from the committed report
+# and nothing complained. Absence must be loud.
+try_check("report/models-present", {
+  f <- file.path(OUT, "mysterycall_evaluation.md")
+  if (!file.exists(f)) return(structure(FALSE, detail = "evaluation.md missing"))
+  txt <- paste(readLines(f, warn = FALSE), collapse = "\n")
+  missing <- character(0)
+  if (grepl("hurdle model not run", txt))       missing <- c(missing, "hurdle (glmmTMB)")
+  if (grepl("glmer triads not run", txt))       missing <- c(missing, "offer GLMER (triads)")
+  if (grepl("glmer not run", txt))              missing <- c(missing, "offer GLMER (full)")
+  if (grepl("broad glmer not run", txt))        missing <- c(missing, "broad-definition GLMER")
+  if (grepl("lmm not run", txt))                missing <- c(missing, "wait LMM")
+  structure(length(missing) == 0,
+            detail = if (length(missing))
+              paste0("silently dropped: ", paste(missing, collapse = ", "))
+            else "all protocol models present")
+})
+
 # ── 6. Caller confounding must be surfaced ────────────────────────────────────
 try_check("report/caller-confounding-reported", {
   f <- file.path(OUT, "caller_dominance_by_scenario.csv")
