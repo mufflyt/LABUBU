@@ -165,6 +165,13 @@ jobs:
 
       # Exit 0 is not proof. The receipt is written only after every expected
       # artifact exists, is non-empty, and the denominator cascade nests.
+      # Provenance must describe the file this run actually read. Without this
+      # the committed PROVENANCE.md still names the real export while the tree
+      # holds the fixture, and provenance/md5-matches-repo-export correctly
+      # fails -- a harness gap, not a scientific one.
+      - name: Regenerate provenance for the fixture run
+        run: Rscript provenance.R
+
       - name: Pipeline completion receipt
         run: Rscript .github/scripts/pipeline-receipt.R
 

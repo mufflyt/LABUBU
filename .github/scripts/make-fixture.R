@@ -25,14 +25,37 @@ notes_col    <- "notes"
 # Stable, distinct pseudonyms. Deliberately not "Practice 001/002": near-
 # duplicate detection keys on edit distance, and sequential numbering would
 # trip it on every run.
-clinic_words <- c("Alder", "Birchwood", "Cedarcrest", "Dovetail", "Elmgrove",
-                  "Fernbank", "Goldleaf", "Harborview", "Ironwood", "Juniper",
-                  "Kestrel", "Larkspur", "Meadowlark", "Northgate", "Oakhollow",
-                  "Pinecrest", "Quarrystone", "Rosewater", "Stonebridge",
-                  "Thistledown", "Umberfield", "Violetbrook", "Westmarch",
-                  "Yarrowfield", "Zephyrhill")
-state_tags <- c("AL", "CO", "FL", "GA", "IA", "KS", "MI", "MN", "NE", "OH",
-                "PA", "TX", "VA", "WI")
+# Stable pseudonyms that are MUTUALLY DISTANT. The pipeline flags practice
+# names as near-duplicates at edit distance <= 4 or normalised distance
+# <= 0.15, to catch a spelling variant fragmenting a practice. Combinatorial
+# names ("Alder FertilityCare (CO)" vs "Alder FertilityCare (FL)") differ by
+# two characters and tripped that detector 178 times on the first fixture.
+# Select greedily so no two pseudonyms are close enough to trip it.
+pseudonym_pool <- as.vector(outer(
+  c("Alder", "Birchwood", "Cedarcrest", "Dovetail", "Elmgrove", "Fernbank",
+    "Goldleaf", "Harborview", "Ironwood", "Juniper", "Kestrel", "Larkspur",
+    "Meadowlark", "Northgate", "Oakhollow", "Pinecrest", "Quarrystone",
+    "Rosewater", "Stonebridge", "Thistledown", "Umberfield", "Violetbrook",
+    "Westmarch", "Yarrowfield", "Zephyrhill", "Amberton", "Bramblewick",
+    "Clearspring", "Duskwillow", "Everglade", "Foxglove", "Greenhollow",
+    "Hazelmere", "Inglewood", "Jasperfield", "Kingsbarrow", "Lambswood",
+    "Marshlight", "Nettlebed", "Orchardgate", "Pemberly", "Quillhaven",
+    "Ravenscroft", "Silverbrook", "Tallowmere", "Underhill", "Vinecliff",
+    "Wrenfield", "Yewbank", "Zinnia"),
+  c("Fertility Associates", "Womens Health Center",
+    "Reproductive Care Clinic", "Family Medicine Group",
+    "Restorative Health Practice"),
+  paste))
+
+pool_distance <- adist(pseudonym_pool)
+kept <- 1L
+for (candidate in seq_along(pseudonym_pool)[-1]) {
+  edit_d <- pool_distance[candidate, kept]
+  norm_d <- edit_d / pmax(nchar(pseudonym_pool[candidate]),
+                          nchar(pseudonym_pool[kept]))
+  if (all(edit_d > 4) && all(norm_d > 0.15)) kept <- c(kept, candidate)
+}
+pseudonym_pool <- pseudonym_pool[kept]
 
 # Map on the NORMALISED key, not the raw string. The pipeline collapses
 # spelling variants via normalize_practice(); pseudonymising raw names first
@@ -48,14 +71,12 @@ raw_names <- raw_export[[practice_col]]
 normalised <- ifelse(is.na(raw_names) | raw_names == "", NA_character_,
                      normalize_practice(raw_names))
 real_practices <- sort(unique(normalised[!is.na(normalised)]))
-pseudonyms <- vapply(seq_along(real_practices), function(i) {
-  sprintf("%s FertilityCare (%s)",
-          clinic_words[((i - 1) %% length(clinic_words)) + 1],
-          state_tags[((i - 1) %/% length(clinic_words)) %% length(state_tags) + 1])
-}, character(1))
-# Guarantee uniqueness when the roster exceeds the word list.
-pseudonyms <- make.unique(pseudonyms, sep = " Annex ")
-names(pseudonyms) <- real_practices
+if (length(pseudonym_pool) < length(real_practices))
+  stop("pseudonym pool holds ", length(pseudonym_pool), " mutually distant ",
+       "names but ", length(real_practices), " practices need one; widen the ",
+       "word lists rather than letting near-duplicates into the fixture")
+pseudonyms <- stats::setNames(pseudonym_pool[seq_along(real_practices)],
+                              real_practices)
 
 fixture <- raw_export
 fixture[[practice_col]] <- unname(pseudonyms[normalised])
