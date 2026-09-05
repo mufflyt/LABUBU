@@ -115,6 +115,10 @@ layers:
     - id: report/caller-confounding-reported
 
     - id: restriction/excluded-from-inference
+    - id: fixture/preserves-practice-structure
+    - id: pipeline/default-export-resolvable
+    - id: ci/checks-cannot-silently-skip
+    - id: ci/no-duplicate-script-registration
 
     - id: figures/opaque-background
 
@@ -127,6 +131,9 @@ layers:
     - id: manuscript/no-hardcoded-statistics
     - id: manuscript/claims-resolve
     - id: manuscript/references-consistent
+    - id: manuscript/sdc-items-resolve
+    - id: manuscript/no-duplicate-tables
+    - id: manuscript/abstract-and-precis-within-limits
     - id: manuscript/render
       script: .github/scripts/check-manuscript-render.R
       workflows: [data-validation]

@@ -13,7 +13,7 @@ Three jobs run.
 
 | Job | What it proves | Needs data? |
 |---|---|---|
-| `scientific gate` | The committed outputs satisfy 20 scientific invariants, and the gate is provably able to fail | Only `yaml` |
+| `scientific gate` | The committed outputs satisfy 27 scientific invariants, and the gate is provably able to fail | Only `yaml` |
 | `pipeline execution` | The analysis code runs and *regenerates* its outputs from scratch | Committed fixture |
 | `re-derive from REDCap` | Full run against live REDCap | Manual dispatch only |
 
@@ -49,7 +49,7 @@ vanished". A scheduled job must not change reported results without review.
 
 ## The scientific gate
 
-20 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
+27 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
 claim, not a snapshot of today's numbers.
 
 | Check | Protects against |
@@ -74,6 +74,13 @@ claim, not a snapshot of today's numbers.
 | `privacy/no-practice-names-in-submission-artifacts` | A practice or clinician name reaching the rendered manuscript, supplement or cover letter |
 | `figures/opaque-background` | A figure saved with a transparent background, invisible in dark viewers |
 | `restriction/excluded-from-inference` | The restriction checkboxes entering a model, estimand or claim while their meaning is unresolved |
+| `manuscript/sdc-items-resolve` | A supplemental digital content item cited in text but missing from the supplement file |
+| `manuscript/no-duplicate-tables` | Duplicate table headers or numbering in the manuscript |
+| `manuscript/abstract-and-precis-within-limits` | Abstract or precis word count exceeding Green Journal limits |
+| `pipeline/default-export-resolvable` | Pipeline failing to locate a valid export CSV |
+| `ci/checks-cannot-silently-skip` | Checks silently skipping without explicit SKIP() classification |
+| `ci/no-duplicate-script-registration` | Multiple registration of the same check ID |
+| `fixture/preserves-practice-structure` | De-identification fixture fragmenting triads or practice keys |
 
 Beyond the gate, four scripts assert things the gate cannot:
 `data-contract.R` (18 row-level assertions, reported with offending record

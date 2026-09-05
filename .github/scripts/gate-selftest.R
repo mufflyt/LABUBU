@@ -36,6 +36,20 @@ mutate_and_test <- function(label, covers, mutate) {
                        "cover_letter_GREEN_JOURNAL.html",
                        "cover_letter_GREEN_JOURNAL.docx")), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
+  # The regression invariants read the supplement source, the CI contract, the
+  # check scripts and the fixture, so the sandbox has to carry them too. A
+  # check whose input is absent now FAILS rather than skipping, so an
+  # incomplete sandbox would show up as a spurious failure, not a silent pass.
+  file.copy(Sys.glob(c("supplemental_digital_content.Rmd",
+                       "evaluate_labubu_mysterycall.R")), tmp)
+  dir.create(file.path(tmp, "config"), showWarnings = FALSE)
+  file.copy(Sys.glob("config/*.yml"), file.path(tmp, "config"))
+  dir.create(file.path(tmp, ".github", "scripts"), recursive = TRUE, showWarnings = FALSE)
+  file.copy(Sys.glob(".github/scripts/*.R"), file.path(tmp, ".github", "scripts"))
+  dir.create(file.path(tmp, "tests", "fixtures"), recursive = TRUE, showWarnings = FALSE)
+  file.copy(Sys.glob("tests/fixtures/*.csv"), file.path(tmp, "tests", "fixtures"))
+  dir.create(file.path(tmp, "tools"), showWarnings = FALSE)
+  file.copy(Sys.glob("tools/*.R"), file.path(tmp, "tools"))
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
   mutate(tmp)
@@ -81,6 +95,20 @@ expect_skip <- function(label, check_id, mutate) {
                        "cover_letter_GREEN_JOURNAL.html",
                        "cover_letter_GREEN_JOURNAL.docx")), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
+  # The regression invariants read the supplement source, the CI contract, the
+  # check scripts and the fixture, so the sandbox has to carry them too. A
+  # check whose input is absent now FAILS rather than skipping, so an
+  # incomplete sandbox would show up as a spurious failure, not a silent pass.
+  file.copy(Sys.glob(c("supplemental_digital_content.Rmd",
+                       "evaluate_labubu_mysterycall.R")), tmp)
+  dir.create(file.path(tmp, "config"), showWarnings = FALSE)
+  file.copy(Sys.glob("config/*.yml"), file.path(tmp, "config"))
+  dir.create(file.path(tmp, ".github", "scripts"), recursive = TRUE, showWarnings = FALSE)
+  file.copy(Sys.glob(".github/scripts/*.R"), file.path(tmp, ".github", "scripts"))
+  dir.create(file.path(tmp, "tests", "fixtures"), recursive = TRUE, showWarnings = FALSE)
+  file.copy(Sys.glob("tests/fixtures/*.csv"), file.path(tmp, "tests", "fixtures"))
+  dir.create(file.path(tmp, "tools"), showWarnings = FALSE)
+  file.copy(Sys.glob("tools/*.R"), file.path(tmp, "tools"))
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
   mutate(tmp)
@@ -129,6 +157,79 @@ ok <- c(
 
   # The defect injected here is the one that was actually present: a reference
   # cited in the Discussion whose number precedes its first use in the Intro.
+  # ── Negative controls for the regression invariants ────────────────────────
+  # One per mistake actually made. Each injects the defect that occurred.
+
+  mutate_and_test("detects a supplemental item promised but never written",
+                  "manuscript/sdc-items-resolve", function(dir) {
+    f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")
+    writeLines(c(readLines(f, warn = FALSE),
+                 "**Appendix Table S99.** A table nobody ever wrote."), f)
+  }),
+
+  mutate_and_test("detects a duplicated main-text table number",
+                  "manuscript/no-duplicate-tables", function(dir) {
+    f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")
+    writeLines(c(readLines(f, warn = FALSE), "```{r dup}",
+                 'kable(head(cars), caption = "Table 1. A second Table 1.")', "```"), f)
+  }),
+
+  mutate_and_test("detects an over-length precis",
+                  "manuscript/abstract-and-precis-within-limits", function(dir) {
+    f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")
+    t <- readLines(f, warn = FALSE)
+    i <- grep('class="precis-title"', t)[1]
+    t[i + 1] <- paste(rep("word", 40), collapse = " ")
+    writeLines(t, f)
+  }),
+
+  mutate_and_test("detects a hardcoded default export filename",
+                  "pipeline/default-export-resolvable", function(dir) {
+    f <- file.path(dir, "evaluate_labubu_mysterycall.R")
+    t <- readLines(f, warn = FALSE)
+    i <- grep('if \\(!exists\\("input_file"\\)\\)', t)[1]
+    t[i] <- 'if (!exists("input_file")) input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"'
+    writeLines(t, f)
+  }),
+
+  mutate_and_test("detects a check that can swallow its own failure",
+                  "ci/checks-cannot-silently-skip", function(dir) {
+    f <- file.path(dir, ".github", "scripts", "check-metamorphic.R")
+    writeLines(c(readLines(f, warn = FALSE), "try({", "  stop('swallowed')", "})"), f)
+  }),
+
+  mutate_and_test("detects the same script enforced twice in the CI contract",
+                  "ci/no-duplicate-script-registration", function(dir) {
+    f <- file.path(dir, "config", "ci_contract.yml")
+    t <- readLines(f, warn = FALSE)
+    i <- grep("^advisory:", t)[1]
+    add <- c("    - id: crosscheck/duplicate-of-reference",
+             "      script: .github/scripts/check-reference-crosscheck.R")
+    writeLines(append(t, add, after = i - 1), f)
+  }),
+
+  mutate_and_test("detects a fixture whose practices have been split apart",
+                  "fixture/preserves-practice-structure", function(dir) {
+    # The original incident exactly: pseudonymise RAW names, so spelling
+    # variants that normalize_practice() would collapse become separate
+    # practices and the complete triads disappear.
+    f <- file.path(dir, "tests", "fixtures", "LABUBU_DATA_LABELS_fixture.csv")
+    d <- utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE)
+    col <- grep("practice name", names(d), ignore.case = TRUE, value = TRUE)[1]
+    # Letters, not digits: normalize_practice() strips a trailing number as a
+    # call-list index, so "Practice 1" collapses to "Practice" and every row
+    # merges into ONE practice that then has all three scenarios -- the defect
+    # would hide itself. This is the third time that rule has bitten in this
+    # repository, which is why the check exists at all.
+    lab <- vapply(seq_len(nrow(d)), function(i) {
+      n <- i - 1L; a <- character(0)
+      repeat { a <- c(LETTERS[(n %% 26) + 1L], a); n <- n %/% 26; if (n == 0L) break }
+      paste0("Practice ", paste(a, collapse = ""))
+    }, character(1))
+    d[[col]] <- lab                                        # one per ROW: no triads survive
+    utils::write.csv(d, f, row.names = FALSE)
+  }),
+
   mutate_and_test("detects a practice name in a submission artifact",
                   "privacy/no-practice-names-in-submission-artifacts", function(dir) {
     f <- file.path(dir, "supplemental_digital_content.html")

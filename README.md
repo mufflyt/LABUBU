@@ -144,16 +144,16 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 
 | Script | Purpose & Description |
 |---|---|
-| [`refresh.R`](file:///Users/tylermuffly/labubu/refresh.R) | **One-command master orchestrator.** Handles export ingestion, archiving, execution, and delta reporting. |
-| [`redcap_pull.R`](file:///Users/tylermuffly/labubu/redcap_pull.R) | Downloads labelled and raw exports directly from the REDCap API token. |
-| [`evaluate_labubu_mysterycall.R`](file:///Users/tylermuffly/labubu/evaluate_labubu_mysterycall.R) | Core data cleaning, normalization, GLMER/LMM modeling, McNemar tests, and report generation. |
-| [`figures_wait_time.R`](file:///Users/tylermuffly/labubu/figures_wait_time.R) | Generates publication-ready figures (raincloud, ridge plot, ECDF, within-practice pairs, 2x2 panel). |
-| [`provenance.R`](file:///Users/tylermuffly/labubu/provenance.R) | Computes MD5 checksums, Git state, package versions, and denominator levels into `PROVENANCE.md`. |
-| [`call_progress.R`](file:///Users/tylermuffly/labubu/call_progress.R) | Lightweight progress utility to count remaining single-mother calls and complete practice triads. |
-| [`app.R`](file:///Users/tylermuffly/labubu/app.R) | Interactive Shiny application for exploring practice-level data and scheduling distributions. |
+| [`refresh.R`](refresh.R) | **One-command master orchestrator.** Handles export ingestion, archiving, execution, and delta reporting. |
+| [`redcap_pull.R`](redcap_pull.R) | Downloads labelled and raw exports directly from the REDCap API token. |
+| [`evaluate_labubu_mysterycall.R`](evaluate_labubu_mysterycall.R) | Core data cleaning, normalization, GLMER/LMM modeling, McNemar tests, and report generation. |
+| [`figures_wait_time.R`](figures_wait_time.R) | Generates publication-ready figures (raincloud, ridge plot, ECDF, within-practice pairs, 2x2 panel). |
+| [`provenance.R`](provenance.R) | Computes MD5 checksums, Git state, package versions, and denominator levels into `PROVENANCE.md`. |
+| [`call_progress.R`](call_progress.R) | Lightweight progress utility to count remaining single-mother calls and complete practice triads. |
+| [`app.R`](app.R) | Interactive Shiny application for exploring practice-level data and scheduling distributions. |
 | `tools/check_figure_opacity.R` | Reports the alpha channel of every figure. A transparent background is invisible by inspection — it looks correct on white and vanishes in a dark viewer. |
 | `tools/scenario_cascade.R` | Prints the access cascade per scenario; the numbers behind `fig0b`. |
-| [`labubu_mysterycall_manuscript.Rmd`](file:///Users/tylermuffly/labubu/labubu_mysterycall_manuscript.Rmd) | Reproducible IMRaD manuscript template rendering directly to `labubu_mysterycall_manuscript.html`. |
+| [`labubu_mysterycall_manuscript.Rmd`](labubu_mysterycall_manuscript.Rmd) | Reproducible IMRaD manuscript template rendering directly to `labubu_mysterycall_manuscript.html`. |
 
 ---
 

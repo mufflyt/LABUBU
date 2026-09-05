@@ -243,6 +243,222 @@ try_check("privacy/no-practice-names-in-submission-artifacts", {
             else paste(length(artifacts), "rendered artifacts carry no practice name"))
 })
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Regression invariants: one per mistake actually made in this repository.
+# Each names the incident it exists to prevent, so nobody deletes it later
+# wondering what it was for.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# INCIDENT: the manuscript listed six supplemental items and the supplement did
+# not exist. Three of the six were printed inline in the main text while being
+# listed as supplemental; the other three had no home at all.
+try_check("manuscript/sdc-items-resolve", {
+  rmd <- "labubu_mysterycall_manuscript.Rmd"
+  sdc <- "supplemental_digital_content.Rmd"
+  if (!file.exists(rmd) || !file.exists(sdc))
+    return(structure(FALSE, detail = "manuscript or supplement source absent"))
+  m <- paste(readLines(rmd, warn = FALSE), collapse = "\n")
+  d <- paste(readLines(sdc, warn = FALSE), collapse = "\n")
+  # Sub-items (S1a, S5b) roll up to their parent item.
+  roll <- function(x) unique(sub("([0-9]+)[a-z]$", "\\1", x))
+  promised <- roll(gsub("[^0-9A-Za-z]", "",
+    regmatches(m, gregexpr("Appendix (Table|Figure) S[0-9]+[a-z]?", m))[[1]]))
+  present  <- roll(gsub("[^0-9A-Za-z]", "",
+    regmatches(d, gregexpr("(Table|Figure) S[0-9]+[a-z]?\\.", d))[[1]]))
+  present  <- sub("^", "Appendix", present)
+  if (!length(promised))
+    return(structure(FALSE, detail = "no supplemental items promised; check cannot evaluate"))
+  missing <- setdiff(promised, present)
+  extra   <- setdiff(present, promised)
+  problems <- c(
+    if (length(missing)) paste("promised but not in the supplement:",
+                               paste(sort(missing), collapse = ", ")),
+    if (length(extra))   paste("in the supplement but never listed:",
+                               paste(sort(extra), collapse = ", ")))
+  structure(length(problems) == 0,
+            detail = if (length(problems)) paste(problems, collapse = "; ")
+                     else sprintf("%d supplemental items promised and present", length(promised)))
+})
+
+# INCIDENT: after a restructure the manuscript carried two Table 1s, with the
+# service menu appearing twice; later, three appendix tables printed in BOTH the
+# main text and the supplement, shipping the same table twice in one package.
+try_check("manuscript/no-duplicate-tables", {
+  rmd <- "labubu_mysterycall_manuscript.Rmd"
+  sdc <- "supplemental_digital_content.Rmd"
+  if (!file.exists(rmd))
+    return(structure(FALSE, detail = "manuscript source absent"))
+  m <- paste(readLines(rmd, warn = FALSE), collapse = "\n")
+  nums <- regmatches(m, gregexpr('caption = "Table [0-9]+\\.', m))[[1]]
+  nums <- gsub("[^0-9]", "", nums)
+  dup_main <- unique(nums[duplicated(nums)])
+
+  shared <- character(0)
+  if (file.exists(sdc)) {
+    d <- paste(readLines(sdc, warn = FALSE), collapse = "\n")
+    in_main <- gsub("[^0-9A-Za-z]", "",
+      regmatches(m, gregexpr("Appendix Table S[0-9]+[a-z]?\\. [A-Z]", m))[[1]])
+    # An appendix table is "printed" in the main text only if the main text
+    # actually builds it, i.e. carries a kable caption for it.
+    printed <- gsub("[^0-9A-Za-z]", "",
+      regmatches(m, gregexpr('caption = (sprintf\\()?"Appendix Table S[0-9]+[a-z]?', m))[[1]])
+    also <- gsub("[^0-9A-Za-z]", "",
+      regmatches(d, gregexpr('caption = (sprintf\\()?"Table S[0-9]+[a-z]?', d))[[1]])
+    shared <- intersect(sub("^captionsprintfAppendix", "", printed),
+                        sub("^captionsprintf", "", also))
+  }
+  problems <- c(
+    if (length(dup_main)) paste("duplicate Table number(s) in the manuscript:",
+                                paste(dup_main, collapse = ", ")),
+    if (length(shared))   paste("table printed in BOTH the manuscript and the supplement:",
+                                paste(shared, collapse = ", ")))
+  structure(length(problems) == 0,
+            detail = if (length(problems)) paste(problems, collapse = "; ")
+                     else sprintf("%d main-text tables, none duplicated or shared with the supplement",
+                                  length(unique(nums))))
+})
+
+# INCIDENT: the abstract and precis both had to be cut by hand to meet the
+# journal's limits. A limit that is only ever checked by a person is a limit
+# that drifts.
+try_check("manuscript/abstract-and-precis-within-limits", {
+  rmd <- "labubu_mysterycall_manuscript.Rmd"
+  if (!file.exists(rmd))
+    return(structure(FALSE, detail = "manuscript source absent"))
+  lines <- readLines(rmd, warn = FALSE)
+  wc <- function(x) length(strsplit(trimws(gsub("`r [^`]*`", "X", paste(x, collapse = " "))), "\\s+")[[1]])
+
+  a0 <- grep("^## ABSTRACT", lines)
+  a1 <- grep("^## INTRODUCTION", lines)
+  if (!length(a0) || !length(a1))
+    return(structure(FALSE, detail = "ABSTRACT or INTRODUCTION heading absent; cannot evaluate"))
+  abstract_words <- wc(lines[(a0[1] + 1):(a1[1] - 1)])
+
+  p0 <- grep('class="precis-title"', lines)
+  if (!length(p0))
+    return(structure(FALSE, detail = "precis block absent; cannot evaluate"))
+  precis_words <- wc(sub("</div>.*$", "", lines[p0[1] + 1]))
+
+  problems <- c(
+    if (abstract_words > 300) sprintf("abstract is %d words (limit 300)", abstract_words),
+    if (precis_words  >  25)  sprintf("precis is %d words (limit 25)",  precis_words))
+  structure(length(problems) == 0,
+            detail = if (length(problems)) paste(problems, collapse = "; ")
+                     else sprintf("abstract %d/300 words, precis %d/25", abstract_words, precis_words))
+})
+
+# INCIDENT: the pipeline's default input_file named an export that had been
+# archived to Old_redcap/, so running the script on its own failed outright
+# with "does not exist in current working directory".
+try_check("pipeline/default-export-resolvable", {
+  f <- "evaluate_labubu_mysterycall.R"
+  if (!file.exists(f))
+    return(structure(FALSE, detail = "pipeline source absent"))
+  src <- readLines(f, warn = FALSE)
+  block <- grep('if \\(!exists\\("input_file"\\)\\)', src)
+  if (!length(block))
+    return(structure(FALSE, detail = "input_file default block not found; cannot evaluate"))
+  # A bare literal filename as the default is the defect: it rots the moment
+  # that export is archived. The default must be resolved at run time.
+  lit <- regmatches(src, gregexpr('input_file <- "LABUBU_DATA_LABELS_[^"]*\\.csv"', src))
+  lit <- unlist(lit)
+  structure(length(lit) == 0,
+            detail = if (length(lit))
+              paste("pipeline hardcodes a default export filename, which rots when it is archived:",
+                    paste(lit, collapse = ", "))
+            else "the default export is resolved at run time, not hardcoded")
+})
+
+# INCIDENT: a newly added check wrapped its body in try(), so when its input was
+# missing in the sandbox it printed an error and passed anyway. This is the rule
+# docs/APPENDIX-lessons.md exists to enforce: a check that cannot evaluate its
+# condition must FAIL, never skip.
+try_check("ci/checks-cannot-silently-skip", {
+  scripts <- Sys.glob(".github/scripts/*.R")
+  if (!length(scripts))
+    return(structure(FALSE, detail = "no check scripts found; cannot evaluate"))
+  offenders <- character(0)
+  for (f in scripts) {
+    txt <- readLines(f, warn = FALSE)
+    # try({ ... }) around a block that reports: an error inside is swallowed and
+    # the check never reports FALSE.
+    bad <- grep("^\\s*try\\(\\{", txt)
+    if (length(bad))
+      offenders <- c(offenders, sprintf("%s:%d try({...}) can swallow a failure",
+                                        basename(f), bad[1]))
+    # suppressWarnings/silent=TRUE wrapped directly around a report call.
+    bad2 <- grep("try\\(.*report\\(", txt)
+    if (length(bad2))
+      offenders <- c(offenders, sprintf("%s:%d report() inside try()",
+                                        basename(f), bad2[1]))
+  }
+  structure(length(offenders) == 0,
+            detail = if (length(offenders)) paste(offenders, collapse = "; ")
+                     else sprintf("%d check scripts, none can swallow a failure", length(scripts)))
+})
+
+# INCIDENT: the same script was registered in config/ci_contract.yml twice,
+# under an umbrella id and again under four granular ids, because two people
+# added it independently.
+try_check("ci/no-duplicate-script-registration", {
+  f <- "config/ci_contract.yml"
+  if (!file.exists(f))
+    return(structure(FALSE, detail = "ci_contract.yml absent"))
+  txt <- readLines(f, warn = FALSE)
+  # Advisory entries are excluded: one script legitimately produces both a
+  # required check and an advisory one (data-contract.R does). The defect is a
+  # script enforced twice, which is what happened when an umbrella id and a set
+  # of granular ids for the same script were added independently.
+  adv <- grep("^advisory:", txt)
+  if (length(adv)) txt <- txt[seq_len(adv[1] - 1)]
+  sc  <- trimws(sub("^\\s*script:\\s*", "", grep("^\\s*script:", txt, value = TRUE)))
+  if (!length(sc))
+    return(structure(FALSE, detail = "no script: entries parsed; cannot evaluate"))
+  dup <- unique(sc[duplicated(sc)])
+  structure(length(dup) == 0,
+            detail = if (length(dup))
+              paste("script registered more than once in the CI contract:",
+                    paste(dup, collapse = ", "))
+            else sprintf("%d distinct scripts registered, none twice", length(unique(sc))))
+})
+
+# INCIDENT: the fixture builder pseudonymised RAW practice names before
+# normalize_practice() collapsed spelling variants, splitting practices apart
+# and destroying 34 of the fixture's complete triads. The fixture then certified
+# a pipeline that could no longer see triads at all.
+try_check("fixture/preserves-practice-structure", {
+  fx <- file.path("tests", "fixtures", "LABUBU_DATA_LABELS_fixture.csv")
+  pl <- "evaluate_labubu_mysterycall.R"
+  if (!file.exists(fx) || !file.exists(pl))
+    return(structure(FALSE, detail = "fixture or pipeline source absent"))
+  src <- readLines(pl, warn = FALSE)
+  take <- function(pat, fn) {
+    i <- grep(pat, src)[1]
+    j <- if (fn) i + which(src[(i + 1):length(src)] == "}")[1] else i
+    paste(src[i:j], collapse = "\n")
+  }
+  env <- new.env()
+  eval(parse(text = take("^PHONE_RE", FALSE)), envir = env)
+  eval(parse(text = take("^redact_phone <- function", FALSE)), envir = env)
+  eval(parse(text = take("^normalize_practice <- function", TRUE)), envir = env)
+
+  f <- utils::read.csv(fx, stringsAsFactors = FALSE, check.names = FALSE)
+  col <- grep("practice name", names(f), ignore.case = TRUE, value = TRUE)[1]
+  sc  <- grep("^Scenario$", names(f), ignore.case = TRUE, value = TRUE)[1]
+  if (is.na(col) || is.na(sc))
+    return(structure(FALSE, detail = "fixture lacks a practice-name or Scenario column"))
+  key <- env$normalize_practice(f[[col]])
+  tab <- table(key, f[[sc]])
+  triads <- sum(rowSums(tab > 0) == 3)
+  # The fixture exists to exercise the paired analysis. With no complete triad
+  # it certifies nothing about the primary model.
+  structure(triads > 0,
+            detail = if (triads > 0)
+              sprintf("fixture holds %d complete triads across %d practices",
+                      triads, length(unique(key[!is.na(key)])))
+            else "fixture has NO complete triads; pseudonymisation has split practices apart")
+})
+
 # ── 5d. Manuscript claims resolve to the analysis ─────────────────────────────
 # The manuscript looks its headline numbers up by claim id. If the claims table
 # is missing, or a claim no longer resolves to an estimand, the paper and the
