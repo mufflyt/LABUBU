@@ -240,6 +240,14 @@ claim_pct <- function(id, digits = 1) sprintf(paste0("%.", digits, "f%%"), claim
 
 N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
 N_RCH   <- nrow(rch); N_INC <- nrow(inc); N_OFFER <- nrow(oa); N_WAIT <- nrow(wsub)
+# Table 1 counts offer ELIGIBILITY; Figure 2 counts calls carrying an OUTCOME.
+# Both are right and they differ by the calls that reached staff with no
+# recorded outcome, so the figure legend names the gap rather than leaving a
+# reader to wonder which number is the mistake.
+casc_elig <- local({
+  cc <- rd("mysterycall_access_cascade.csv")
+  cc$n[grepl("Eligible", cc$measure)][1]
+})
 N_TRIAD <- sum(cov$n_scenarios == 3)
 N_DECL  <- sum(tf(d$reached) & !tf(d$analytic_inclusion))
 
@@ -572,7 +580,7 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 
 **Figure 1.** Reproductive services offered by Restorative Reproductive Medicine practices, among the `r N_INC` calls that reached staff and completed the service interview. Points are proportions with 95% Wilson score confidence intervals, the same intervals reported in Appendix Table S3 and throughout the text; the dotted line marks 50%. Services shown in red are those a patient requires to conceive without a male partner. Intrauterine insemination and in vitro fertilization each rest on a single practice, which the intervals reflect.
 
-**Figure 2.** STROBE flow for the whole cohort. Of `r N_REC` calls placed, `r sum(!is.na(d$call_date))` had a call date recorded, `r N_RCH` reached a live office, `r N_OFFER` were eligible for the appointment-availability analysis, and `r N_WAIT` had an observed appointment date. Exclusions are itemized by disposition code.
+**Figure 2.** STROBE flow for the whole cohort. Of `r N_REC` calls placed, `r sum(!is.na(d$call_date))` had a call date recorded, `r N_RCH` reached a live office, `r N_OFFER` carried an outcome into the appointment-availability analysis, and `r N_WAIT` had an observed appointment date. Table 1 reports `r casc_elig` calls as offer-eligible; the two-call difference is calls that reached staff but carry no recorded outcome. Exclusions are itemized by disposition code.
 
 **Figure 3.** STROBE flow by caller scenario. The three arms enter the cascade at comparable widths (`r paste(casc$reached, collapse = ", ")` reached for straight couple, lesbian couple and single mother respectively) and leave at very different ones (`r paste(casc$offered_strict, collapse = ", ")` with an observed appointment date). Documentation completeness also differed by arm (Appendix Table S2), so this figure should be read alongside that table rather than as an access finding on its own.
 
