@@ -50,7 +50,12 @@ volatile_line <- function(x) {
 # talking, not the data.
 result_path <- function(path) {
   grepl("^mysterycall_outputs/.*\\.csv$", path) &
-    !grepl("estimands\\.csv$", path) &
+    # estimands.csv and manuscript_claims.csv are both judged by
+    # estimand-diff.R. The claims table is DERIVED from the estimands and
+    # carries the same interval bounds, so comparing it here applies the tight
+    # point-estimate tolerance to bounds that legitimately move with the
+    # optimiser -- which is the noise this whole line of work is removing.
+    !grepl("(estimands|manuscript_claims)\\.csv$", path) &
     # per-run review lists, not results
     !grepl("(practice_name_review|duplicate_practice_scenario)", path)
 }
