@@ -240,6 +240,15 @@ N_RCH   <- nrow(rch); N_INC <- nrow(inc); N_OFFER <- nrow(oa); N_WAIT <- nrow(ws
 N_TRIAD <- sum(cov$n_scenarios == 3)
 N_DECL  <- sum(tf(d$reached) & !tf(d$analytic_inclusion))
 
+# Geographic coverage. Practice location was never recorded as a field; some
+# practice names carry a parenthesised state tag. Parsed, not geocoded, so this
+# supports a generalizability caveat and nothing stronger.
+.pk       <- unique(d$practice_key[!is.na(d$practice_key)])
+.st       <- regmatches(.pk, regexpr("\\(([A-Z]{2})[,)]", .pk))
+N_ST_PRAC <- length(.st)
+N_STATES  <- length(unique(gsub("[(),]", "", .st)))
+
+
 # ── Primary model: inferred appointment availability, complete triads ─────────
 triad_ids <- cov$practice_id[cov$n_scenarios == 3]
 oa_triad  <- oa[oa$practice_id %in% triad_ids & !is.na(oa$practice_id), ]
@@ -374,43 +383,24 @@ This national secret-shopper audit had one primary objective and one secondary, 
 
 ## SOURCES AND METHODS
 
-### Study Design and Practice Eligibility
-We conducted a national within-practice audit study of RRM practices in the United States between 2025 and 2026. A comprehensive national roster of RRM practices was compiled from professional directories and clinical registries. The study protocol was reviewed and approved by the Colorado Multiple Institutional Review Board (COMIRB 25-2596).
-
-Trained callers telephoned each eligible practice during standard business hours (08:00–17:00 local time, excluding 12:00–13:00). Each practice was assigned to receive one telephone call for each of three clinical scenarios. Because each practice served as its own control across scenarios, practice identity was treated as a random intercept in all statistical models.
-
-### Standardized Caller Scenarios
-Three standardized clinical scenarios were designed:
-
-- Straight Couple: A female caller seeking fertility evaluation with a male partner.
-- Lesbian Couple: A female caller seeking fertility evaluation with a female partner.
-- Single Mother: A single female caller seeking fertility evaluation using donor sperm.
-
-Call scripts were strictly standardized across scenarios, differing only in the caller's stated partner status and clinical inquiry regarding donor sperm care.
+### Study Design and Scenarios
+We conducted a national within-practice audit of RRM practices in the United States between 2025 and 2026, using a roster compiled from professional directories and clinical registries. Trained callers telephoned each practice during business hours (08:00–17:00 local time, excluding 12:00–13:00), once for each of three standardized scenarios: a female caller seeking fertility evaluation with a male partner (straight couple), with a female partner (lesbian couple), or alone using donor sperm (single mother). Scripts were identical apart from the caller's stated partner status and the donor sperm inquiry. Because each practice served as its own control across scenarios, practice identity was treated as a random intercept in all models. The Colorado Multiple Institutional Review Board approved the protocol (COMIRB 25-2596).
 
 ### Main Outcome Measures
-The **primary outcome** was the service menu: for each practice reached, whether staff reported offering cycle tracking, hormonal laboratory monitoring, ovulation induction, IUI, IVF, and whether the practice works with donor sperm. These are directly reported by staff in response to a standardized question, require no derivation, and do not depend on which caller placed the call.
+The **primary outcome** was the service menu: for each practice reached, whether staff reported offering cycle tracking, hormonal laboratory monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and whether the practice works with donor sperm. Staff reported these directly in response to a standardized question; they require no derivation and do not depend on which caller placed the call.
 
-**Secondary, exploratory outcomes** were appointment availability and business-day wait time by caller scenario.
-
-### Outcome Definitions
-Call dispositions were mapped to the standard access-audit exclusion codes, which distinguish three nested constructs that are frequently conflated: whether a live office was **reached**, whether the call was **eligible** for the offer analysis, and whether an appointment was **offered**.
-
-- **Reached a live office**: staff engaged with the caller (including calls that ended in a stated refusal or an extended hold). Voicemail, wrong numbers, unanswered lines, personal phones, and closed systems were not reached.
-- **Appointment availability, strict (primary)**: among offer-eligible calls, a first-available appointment date was recorded. A stated "not accepting new patients" was scored as unavailable. The strict definition is primary because it has greater specificity and requires less investigator interpretation.
-- **Appointment availability, broad (sensitivity)**: as above, but a concrete scheduling timeframe reported by staff without a specific date was also counted. This definition demonstrates how far the findings depend on measurement assumptions.
+**Secondary, exploratory outcomes** were appointment availability and business-day wait time by caller scenario. Call dispositions were mapped to the standard access-audit exclusion codes, which separate three nested constructs that are frequently conflated: whether a live office was **reached** (staff engaged with the caller, including stated refusals and extended holds; voicemail, wrong numbers, unanswered lines, personal phones and closed systems were not reached), whether the call was **eligible** for the offer analysis, and whether an appointment was **available**. Availability was scored strictly for the primary analysis, requiring a recorded first-available date and scoring a stated "not accepting new patients" as unavailable, and broadly as a sensitivity analysis, additionally counting a concrete scheduling timeframe reported without a specific date. The strict definition is primary because it requires less investigator interpretation. Wait time was the number of business days (Monday–Friday, excluding US federal holidays) between the call and the first available appointment, with same-day appointments retained as a wait of zero.
 
 The data-collection instrument contained no item asking whether staff agreed to schedule the caller. Throughout this paper the outcome is therefore described as **appointment availability inferred from call documentation**, not as a practice "offering an appointment": the latter would assert something the instrument never measured. This is the study's principal measurement limitation.
 
-### Duplicate practice-scenario calls
-The protocol specifies one call per practice per scenario; eight cells contained two. Voicemail, wrong numbers and abandoned or over-long holds are contact *attempts* rather than completed calls, so where an attempt preceded a completed call the completed call determined the cell (2 cells). Where two protocol-valid completed calls existed, the cell was treated as a protocol deviation and excluded from the primary paired analysis rather than resolved by preferring the earlier or later call (2 cells). Both calls are retained in the call-level dataset, and first-successful versus last-successful selection is reported as a sensitivity analysis. Wait time was the number of business days (Monday–Friday, excluding US federal holidays) between the call and the first available appointment, with same-day appointments retained as a wait of zero.
+The protocol specifies one call per practice per scenario; eight cells contained two. Where a contact attempt (voicemail, wrong number, abandoned or over-long hold) preceded a completed call, the completed call determined the cell; where two protocol-valid completed calls existed, the cell was treated as a protocol deviation and excluded from the primary paired analysis rather than resolved by preferring the earlier or later call. All calls are retained in the call-level dataset, and first- versus last-successful selection is reported as a sensitivity analysis (Appendix Table S5).
 
 ### Statistical Analysis and Power
-Proportions carry 95% Wilson score confidence intervals.[13,14] The access cascade reports each stage with its own denominator, nested within the preceding stage.
+Proportions carry 95% Wilson score confidence intervals.[13,14] The access cascade reports each stage against its own denominator, nested within the preceding stage.
 
-Mixed-effects logistic regression with a practice random intercept was fitted to the offer outcome, first on the subset of complete practice triads (N = `r N_TRIAD` practices) to remove practice-selection dialing bias, then on the full offer sample, and finally under the broad offer definition as a sensitivity analysis. Because the appointment date was missing for a scenario-dependent share of calls, a two-part hurdle model estimated the obtainment and wait-given-obtainment steps jointly rather than conditioning on complete cases. Wait time was additionally modeled with a linear mixed model; because the wait distribution is right-skewed, the outcome was log-transformed and estimates are reported as back-transformed geometric mean ratios (GMR), not as differences in days.
+Mixed-effects logistic regression with a practice random intercept was fitted to the availability outcome, first on the subset of complete practice triads (N = `r N_TRIAD` practices) to remove practice-selection dialing bias, then on the full offer sample, and finally under the broad definition. Because the appointment date was missing for a scenario-dependent share of calls, a two-part hurdle model estimated the obtainment and wait-given-obtainment steps jointly rather than conditioning on complete cases. Wait time was additionally modeled with a linear mixed model on the log scale, with estimates back-transformed to geometric mean ratios (GMR) rather than reported as differences in days.
 
-Within-practice matched contrasts used exact McNemar tests. Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect (MDE) odds ratios at 80% power (α = 0.05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with SAMPL reporting guidelines,[14] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
+Within-practice matched contrasts used exact McNemar tests. Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect odds ratios at 80% power (α = .05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with SAMPL reporting guidelines,[14] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
 
 ---
 
@@ -557,6 +547,7 @@ Limitations:
 5. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
 6. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
 7. **Single call per scenario.** Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
+8. **Geographic representativeness is unverified.** The instrument recorded no practice address. A state was identifiable from the practice name for `r N_ST_PRAC` of `r N_PRAC` practices, spanning `r N_STATES` states, so the roster is not regionally concentrated; but with location missing for the remainder and no population weighting, we cannot establish that the sample represents the national distribution of RRM practices.
 
 ### Recommendations for the Next Wave
 Adding an explicit item asking whether staff agreed to schedule the caller, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The three "restrictions on the individuals you would provide care to" checkboxes are the only directly measured discrimination item in the instrument, and they are deliberately **excluded from all analyses reported here**: their semantics are unresolved, since the straight-couple box is ticked on straight-couple calls and a checked box may denote either restricted or provided care. Resolving them requires the original REDCap field labels, choices, branching logic and coded values, not inference from the observed pattern. Should the codebook confirm that they record restriction, they would be a stronger primary measure of discrimination than any outcome inferred from call documentation, and adopting them would warrant an explicit protocol amendment rather than a substitution.
@@ -585,6 +576,8 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 **Appendix Table S3.** Reproductive services offered, numeric detail underlying Figure 1.
 
 **Appendix Table S4.** Completed STROBE checklist for cross-sectional studies.
+
+**Appendix Table S5.** Adjudication of the eight practice-scenario cells containing duplicate calls, with the primary and sensitivity cell assignments side by side.
 
 **Appendix Figure S1.** Wait time to first available appointment (raincloud, ridgeline, empirical cumulative distribution, and within-practice pairs), restricted to the `r N_WAIT` calls with an observed appointment date.
 
