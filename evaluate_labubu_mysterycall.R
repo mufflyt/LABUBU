@@ -1,5 +1,11 @@
 library(mysterycall)
 
+# Several tests in the pipeline are Monte Carlo (Fisher exact with
+# simulate.p.value, Freeman-Halton). Unseeded they return a slightly different
+# p on every run, which made the nightly report drift when nothing had changed.
+# Seed once here so a rerun on identical data is bit-identical.
+set.seed(20260904L)
+
 # Default export. refresh.R sets `input_file` before sourcing this script to
 # point at the newest export; the guard lets it override this default.
 if (!exists("input_file")) input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"

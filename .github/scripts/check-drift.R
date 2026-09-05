@@ -42,6 +42,37 @@ normalise <- function(lines) {
   lines[nzchar(trimws(lines))]
 }
 
+# Two lines that differ only in the low-order digits of their numbers are the
+# same result computed on a different machine. A BLAS or optimiser difference
+# moved a caller-adjusted coefficient in the sixth decimal and opened a
+# pull request over it; the estimands were byte-identical.
+NUMERIC_RE <- "-?[0-9]+\\.?[0-9]*([eE][-+]?[0-9]+)?"
+REL_TOLERANCE <- 1e-4
+
+numerically_equivalent <- function(a, b) {
+  if (identical(a, b)) return(TRUE)
+  # The non-numeric skeleton must match exactly; only digits may differ.
+  if (!identical(gsub(NUMERIC_RE, "#", a), gsub(NUMERIC_RE, "#", b)))
+    return(FALSE)
+  a_nums <- suppressWarnings(as.numeric(
+    regmatches(a, gregexpr(NUMERIC_RE, a))[[1]]))
+  b_nums <- suppressWarnings(as.numeric(
+    regmatches(b, gregexpr(NUMERIC_RE, b))[[1]]))
+  if (length(a_nums) != length(b_nums)) return(FALSE)
+  if (!length(a_nums)) return(TRUE)
+  both_na <- is.na(a_nums) & is.na(b_nums)
+  if (any(is.na(a_nums) != is.na(b_nums))) return(FALSE)
+  a_nums <- a_nums[!both_na]; b_nums <- b_nums[!both_na]
+  if (!length(a_nums)) return(TRUE)
+  denominator <- pmax(abs(a_nums), .Machine$double.eps)
+  all(abs(a_nums - b_nums) / denominator <= REL_TOLERANCE)
+}
+
+content_equivalent <- function(previous, current) {
+  if (length(previous) != length(current)) return(FALSE)
+  all(mapply(numerically_equivalent, previous, current))
+}
+
 meaningful <- character(0)
 for (path in changed_paths) {
   if (cosmetic_path(path)) next
@@ -49,13 +80,14 @@ for (path in changed_paths) {
     system2("git", c("show", paste0("HEAD:", path)), stdout = TRUE,
             stderr = FALSE))
   current <- if (file.exists(path)) readLines(path, warn = FALSE) else character(0)
-  if (!identical(normalise(previous), normalise(current)))
+  if (!content_equivalent(normalise(previous), normalise(current)))
     meaningful <- c(meaningful, path)
 }
 
 if (!length(meaningful)) {
   base::message("DRIFT: cosmetic only (", length(changed_paths),
-                " file(s) changed: timestamps and re-rendered figures)")
+                " file(s) changed: timestamps, re-rendered figures, ",
+                "and numbers within ", format(REL_TOLERANCE), " relative tolerance)")
   base::message("  no pull request needed")
   quit(status = 1)
 }

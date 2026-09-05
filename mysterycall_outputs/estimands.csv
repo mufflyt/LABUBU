@@ -1,0 +1,25 @@
+estimand_id,estimand,estimate,lower,upper,n
+n_all_calls,calls placed,234,NA,NA,NA
+n_reached,reached a live office,108,NA,NA,NA
+n_offer_eligible,offer-eligible calls,102,NA,NA,NA
+n_offered,appointments offered,57,NA,NA,NA
+n_wait_eligible,wait observed,57,NA,NA,NA
+n_complete_triads,practices with 3 scenarios,48,NA,NA,NA
+offer_strict_straight_couple,strict offer prevalence - Straight couple,75.7,NA,NA,37
+offer_broad_straight_couple,broad offer prevalence - Straight couple,78.4,NA,NA,37
+offer_strict_lesbian_couple,strict offer prevalence - Lesbian couple,42.4,NA,NA,34
+offer_broad_lesbian_couple,broad offer prevalence - Lesbian couple,60.6,NA,NA,34
+offer_strict_single_mother,strict offer prevalence - Single mother,50,NA,NA,31
+offer_broad_single_mother,broad offer prevalence - Single mother,60,NA,NA,31
+service_cycle_tracking,service offered - cycle_tracking,94.9,88.6,97.8,98
+service_hormonal_timing,service offered - hormonal_timing,63.3,53.4,72.1,98
+service_ovulation_induction,service offered - ovulation_induction,11.2,6.4,19,98
+service_iui,service offered - iui,1,0.2,5.6,98
+service_ivf,service offered - ivf,1,0.2,5.6,98
+or_triad_lesbian_couple,triad offer OR scenarioLesbian couple,0.03894,0.005498,0.275787,76
+or_triad_single_mother,triad offer OR scenarioSingle mother,0.094544,0.013796,0.64793,76
+or_broad_lesbian_couple,broad-definition offer OR scenarioLesbian couple,0.308118,0.076201,1.24587,100
+or_broad_single_mother,broad-definition offer OR scenarioSingle mother,0.285491,0.064211,1.269326,100
+gmr_wait_lesbian_couple,wait GMR scenarioLesbian couple,0.826118,0.468526,1.456635,57
+gmr_wait_single_mother,wait GMR scenarioSingle mother,0.818855,0.462761,1.448965,57
+caller_scenario_cramers_v,caller x scenario association,0.664,NA,NA,NA

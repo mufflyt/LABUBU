@@ -180,6 +180,9 @@ jobs:
 
       # Nothing previously proved the manuscript still knits. It renders here
       # from the outputs this run just generated, not from committed ones.
+      - name: Estimand report
+        run: Rscript .github/scripts/estimand-report.R
+
       - name: Manuscript render
         run: Rscript .github/scripts/check-manuscript-render.R
 

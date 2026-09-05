@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-04 17:56:19 MDT
+Generated: 2026-09-04 18:26:05 MDT
 
 ## Package
 
@@ -412,7 +412,7 @@ The only directly measured discrimination item. Currently unanalysable because t
       p_value significant
 1 0.001701222        TRUE
 2 0.544511965       FALSE
-3 0.483758121       FALSE
+3 0.484257871       FALSE
 4 0.526965892       FALSE
 5 0.008117469        TRUE
 ```
