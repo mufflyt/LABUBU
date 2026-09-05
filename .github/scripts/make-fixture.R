@@ -63,7 +63,7 @@ pseudonym_pool <- pseudonym_pool[kept]
 # the triad structure the study is built on (48 triads became 14). Pull the
 # real function out of the pipeline so the fixture collapses identically.
 pipeline_src <- readLines("evaluate_labubu_mysterycall.R", warn = FALSE)
-fn_start <- grep("^normalize_practice <- function", pipeline_src)[1]
+fn_start <- grep("^PHONE_RE <-", pipeline_src)[1]
 fn_end   <- fn_start - 1 + grep("^\\}$", pipeline_src[fn_start:length(pipeline_src)])[1]
 eval(parse(text = paste(pipeline_src[fn_start:fn_end], collapse = "\n")))
 
