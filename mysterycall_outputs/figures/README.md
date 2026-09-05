@@ -4,10 +4,10 @@
 
 All figures in this directory were produced by `figures_wait_time.R`
 from `mysterycall_outputs/labubu_cleaned_analysis.csv`, which was derived by
-`evaluate_labubu_mysterycall.R` from REDCap export `LABUBU_DATA_LABELS_2026-09-04_1651.csv`
-(MD5 `e7ed747beff55e01`, 234 rows, downloaded 2026-09-04 16:51:45 MDT).
+`evaluate_labubu_mysterycall.R` from REDCap export `LABUBU_DATA_LABELS_2026-09-05_0042.csv`
+(MD5 `e7ed747beff55e01`, 234 rows, downloaded 2026-09-05 00:42:11 UTC).
 
-Generated 2026-09-04 18:26:18 MDT at commit `5bc75ad` using mysterycall v1.6.3.9000 and R version 4.4.2 (2024-10-31).
+Generated 2026-09-05 00:42:22 UTC at commit `d620f39` using mysterycall v1.6.3.9000 and R version 4.4.2 (2024-10-31).
 
 ## Denominators — do not quote the record count under these figures
 
