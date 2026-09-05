@@ -13,16 +13,26 @@ Three jobs run.
 
 | Job | What it proves | Needs data? |
 |---|---|---|
-| `scientific gate` | The committed outputs satisfy 13 scientific invariants, and the gate is provably able to fail | No — base R only |
+| `scientific gate` | The committed outputs satisfy 16 scientific invariants, and the gate is provably able to fail | Only `yaml` |
 | `pipeline execution` | The analysis code runs and *regenerates* its outputs from scratch | Committed fixture |
 | `re-derive from REDCap` | Full run against live REDCap | Manual dispatch only |
 
-`scientific gate` installs nothing. It reads committed CSVs with base R, so an
-unrelated CRAN outage cannot take down the study's validation. (This is not
-hypothetical: `Deriv` was archived from CRAN mid-project and took `glmmTMB`
-down with it.)
+`scientific gate` installs one leaf package, `yaml`, and nothing else. It reads
+committed CSVs with base R, so an outage in the *analysis* dependency stack
+cannot take down the study's validation. (Not hypothetical: `Deriv` was
+archived from CRAN mid-project and took `glmmTMB` with it.)
 
-`pipeline execution` deletes `mysterycall_outputs/` before running. That is
+It runs, in order:
+`check-workflow-contract.R` (are the workflows themselves sound),
+`check-ci-contract.R` (does `config/ci_contract.yml` match the implementation),
+`check-docs-sync.R` (is this file still true),
+`gate-selftest.R` (can the gate fail),
+then `scientific-gate.R`.
+
+`pipeline execution` deletes `mysterycall_outputs/` before running. It then
+runs, in order: `check-lockfile.R`, `preflight-env.R`, the pipeline,
+`provenance.R`, `pipeline-receipt.R`, `data-contract.R`, `estimand-report.R`,
+`manuscript-claims.R`, `scientific-gate.R`, `check-manuscript-render.R`. That is
 deliberate — the dangerous failure is code changing, the analysis silently not
 running, and CI validating last week's CSVs. Wiping first makes a stale file
 unable to masquerade as a fresh one.
@@ -39,7 +49,7 @@ vanished". A scheduled job must not change reported results without review.
 
 ## The scientific gate
 
-13 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
+16 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
 claim, not a snapshot of today's numbers.
 
 | Check | Protects against |
@@ -57,6 +67,14 @@ claim, not a snapshot of today's numbers.
 | `manuscript/no-hardcoded-statistics` | Literal statistics drifting away from the data |
 | `provenance/md5-matches-repo-export` | Provenance describing a different export than the one analysed |
 | `denominators/distinct-levels` | Denominators collapsing into one another |
+| `privacy/callers-de-identified` | Staff names reaching a committed analysis artifact |
+| `privacy/no-contact-details-in-artifacts` | Phone numbers or emails in committed outputs |
+| `manuscript/claims-resolve` | A manuscript claim no longer backed by an estimand |
+
+Beyond the gate, three scripts assert things the gate cannot:
+`data-contract.R` (18 row-level assertions, reported with offending record
+ids), `pipeline-receipt.R` (the analysis actually ran and its denominators
+nest), and `check-manuscript-render.R` (the paper still knits).
 
 ### Why the gate has its own test suite
 
@@ -68,6 +86,51 @@ Coverage is **enforced, not counted**: every case declares the check ID it
 covers, the suite parses the gate's own check IDs from source, and any check
 with neither a negative control nor an explicit `EXEMPT` entry fails the suite.
 Adding a gate check without a control fails CI.
+
+## Nightly drift: what counts as a result
+
+`check-drift.R` compares the **analytic CSVs** and nothing else;
+`estimand-diff.R` judges `estimands.csv`, holding point estimates to 1e-4 and
+interval bounds to 5e-2 because bounds are far less numerically stable.
+
+That split was learned the hard way. Three earlier rounds tried to list which
+lines were "volatile" — timestamps, commit SHAs, export filenames, the package
+banner — and a nightly with all of them merged still opened a spurious PR over
+the platform triple (`x86_64-apple-darwin20` vs `x86_64-pc-linux-gnu`) and R's
+`print()` widening a column when a number gains a digit. A nightly runs on a
+Linux runner and compares against artifacts generated on a maintainer's Mac,
+so environment metadata differs by construction and no pattern list can ever
+be complete. Results live in the CSVs and the estimands; everything else is
+narrative, figures, or metadata regenerated from them.
+
+## Dependencies
+
+`config/dependencies.lock.csv` records the 24 packages the analysis runs on.
+Regenerate it deliberately with `write-lockfile.R`. `check-lockfile.R`
+reports version drift rather than failing on it — a runner
+will not match a laptop package-for-package — but fails when an essential
+package is absent or `mysterycall` is off its pinned SHA. renv is deliberately
+not used; see the lockfile PR for why.
+
+## The CI contract
+
+`config/ci_contract.yml` declares every required check, its layer, and the
+workflow that runs it. `check-ci-contract.R` verifies declaration and
+implementation agree in **both** directions: declared-but-unimplemented is a
+check that exists only on paper, implemented-but-undeclared is one that
+escaped review. Its `advisory` section records checks that are surfaced but
+never enforced, currently `practice/one-call-per-scenario`.
+
+`check-docs-sync.R` asserts this file names every gate check and every CI
+script, because documentation that silently falls behind is worse than none —
+it is trusted. It caught this file describing thirteen checks when the gate had sixteen.
+
+## Open decisions
+
+`docs/OPEN-DECISIONS.md` holds questions CI has isolated but must not answer,
+because each would change an estimand or the instrument: the duplicate
+practice-scenario tie-break, restriction-checkbox coding, the derived offer
+proxy, and caller confounding.
 
 ## Snapshot values vs. invariants
 
