@@ -1667,17 +1667,17 @@ structure.</p>
 practices were telephoned by trained callers presenting one of three
 standardized clinical scenarios: a straight couple, a lesbian couple, or
 a single mother seeking donor sperm care. Each practice was eligible for
-one call per scenario. Because the data-collection instrument contained
-no explicit “was an appointment offered” item, the offer outcome was
-derived: a call was scored as offered when a first-available appointment
-date was recorded, and as not offered when the practice stated it was
-not accepting new patients; a sensitivity definition additionally
-counted a concrete scheduling timeframe as an offer. Reaching a live
-office and being offered an appointment were analyzed as separate
-cascade stages. Mixed-effects logistic regression with a practice random
-intercept was fitted to complete practice triads; within-practice
-matched contrasts used exact McNemar tests with minimum detectable
-effect (MDE) specifications.</p>
+one call per scenario. The instrument contained no explicit “was an
+appointment offered” item, so the outcome is appointment availability
+inferred from call documentation: a call was scored as available when a
+first-available appointment date was recorded, and unavailable when the
+practice stated it was not accepting new patients. A sensitivity
+definition additionally counted a concrete scheduling timeframe.
+Reaching a live office and being offered an appointment were analyzed as
+separate cascade stages. Mixed-effects logistic regression with a
+practice random intercept was fitted to complete practice triads;
+within-practice matched contrasts used exact McNemar tests with minimum
+detectable effect (MDE) specifications.</p>
 <p>RESULTS: 234 calls were placed to 105 practices. A live office was
 reached on 46.2% (95% CI 39.9-52.6%; 108/234) of calls; 100 calls were
 eligible for the offer analysis and 48 practices completed all three
@@ -1686,15 +1686,15 @@ offered by 94.9% (95% CI 88.6-97.8%; 93/98), ovulation induction by
 11.2% (95% CI 6.4-19.0%; 11/98), intrauterine insemination (IUI) by 1.0%
 (95% CI 0.2-5.6%; 1/98), in vitro fertilization (IVF) by 1.0% (95% CI
 0.2-5.6%; 1/98), and donor sperm care by 3.1% (95% CI 1.0-8.6%; 3/98).
-Appointment-offer rates were 75.7% for straight couples, 42.4% for
-lesbian couples, and 50.0% for single mothers. In complete-triad
+Inferred appointment availability was 75.7% for straight couples, 42.4%
+for lesbian couples, and 50.0% for single mothers. In complete-triad
 mixed-effects logistic regression, relative to straight couples, the
-odds of an appointment offer were OR 0.04 (0.01-0.28) for lesbian
-couples (p = 0.001) and OR 0.09 (0.01-0.65) for single mothers (p =
-0.016). Under the broader offer definition these attenuated to OR 0.31
-(0.08-1.25) and OR 0.29 (0.06-1.27) respectively. Caller identity was
-strongly associated with scenario (Cramér’s V = 0.66), so scenario and
-caller effects are not separately identifiable.</p>
+odds of inferred appointment availability were OR 0.04 (0.01-0.28) for
+lesbian couples (p = 0.001) and OR 0.09 (0.01-0.65) for single mothers
+(p = 0.016). Under the broader offer definition these attenuated to OR
+0.31 (0.08-1.25) and OR 0.29 (0.06-1.27) respectively. Caller identity
+was strongly associated with scenario (Cramér’s V = 0.66), so scenario
+and caller effects are not separately identifiable.</p>
 <p>CONCLUSION: RRM practices uniformly provide cycle tracking but rarely
 provide IUI, IVF, or donor sperm care, a structural service limitation
 for single mothers and same-sex couples that does not depend on staff
@@ -1775,20 +1775,38 @@ whether an appointment was <strong>offered</strong>.</p>
 caller (including calls that ended in a stated refusal or an extended
 hold). Voicemail, wrong numbers, unanswered lines, personal phones, and
 closed systems were not reached.</li>
-<li><strong>Appointment offered (primary, strict)</strong>: among
+<li><strong>Appointment availability, strict (primary)</strong>: among
 offer-eligible calls, a first-available appointment date was recorded. A
-stated “not accepting new patients” was scored as not offered.</li>
-<li><strong>Appointment offered (sensitivity, broad)</strong>: as above,
-but a concrete scheduling timeframe reported by staff without a specific
-date was also counted as an offer.</li>
+stated “not accepting new patients” was scored as unavailable. The
+strict definition is primary because it has greater specificity and
+requires less investigator interpretation.</li>
+<li><strong>Appointment availability, broad (sensitivity)</strong>: as
+above, but a concrete scheduling timeframe reported by staff without a
+specific date was also counted. This definition demonstrates how far the
+findings depend on measurement assumptions.</li>
 </ul>
-<p>The data-collection instrument did not contain an explicit item
-asking whether staff agreed to schedule the caller. The offer outcome is
-therefore a derived proxy, and this is the study’s principal measurement
-limitation (see Limitations). Wait time was the number of business days
-(Monday–Friday, excluding US federal holidays) between the call and the
-first available appointment, with same-day appointments retained as a
-wait of zero.</p>
+<p>The data-collection instrument contained no item asking whether staff
+agreed to schedule the caller. Throughout this paper the outcome is
+therefore described as <strong>appointment availability inferred from
+call documentation</strong>, not as a practice “offering an
+appointment”: the latter would assert something the instrument never
+measured. This is the study’s principal measurement limitation.</p>
+</div>
+<div id="duplicate-practice-scenario-calls" class="section level3">
+<h3>Duplicate practice-scenario calls</h3>
+<p>The protocol specifies one call per practice per scenario; eight
+cells contained two. Voicemail, wrong numbers and abandoned or over-long
+holds are contact <em>attempts</em> rather than completed calls, so
+where an attempt preceded a completed call the completed call determined
+the cell (2 cells). Where two protocol-valid completed calls existed,
+the cell was treated as a protocol deviation and excluded from the
+primary paired analysis rather than resolved by preferring the earlier
+or later call (2 cells). Both calls are retained in the call-level
+dataset, and first-successful versus last-successful selection is
+reported as a sensitivity analysis. Wait time was the number of business
+days (Monday–Friday, excluding US federal holidays) between the call and
+the first available appointment, with same-day appointments retained as
+a wait of zero.</p>
 </div>
 <div id="statistical-analysis-and-power" class="section level3">
 <h3>Statistical Analysis and Power</h3>
@@ -1934,25 +1952,33 @@ in 3.1% (95% CI 1.0-8.6%; 3/98). The IUI and IVF counts each reflect a
 single practice and should be read as an upper bound on availability
 rather than a stable rate estimate.</p>
 </div>
-<div id="appointment-offers-by-caller-identity" class="section level3">
-<h3>Appointment Offers by Caller Identity</h3>
-<p>Appointment-offer rates among offer-eligible calls were 75.7% for
+<div id="appointment-availability-by-caller-identity" class="section level3">
+<h3>Appointment Availability by Caller Identity</h3>
+<p>Inferred appointment availability among eligible calls was 75.7% for
 straight couples, 42.4% for lesbian couples, and 50.0% for single
 mothers (Table 1).</p>
 <p>In complete-triad mixed-effects logistic regression (N = 48
-practices), relative to straight-couple callers, the odds of an
-appointment offer were OR 0.04 (0.01-0.28) for lesbian couples (p =
-0.001) and OR 0.09 (0.01-0.65) for single mothers (p = 0.016). The
+practices), relative to straight-couple callers, the odds of inferred
+appointment availability were OR 0.04 (0.01-0.28) for lesbian couples (p
+= 0.001) and OR 0.09 (0.01-0.65) for single mothers (p = 0.016). The
 confidence intervals span orders of magnitude, reflecting
 near-separation at this sample size; direction is interpretable,
 magnitude is not.</p>
-<p>Under the broad offer definition, which additionally credits a stated
-scheduling timeframe, the same contrasts attenuated to OR 0.31
-(0.08-1.25) and OR 0.29 (0.06-1.27). The dependence of the estimate on
-the outcome definition is material and is discussed below.</p>
+<p><strong>The magnitude of these estimates depends materially on the
+measurement definition, and this is a substantive result rather than a
+robustness check.</strong> Under the broad definition, which
+additionally credits a stated scheduling timeframe, the same contrasts
+attenuate to OR 0.31 (0.08-1.25) for lesbian couples and OR 0.29
+(0.06-1.27) for single mothers — an order-of-magnitude change in the
+point estimate, with intervals that include unity. Both definitions
+place the effect in the same direction; only the strict definition
+places it far from the null. Because neither definition was measured
+directly, the direction is the more defensible claim and the magnitude
+should not be quoted without its definition.</p>
 <table style="width:100%;">
-<caption>Table 3. Within-practice matched paired appointment-offer
-analysis. Only discordant practices contribute information.</caption>
+<caption>Table 3. Within-practice matched paired analysis of inferred
+appointment availability. Only discordant practices contribute
+information.</caption>
 <colgroup>
 <col width="31%" />
 <col width="19%" />
@@ -1998,19 +2024,20 @@ analysis. Only discordant practices contribute information.</caption>
 </tr>
 </tbody>
 </table>
-<p>Within-practice paired differences in offer rate were: Straight vs
-Single Mother +31.2 percentage points (95% CI +2.7 to +59.8; n = 16
-practices); Lesbian vs Single Mother -9.1 percentage points (95% CI
--21.1 to +2.9; n = 22 practices); Straight vs Lesbian +42.1 percentage
-points (95% CI +19.9 to +64.3; n = 19 practices). Practices treated
-callers identically in 68%-81% of paired reachability comparisons.</p>
+<p>Within-practice paired differences in inferred availability were:
+Straight vs Single Mother +31.2 percentage points (95% CI +2.7 to +59.8;
+n = 16 practices); Lesbian vs Single Mother -9.1 percentage points (95%
+CI -21.1 to +2.9; n = 22 practices); Straight vs Lesbian +42.1
+percentage points (95% CI +19.9 to +64.3; n = 19 practices). Practices
+treated callers identically in 68%-81% of paired reachability
+comparisons.</p>
 </div>
 <div id="caller-assignment" class="section level3">
 <h3>Caller Assignment</h3>
 <p>Scenarios were not randomized across callers (Table 4). Caller
 identity was strongly associated with scenario (Cramér’s V = 0.66), and
-per-caller offer rates varied widely. Consequently, a scenario contrast
-and a caller contrast are numerically the same comparison, and
+per-caller availability rates varied widely. Consequently, a scenario
+contrast and a caller contrast are numerically the same comparison, and
 within-practice pairing does not separate them because the paired calls
 were placed by different callers.</p>
 <table>
@@ -2083,10 +2110,10 @@ absence of these services is a barrier to care that operates
 independently of any staff attitude or scheduling decision.[9-12] This
 result rests on directly observed service responses, not on a derived
 outcome, and is unaffected by how calls were assigned to callers.</p>
-<p>The hypothesis-generating signal is that appointment-offer rates
-differed across caller scenarios in the observed direction of
-disadvantage for lesbian couples and single mothers. We do not present
-this as an established effect, for the reasons below.</p>
+<p>The hypothesis-generating signal is that inferred appointment
+availability differed across caller scenarios in the observed direction
+of disadvantage for lesbian couples and single mothers. We do not
+present this as an established effect, for the reasons below.</p>
 </div>
 <div id="why-the-offer-difference-is-not-yet-a-finding" class="section level3">
 <h3>Why the Offer Difference Is Not Yet a Finding</h3>
@@ -2100,15 +2127,21 @@ concrete scheduling timeframe, the contrasts attenuate substantially (OR
 0.04 (0.01-0.28) to OR 0.31 (0.08-1.25) for lesbian couples). An effect
 that moves this much with the coding rule is not yet separable from a
 documentation artifact.</p>
-<p>Second, caller and scenario are confounded. Callers were not
-randomized across scenarios; each arm was dominated by a small number of
-callers (Table 4; Cramér’s V = 0.66), and per-caller offer rates ranged
+<p>Second, caller and scenario are confounded, and we make no attempt to
+correct this statistically. Callers were not randomized across
+scenarios; each arm was dominated by a small number of callers (Table 4;
+Cramér’s V = 0.66), one of whom placed 53 of 77 straight-couple calls
+and no single-mother calls, and per-caller availability rates ranged
 widely. Because the paired within-practice design compares scenarios
-that were dialed by different people, matching removes practice-level
-confounding but not caller-level confounding. In a model adjusting for
-caller, the scenario standard errors inflate to the point of
-non-identifiability, which is itself the evidence that the two cannot be
-separated in these data.</p>
+dialed by different people, matching removes practice-level confounding
+but not caller-level confounding. A caller-adjusted regression would
+appear to address this while extrapolating into caller-scenario
+combinations that barely or never occurred; we therefore report the
+caller-adjusted model <strong>only as evidence that the two effects are
+not separately identifiable</strong>, not as a corrected estimate.
+Caller-scenario confounding is a limitation of the design, and scenario
+effects in this wave should not be interpreted as cleanly attributable
+to caller identity rather than to the caller who conveyed it.</p>
 <p>Third, the matched analysis is underpowered. Discordant practices
 number 7, 2, 8 across the three contrasts, giving minimum detectable
 effects of OR 8.1 to OR 9.0 at 80% power. Plausible audit-study effects
@@ -2140,8 +2173,8 @@ instrument item recorded whether staff agreed to schedule the caller.
 Results are sensitive to the coding rule, as shown by the strict versus
 broad comparison.</li>
 <li><strong>Caller is confounded with scenario.</strong> Scenario arms
-were dominated by different callers, and caller-level offer rates vary
-widely. Scenario effects cannot be distinguished from caller
+were dominated by different callers, and caller-level availability rates
+vary widely. Scenario effects cannot be distinguished from caller
 effects.</li>
 <li><strong>Limited statistical power for matched contrasts.</strong>
 With 7, 2, 8 discordant practices, only very large effects (OR 8.1 to OR
@@ -2160,13 +2193,21 @@ evaluated.</li>
 </div>
 <div id="recommendations-for-the-next-wave" class="section level3">
 <h3>Recommendations for the Next Wave</h3>
-<p>Adding an explicit appointment-offer item to the data-collection
-instrument, and randomizing or blocking caller assignment across
-scenarios, would convert the exploratory contrast reported here into an
-estimable effect. The three “restrictions on the individuals you would
-provide care to” checkboxes already in the instrument are the only
-directly measured discrimination item; their coding is currently
-ambiguous and should be adjudicated against the codebook before use.</p>
+<p>Adding an explicit item asking whether staff agreed to schedule the
+caller, and randomizing or blocking caller assignment across scenarios,
+would convert the exploratory contrast reported here into an estimable
+effect. The three “restrictions on the individuals you would provide
+care to” checkboxes are the only directly measured discrimination item
+in the instrument, and they are deliberately <strong>excluded from all
+analyses reported here</strong>: their semantics are unresolved, since
+the straight-couple box is ticked on straight-couple calls and a checked
+box may denote either restricted or provided care. Resolving them
+requires the original REDCap field labels, choices, branching logic and
+coded values, not inference from the observed pattern. Should the
+codebook confirm that they record restriction, they would be a stronger
+primary measure of discrimination than any outcome inferred from call
+documentation, and adopting them would warrant an explicit protocol
+amendment rather than a substitution.</p>
 </div>
 <div id="conclusion" class="section level3">
 <h3>Conclusion</h3>
