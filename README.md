@@ -9,12 +9,44 @@
 [![Render Manuscript](https://github.com/mufflyt/LABUBU/actions/workflows/render-manuscript.yml/badge.svg)](https://github.com/mufflyt/LABUBU/actions/workflows/render-manuscript.yml)
 [![Provenance Generated](https://img.shields.io/badge/Provenance-Auto--Generated-orange.svg)](PROVENANCE.md)
 
-Secret-shopper (audit) study of Restorative Reproductive Medicine (RRM) practices across the United States. Each practice is called once per **scenario** — *straight couple*, *lesbian couple*, *single mother using donor sperm* — to evaluate whether willingness to schedule (appointment acceptance) and business-day wait times differ systematically by caller identity.
+Secret-shopper (audit) study of Restorative Reproductive Medicine (RRM) practices across the United States. Each practice is called once per **scenario** — *straight couple*, *lesbian couple*, *single mother using donor sperm* — to evaluate whether appointment access and business-day wait times differ by caller identity.
+
+> **On the primary outcome.** The data-collection instrument never asked whether staff agreed to schedule the caller, so the outcome is **appointment availability inferred from call documentation**, not a measured "offer". Strict and broad definitions give materially different effect sizes (triad OR 0.04 vs 0.31); direction is the defensible claim, magnitude should not be quoted without its definition. See [`docs/OPEN-DECISIONS.md`](docs/OPEN-DECISIONS.md).
 
 - **Study Design:** Within-practice paired comparison (practice entered as random intercept).
 - **Principal Investigator:** Dr. Tyler Muffly, MD (Denver Health / University of Colorado).
 - **Data Source:** REDCap project **pid 39546** (`redcap.ucdenver.edu`).
 - **Modeling Engine:** [`mysterycall`](https://github.com/mufflyt/mysterycall) R package (external statistical engine).
+
+---
+
+## 🖼️ Figures
+
+### Cohort flow
+
+![STROBE flow](mysterycall_outputs/figures/fig0_strobe_flow.png)
+
+234 calls placed → 108 reached a live office → 100 eligible for the offer
+analysis → 57 with an observed appointment date.
+
+### Flow by caller scenario
+
+![STROBE flow by scenario](mysterycall_outputs/figures/fig0b_strobe_flow_by_scenario.png)
+
+The three arms enter the funnel at comparable widths and leave at very
+different ones — 39/37/32 reached, but 28/14/15 reaching the wait analysis.
+That asymmetry is the study's central observation, and it is visible here
+before any model is fitted.
+
+### Wait time to first available appointment
+
+![Wait-time panel](mysterycall_outputs/figures/fig_panel_wait_times.png)
+
+Raincloud, ridgeline, ECDF and within-practice pairs. **All four are built on
+the wait subset (n = 57)** — calls where an appointment date was recorded,
+which is 24% of calls placed and scenario-dependent (28 straight, 14 lesbian,
+15 single mother). They describe the practices that gave a date, not the study
+population.
 
 ---
 
@@ -119,7 +151,23 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 | [`provenance.R`](file:///Users/tylermuffly/labubu/provenance.R) | Computes MD5 checksums, Git state, package versions, and denominator levels into `PROVENANCE.md`. |
 | [`call_progress.R`](file:///Users/tylermuffly/labubu/call_progress.R) | Lightweight progress utility to count remaining single-mother calls and complete practice triads. |
 | [`app.R`](file:///Users/tylermuffly/labubu/app.R) | Interactive Shiny application for exploring practice-level data and scheduling distributions. |
+| `tools/check_figure_opacity.R` | Reports the alpha channel of every figure. A transparent background is invisible by inspection — it looks correct on white and vanishes in a dark viewer. |
+| `tools/scenario_cascade.R` | Prints the access cascade per scenario; the numbers behind `fig0b`. |
 | [`labubu_mysterycall_manuscript.Rmd`](file:///Users/tylermuffly/labubu/labubu_mysterycall_manuscript.Rmd) | Reproducible IMRaD manuscript template rendering directly to `labubu_mysterycall_manuscript.html`. |
+
+---
+
+## 📚 Documentation
+
+| File | What it answers |
+|---|---|
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed, grouped by science / data / machinery |
+| [`NEWS.md`](NEWS.md) | The short version for someone returning to the project |
+| [`docs/CI.md`](docs/CI.md) | What a green check means, and what it does not |
+| [`docs/OPEN-DECISIONS.md`](docs/OPEN-DECISIONS.md) | PI decisions made, and the questions still open |
+| [`docs/PI-QUERY-restriction-checkbox.md`](docs/PI-QUERY-restriction-checkbox.md) | The exact question to send the callers, and the decision rule set in advance |
+| [`docs/APPENDIX-lessons.md`](docs/APPENDIX-lessons.md) | Why each CI check exists — every one traces to something that went wrong |
+| [`PROVENANCE.md`](PROVENANCE.md) | Which export, commit and package versions produced the current results |
 
 ---
 
@@ -137,14 +185,39 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 ## 📌 Settled Analytical Directives
 
 > [!CAUTION]
-> 1. **Do not report the unmatched marginal acceptance comparison.**
->    Single-mother calls disproportionately landed at high-acceptance practices (~70% acceptance rate vs ~14% at practices never called for single mothers), artificially inflating unmatched single-mother acceptance (64%). Within-practice paired analyses show single mothers actually face slightly lower acceptance (~7 percentage points lower). Report **only** paired analyses.
-> 2. **Acknowledge statistical power limits explicitly.**
->    With ~11–13 discordant practices per contrast, scenario comparisons are underpowered to detect subtle odds ratios. Frame scenario contrasts as exploratory with explicit MDE floors.
-> 3. **Lead with well-powered descriptive findings.**
->    Highlight practice service mix (e.g., cycle tracking ~94%, IUI 1%, IVF 1%, donor sperm 3%), overall appointment offer rate (~45%), and practice scenario concordance (69–77%).
-> 4. **Prioritize completion of single-mother calls.**
->    Completing remaining single-mother calls eliminates residual confounding and maximizes paired sample efficiency. Targeted call lists: `mysterycall_outputs/single_mother_calls_priority1_triads.csv` and `..._priority2_pairs.csv`.
+> These supersede an earlier version of this section, which described a
+> confounding pattern (single-mother acceptance inflated to 64% by dialing
+> selection) that no longer exists in the data, and an "overall appointment
+> offer rate (~45%)" that was really the rate of reaching a live office. Both
+> were artefacts of `contact_office` aliasing the analytic-inclusion flag.
+
+> 1. **Reaching a live office is not being offered an appointment.**
+>    They are separate constructs with separate denominators: reached 108,
+>    offer-eligible 102, historical inclusion 98. Never collapse them.
+> 2. **The offer outcome is inferred, not measured.**
+>    No instrument item asked whether staff agreed to schedule. Report it as
+>    *appointment availability inferred from call documentation*. Strict is
+>    primary, broad is sensitivity, and the gap between them (triad OR 0.04 vs
+>    0.31) is a finding, not a footnote.
+> 3. **Do not treat caller-adjusted models as a correction.**
+>    Cramér's V 0.66; one caller placed 53/77 straight-couple calls and no
+>    single-mother calls. Caller and scenario are not separately identifiable.
+>    Report the adjusted model only as evidence of that.
+> 4. **Acknowledge power limits explicitly.**
+>    Discordant practices number 7, 2 and 8 across the three paired contrasts.
+>    Frame scenario contrasts as exploratory with explicit MDE floors.
+> 5. **Lead with the well-powered descriptives.**
+>    Service mix — cycle tracking 94.9%, IUI 1.0%, IVF 1.0%, donor sperm 3.1% —
+>    rests on directly observed responses rather than a derived outcome, and is
+>    unaffected by caller assignment. IUI and IVF are each a single practice;
+>    say so.
+> 6. **Restriction checkboxes stay out of inference** until the callers confirm
+>    what a ticked box meant. CI enforces this
+>    (`restriction/excluded-from-inference`).
+> 7. **Finishing the single-mother arm is still worthwhile**, but it does not
+>    fix the derived outcome or the caller confounding. Targeted lists:
+>    `mysterycall_outputs/single_mother_calls_priority1_triads.csv` and
+>    `..._priority2_pairs.csv`.
 
 ---
 
