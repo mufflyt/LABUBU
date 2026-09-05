@@ -179,17 +179,20 @@ jobs:
       - name: Data contract
         run: Rscript .github/scripts/data-contract.R
 
-      - name: Scientific gate on freshly generated outputs
-        run: Rscript .github/scripts/scientific-gate.R
-
-      # Nothing previously proved the manuscript still knits. It renders here
-      # from the outputs this run just generated, not from committed ones.
+      # These produce artifacts the gate then validates, so they must run
+      # BEFORE it: manuscript/claims-resolve failed with "manuscript_claims.csv
+      # absent" purely because the gate ran first.
       - name: Estimand report
         run: Rscript .github/scripts/estimand-report.R
 
       - name: Manuscript claims
         run: Rscript .github/scripts/manuscript-claims.R
 
+      - name: Scientific gate on freshly generated outputs
+        run: Rscript .github/scripts/scientific-gate.R
+
+      # Nothing previously proved the manuscript still knits. It renders here
+      # from the outputs this run just generated, not from committed ones.
       - name: Manuscript render
         run: Rscript .github/scripts/check-manuscript-render.R
 
