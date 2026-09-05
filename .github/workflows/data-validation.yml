@@ -164,6 +164,9 @@ jobs:
           if (!requireNamespace("mysterycall", quietly = TRUE))
             stop("mysterycall failed to install")
 
+      - name: Lockfile audit
+        run: Rscript .github/scripts/check-lockfile.R
+
       - name: Environment preflight
         run: Rscript .github/scripts/preflight-env.R
 
@@ -319,6 +322,9 @@ jobs:
 
       # Fail here, in seconds, rather than after the pipeline has written a
       # thinned report that report/models-present then has to catch.
+      - name: Lockfile audit
+        run: Rscript .github/scripts/check-lockfile.R
+
       - name: Environment preflight
         run: Rscript .github/scripts/preflight-env.R
 

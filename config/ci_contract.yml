@@ -29,6 +29,16 @@ layers:
         Fails in seconds when a package the protocol models need is absent,
         before the pipeline can write a thinned report.
 
+    - id: environment/lockfile
+      script: .github/scripts/check-lockfile.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Records which package versions produced a result and reports drift.
+        Fails only when an essential package is absent or mysterycall is not
+        at the pinned SHA.
+
   ci-integrity:
     - id: workflow/contract
       script: .github/scripts/check-workflow-contract.R

@@ -124,6 +124,9 @@ jobs:
             stop("mysterycall failed to install; refusing to auto-commit results ",
                  "produced without it")
 
+      - name: Lockfile audit
+        run: Rscript .github/scripts/check-lockfile.R
+
       - name: Environment preflight
         run: Rscript .github/scripts/preflight-env.R
 
