@@ -1121,6 +1121,58 @@ if (!is.null(strobe) && inherits(strobe, "ggplot")) {
   }
 }
 
+# ── STROBE flow, split by caller scenario ─────────────────────────────────────
+# The combined diagram shows the cohort, which is what STROBE asks for, but it
+# hides that the three arms attrit differently: 82% of reached straight-couple
+# calls yielded an appointment date versus 42% and 48% for the other two. A
+# per-scenario panel makes that visible in the figure rather than only in the
+# missingness table.
+#
+# Scenario labels follow the protocol and the manuscript ("Lesbian couple"),
+# not a synonym, so figure and text cannot drift apart.
+strobe_panels <- lapply(levels(dat$scenario), function(scen) {
+  arm <- dat[!is.na(dat$scenario) & dat$scenario == scen, ]
+  not_reached <- arm$exclusion_code[!arm$reached & !is.na(arm$call_date)]
+  detail <- table(ifelse(is.na(not_reached), "NA", as.character(not_reached)))
+  tryCatch(
+    mysterycall_strobe_flow(
+      n_total          = nrow(arm),
+      n_calldate       = sum(!is.na(arm$call_date)),
+      n_included       = sum(arm$reached),
+      n_logistic       = sum(!is.na(arm$appt_offered)),
+      n_waittime       = sum(!is.na(arm$biz_wait)),
+      excl_no_calldate = sum(is.na(arm$call_date)),
+      excl_detail      = stats::setNames(as.integer(detail), names(detail)),
+      label_included   = "Reached a live office",
+      label_logistic   = "Offer analysis",
+      label_waittime   = "Wait-time analysis",
+      title            = scen),
+    error = function(e) NULL)
+})
+names(strobe_panels) <- levels(dat$scenario)
+
+if (all(vapply(strobe_panels, inherits, logical(1), "ggplot")) &&
+    requireNamespace("patchwork", quietly = TRUE)) {
+  panel <- patchwork::wrap_plots(strobe_panels, nrow = 1) +
+    patchwork::plot_annotation(
+      title = "LABUBU STROBE Flow by Caller Scenario",
+      theme = ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, size = 15, face = "bold"),
+        plot.background = ggplot2::element_rect(fill = "white", colour = NA)))
+  for (ext in c("png", "tiff")) {
+    target <- file.path(fig_dir, paste0("fig0b_strobe_flow_by_scenario.", ext))
+    save_args <- list(filename = target, plot = panel, width = 20, height = 11,
+                      dpi = 300, bg = "white", limitsize = FALSE)
+    if (ext == "tiff") save_args$compression <- "lzw"
+    tryCatch(do.call(ggplot2::ggsave, save_args),
+             error = function(e) message("STROBE panel save failed for ", ext,
+                                         ": ", conditionMessage(e)))
+  }
+  message("Saved: ", file.path(fig_dir, "fig0b_strobe_flow_by_scenario.png"))
+} else {
+  message("STROBE per-scenario panel not drawn (patchwork or a panel missing).")
+}
+
 # ── Issue IDs ─────────────────────────────────────────────────────────────────
 issue_ids <- list(
   missing_scenario                    = dat$record_id[is.na(dat$scenario)],
