@@ -22,4 +22,10 @@ or_broad_lesbian_couple,broad-definition offer OR scenarioLesbian couple,0.30811
 or_broad_single_mother,broad-definition offer OR scenarioSingle mother,0.285491,0.064211,1.269326,100
 gmr_wait_lesbian_couple,wait GMR scenarioLesbian couple,0.826118,0.468526,1.456635,57
 gmr_wait_single_mother,wait GMR scenarioSingle mother,0.818855,0.462761,1.448965,57
+paired_discordant_straight_couple_vs_single_mother,discordant practices -- Straight couple vs Single mother,7,NA,NA,16
+paired_p_straight_couple_vs_single_mother,exact McNemar p -- Straight couple vs Single mother,0.125,NA,NA,16
+paired_discordant_lesbian_couple_vs_single_mother,discordant practices -- Lesbian couple vs Single mother,2,NA,NA,22
+paired_p_lesbian_couple_vs_single_mother,exact McNemar p -- Lesbian couple vs Single mother,0.5,NA,NA,22
+paired_discordant_straight_couple_vs_lesbian_couple,discordant practices -- Straight couple vs Lesbian couple,8,NA,NA,19
+paired_p_straight_couple_vs_lesbian_couple,exact McNemar p -- Straight couple vs Lesbian couple,0.008,NA,NA,19
 caller_scenario_cramers_v,caller x scenario association,0.664,NA,NA,NA
