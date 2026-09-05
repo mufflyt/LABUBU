@@ -123,6 +123,10 @@ check that exists only on paper, implemented-but-undeclared is one that
 escaped review. Its `advisory` section records checks that are surfaced but
 never enforced, currently `practice/one-call-per-scenario`.
 
+`strobe-checklist.R` generates the completed STROBE checklist the journal
+requires, using the study's own answers rather than the package helper, which
+accepts only count models.
+
 `check-docs-sync.R` asserts this file names every gate check and every CI
 script, because documentation that silently falls behind is worse than none —
 it is trusted. It caught this file describing thirteen checks when the gate had sixteen.
