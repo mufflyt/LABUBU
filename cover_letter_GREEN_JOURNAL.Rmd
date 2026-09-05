@@ -1,0 +1,73 @@
+---
+title: ""
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  word_document:
+    toc: false
+  html_document:
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+OUT <- "mysterycall_outputs"
+
+# Numbers in this letter resolve against the same manuscript_claims.csv the
+# manuscript uses. A letter that quotes a rate the paper no longer reports is a
+# desk-reject risk, so nothing here is typed by hand.
+claims_path <- file.path(OUT, "manuscript_claims.csv")
+if (!file.exists(claims_path))
+  stop("manuscript_claims.csv is absent; run .github/scripts/manuscript-claims.R")
+claims <- utils::read.csv(claims_path, stringsAsFactors = FALSE)
+
+claim <- function(id, field = "estimate") {
+  row <- claims[claims$claim_id == id, ]
+  if (!nrow(row)) stop("no such manuscript claim: ", id)
+  row[[field]][1]
+}
+claim_pct <- function(id, digits = 0) sprintf(paste0("%.", digits, "f%%"), claim(id))
+claim_n   <- function(id) format(as.integer(claim(id)), big.mark = ",")
+```
+
+`r format(Sys.Date(), "%B %d, %Y")`
+
+Editor-in-Chief
+*Obstetrics & Gynecology*
+The American College of Obstetricians and Gynecologists
+409 12th Street SW
+Washington, DC 20024
+
+**RE: Original Research submission, "Reproductive Services Offered by Restorative Reproductive Medicine Practices: A National Secret-Shopper Audit"**
+
+Dear Editor:
+
+We submit for your consideration a national secret-shopper audit of Restorative Reproductive Medicine (RRM) practices in the United States. RRM is a growing model of infertility care that is increasingly named in state legislation and in professional and public discussion as an alternative to conventional assisted reproduction. What has not been measured is what these practices actually offer. We placed `r claim_n("n_calls")` standardized telephone calls to a national roster of RRM practices and asked, in a scripted interview, which reproductive services each practice provides.
+
+**Principal finding.** The finding is structural rather than interpersonal. Cycle tracking was offered by `r claim_pct("service_cycle_tracking")` of practices reached, while intrauterine insemination and in vitro fertilization were each offered by `r claim_pct("service_iui", 0)` of practices, resting on a single practice apiece. The services a patient needs in order to conceive without a male partner are therefore almost uniformly absent from the RRM service menu. This is not a matter of how a patient is treated when she calls. It is a matter of what the model of care contains. A same-sex couple or a single woman routed to an RRM practice by a referral network, an insurance design, or a state policy will encounter that absence regardless of how welcoming the staff are.
+
+**Relevance to the readership.** Obstetrician-gynecologists are the referral point for most patients who begin an infertility evaluation. As RRM gains legislative and institutional footing, clinicians and policymakers need an empirical account of the model's scope before directing patients toward it. We believe this is the first systematic national measurement of the RRM service menu.
+
+**What we deliberately do not claim.** Our secondary comparisons of appointment availability across caller scenarios are underpowered and confounded by caller assignment, and we report them as exploratory with an explicit minimum detectable effect beside every contrast. The data-collection instrument contained no item asking whether staff agreed to schedule the caller, so we describe that outcome as appointment availability inferred from call documentation rather than as an appointment offer, and we name this as the study's principal measurement limitation in both the Methods and the Discussion. We would rather present a well-measured descriptive finding with its limits stated than an underpowered disparity claim the data cannot carry, and we would welcome reviewer scrutiny on exactly this point.
+
+**Reproducibility.** Every number in the manuscript resolves to a row in a generated claims table rather than being transcribed, and the analysis runs under a continuous integration suite that blocks a change in any reported estimate from reaching the manuscript unreviewed. We can supply the full analysis code and the deidentified call-level dataset on request.
+
+**Declarations.**
+
+1. *Originality.* This manuscript is original, has not been published elsewhere, and is not under consideration by another journal.
+2. *Authorship.* All authors meet ICMJE criteria, have reviewed the submitted manuscript, and approve its submission.
+3. *Conflicts of interest.* The authors report no conflicts of interest.
+4. *Funding.* This research received no external funding.
+5. *Ethics.* The protocol was reviewed and approved by the Colorado Multiple Institutional Review Board (COMIRB 25-2596). No individual patients were involved and no protected health information was collected; the unit of observation is the practice.
+
+We appreciate your consideration and are prepared to respond promptly to reviewer comments.
+
+Respectfully submitted,
+
+\
+
+Tyler M. Muffly, MD
+Corresponding Author
+Denver Health, Denver, Colorado
+tyler.muffly@dhha.org
+
+On behalf of Sofie Rosenberg, MD; Melanie Mandell, MPH; Elizabeth Steiner, MD; and Samuel Raine, MD
