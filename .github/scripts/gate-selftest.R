@@ -109,6 +109,16 @@ ok <- c(
     writeLines(c(t, "Estimates are mean difference in business days vs. Straight couple"), f)
   }),
 
+  # The defect injected here is the one that was actually present: a reference
+  # cited in the Discussion whose number precedes its first use in the Intro.
+  mutate_and_test("detects a reference list out of first-appearance order",
+                  "manuscript/references-consistent", function(dir) {
+    f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")
+    t <- readLines(f, warn = FALSE)
+    t <- sub("family building\\.\\[3\\]", "family building.[13]", t)
+    writeLines(t, f)
+  }),
+
   mutate_and_test("detects hardcoded statistic in manuscript",
                   "manuscript/no-hardcoded-statistics", function(dir) {
     f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")

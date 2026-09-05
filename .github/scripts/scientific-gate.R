@@ -323,6 +323,56 @@ try_check("report/caller-confounding-reported", {
 # Every number in the Rmd must come from an inline R expression. Literal
 # statistics drift silently away from the data, which is how the manuscript
 # came to report ORs and medians from a superseded export.
+# A Vancouver reference list has three failure modes that no renderer catches:
+# a citation with no matching entry, an entry nothing cites, and numbering that
+# is not in order of first appearance. All three reached a submission-ready
+# draft here (SAMPL cited as the source for a Wilson interval, a housing-
+# discrimination study cited for an RRM clinical menu, and 8-9 appearing before
+# 3), so they are checked rather than trusted to proofreading.
+try_check("manuscript/references-consistent", {
+  f <- "labubu_mysterycall_manuscript.Rmd"
+  if (!file.exists(f))
+    return(structure(FALSE, detail = paste(f, "absent")))
+  lines <- readLines(f, warn = FALSE)
+
+  intro <- grep("^## INTRODUCTION", lines)
+  refs  <- grep("^## REFERENCES",   lines)
+  if (!length(intro) || !length(refs))
+    return(structure(FALSE, detail = "INTRODUCTION or REFERENCES heading absent"))
+
+  body <- paste(lines[intro[1]:(refs[1] - 1)], collapse = "\n")
+  listed <- as.integer(sub("^([0-9]+)\\..*$", "\\1",
+                grep("^[0-9]+\\. [A-Z]", lines[refs[1]:length(lines)], value = TRUE)))
+  if (!length(listed))
+    return(structure(FALSE, detail = "no reference entries parsed"))
+
+  # Expand [4-9] and [3,13-15] into the integers they cite, in order.
+  groups <- regmatches(body, gregexpr("\\[[0-9]+(?:[,\u2013-][0-9]+)*\\]", body))[[1]]
+  cited  <- unlist(lapply(groups, function(g) {
+    unlist(lapply(strsplit(gsub("\\[|\\]", "", g), ",")[[1]], function(part) {
+      ends <- as.integer(strsplit(part, "[\u2013-]")[[1]])
+      if (length(ends) == 2) seq(ends[1], ends[2]) else ends
+    }))
+  }))
+  if (!length(cited))
+    return(structure(FALSE, detail = "no citations parsed from body"))
+
+  first    <- cited[!duplicated(cited)]
+  dangling <- setdiff(cited,  listed)   # cited, never listed
+  orphan   <- setdiff(listed, cited)    # listed, never cited
+  unsorted <- !identical(first, sort(first))
+
+  problems <- c(
+    if (length(dangling)) paste("cited but not listed:", paste(sort(dangling), collapse = ", ")),
+    if (length(orphan))   paste("listed but never cited:", paste(sort(orphan), collapse = ", ")),
+    if (unsorted)         paste("not in order of first appearance:",
+                                paste(first, collapse = ", ")))
+
+  structure(length(problems) == 0,
+            detail = if (length(problems)) paste(problems, collapse = "; ")
+                     else paste(length(listed), "references, all cited, in order"))
+})
+
 try_check("manuscript/no-hardcoded-statistics", {
   f <- "labubu_mysterycall_manuscript.Rmd"
   if (!file.exists(f)) return(structure(FALSE, detail = "Rmd missing"))
