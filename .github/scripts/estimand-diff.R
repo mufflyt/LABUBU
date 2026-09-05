@@ -23,6 +23,13 @@ dir.create(ci_dir, showWarnings = FALSE)
 # hiding a real shift (an OR moving 0.04 -> 0.31 is ~7e0).
 REL_TOLERANCE <- 1e-4
 ABS_TOLERANCE <- 1e-8
+# Interval bounds come from profile/Wald computations whose optimiser path
+# differs across platforms far more than the point estimate does: an observed
+# nightly moved a wait-GMR lower bound 0.468526 -> 0.475872 (1.6%) while the
+# estimate itself was bit-identical. Bounds therefore get their own, looser
+# tolerance; a real shift in an interval is accompanied by a shift in the
+# estimate, which is still held to 1e-4.
+BOUND_REL_TOLERANCE <- 5e-2
 
 if (!file.exists(estimand_path)) {
   cat("::error title=ESTIMAND REPORT MISSING::",
@@ -40,6 +47,16 @@ if (!length(baseline_raw)) {
 }
 baseline <- readr::read_csv(I(paste(baseline_raw, collapse = "\n")),
                             show_col_types = FALSE, progress = FALSE)
+
+classify_with <- function(base_value, new_value, rel_tolerance) {
+  if (is.na(base_value) && is.na(new_value)) return("unchanged")
+  if (is.na(base_value) || is.na(new_value))  return("non-comparable")
+  if (identical(base_value, new_value))       return("unchanged")
+  absolute <- abs(new_value - base_value)
+  relative <- if (abs(base_value) > 0) absolute / abs(base_value) else Inf
+  if (absolute <= ABS_TOLERANCE || relative <= rel_tolerance) "negligible"
+  else "substantial"
+}
 
 classify <- function(base_value, new_value) {
   if (is.na(base_value) && is.na(new_value)) return("unchanged")
@@ -67,6 +84,14 @@ comparison <- do.call(rbind, lapply(all_ids, function(id) {
                       status = "removed", stringsAsFactors = FALSE))
   base_value <- base_row$estimate[1]; new_value <- new_row$estimate[1]
   status <- classify(base_value, new_value)
+  # A bound that moved while the estimate did not is optimiser noise.
+  if (status == "unchanged") {
+    bound_status <- c(
+      classify_with(base_row$lower[1],  new_row$lower[1],  BOUND_REL_TOLERANCE),
+      classify_with(base_row$upper[1],  new_row$upper[1],  BOUND_REL_TOLERANCE))
+    if (any(bound_status == "substantial")) status <- "substantial"
+    else if (any(bound_status == "negligible")) status <- "negligible"
+  }
   data.frame(
     estimand_id = id, estimand = new_row$estimand[1],
     base = base_value, current = new_value,

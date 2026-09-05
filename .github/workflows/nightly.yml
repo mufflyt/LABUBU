@@ -195,7 +195,14 @@ jobs:
           # every run. Without this, the nightly would open a pull request
           # every night regardless of whether anything scientific moved --
           # which trains reviewers to ignore nightly PRs.
-          if ! Rscript .github/scripts/check-drift.R; then
+          # Two authorities: check-drift.R judges report text, estimand-diff.R
+          # judges the estimands (exit 2 = something moved beyond tolerance).
+          # A PR is warranted if EITHER says something real changed.
+          text_drift=0;     Rscript .github/scripts/check-drift.R   || text_drift=$?
+          Rscript .github/scripts/estimand-diff.R > /dev/null 2>&1; estimand_drift=$?
+
+          if [ "$text_drift" -ne 0 ] && [ "$estimand_drift" -ne 2 ]; then
+            echo "No meaningful drift: report text and estimands both unchanged."
             echo "DRIFT=cosmetic" >> "$GITHUB_ENV"
             exit 0
           fi
