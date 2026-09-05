@@ -1,9 +1,9 @@
 {
   "environment": {
-    "generated_at": "2026-09-05 11:48:19 MDT",
+    "generated_at": "2026-09-05 15:41:59 MDT",
     "r_version": "R version 4.4.2 (2024-10-31)",
     "platform": "x86_64-apple-darwin20",
-    "labubu_commit": "106e76b",
+    "labubu_commit": "74b76e8",
     "labubu_branch": "main",
     "labubu_dirty": true,
     "packages": {
@@ -17,8 +17,8 @@
       "patchwork": "1.3.2",
       "ggbeeswarm": "0.7.3"
     },
-    "mysterycall_commit": "09acc725",
-    "mysterycall_branch": "feat/export-reporting-formatters"
+    "mysterycall_commit": "cd92ae78",
+    "mysterycall_branch": "main"
   },
   "source_export": {
     "labels_file": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
@@ -109,7 +109,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 7,
       "md5": "39869d1bd517cc55",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/caller_dominance_by_scenario.csv",
@@ -117,7 +117,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "9b5f701c75886576",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/caller_icc.csv",
@@ -125,7 +125,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "225850b35121db79",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/caller_overlap_by_contrast.csv",
@@ -133,7 +133,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "96f283e979412344",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/caller_rates.csv",
@@ -141,7 +141,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 7,
       "md5": "0014095552efb4cb",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/caller_stratified_contrast.csv",
@@ -149,7 +149,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 1,
       "md5": "383bfb02782799ec",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/duplicate_practice_scenario_calls.csv",
@@ -157,7 +157,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 16,
       "md5": "a15d4836dcdc5135",
-      "created": "2026-09-05 11:47:42 MDT"
+      "created": "2026-09-05 15:41:21 MDT"
     },
     {
       "artifact": "mysterycall_outputs/estimands.csv",
@@ -173,7 +173,23 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 10,
       "md5": "9b36d2aa41bd4ae8",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/fig0_strobe_flow_data.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
+      "rows": 6,
+      "md5": "bdf1785f023c4922",
+      "created": "2026-09-05 15:25:36 MDT"
+    },
+    {
+      "artifact": "mysterycall_outputs/fig5_service_forest_data.csv",
+      "script": "evaluate_labubu_mysterycall.R",
+      "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
+      "rows": 6,
+      "md5": "d71b461d56e43ee6",
+      "created": "2026-09-05 15:25:52 MDT"
     },
     {
       "artifact": "mysterycall_outputs/included_with_na_appointments.csv",
@@ -181,7 +197,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 41,
       "md5": "13fd14d92727839b",
-      "created": "2026-09-05 10:10:22 MDT"
+      "created": "2026-09-05 15:25:29 MDT"
     },
     {
       "artifact": "mysterycall_outputs/labubu_cleaned_analysis.csv",
@@ -189,7 +205,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 234,
       "md5": "2b5bb5411f86867f",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/manuscript_claims.csv",
@@ -205,7 +221,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 105,
       "md5": "073b3b713af047d9",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/matched_reached_wide.csv",
@@ -213,7 +229,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 105,
       "md5": "5163dfa9e18534f1",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/matched_wait_wide.csv",
@@ -221,7 +237,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 105,
       "md5": "14696d66867155fb",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/missingness_by_arm.csv",
@@ -229,7 +245,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "0caf4ebf07298380",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mutation_report.csv",
@@ -237,7 +253,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 6,
       "md5": "257e0bc26a94329f",
-      "created": "2026-09-05 11:40:37 MDT"
+      "created": "2026-09-05 12:04:50 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_access_cascade_by_scenario.csv",
@@ -245,7 +261,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "d1dcbb0606c522be",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_access_cascade.csv",
@@ -253,7 +269,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 4,
       "md5": "83385a7c37382bae",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_completeness.csv",
@@ -261,7 +277,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 14,
       "md5": "fea221b8007d9fed",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_missing_appt_summary.csv",
@@ -269,7 +285,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 5,
       "md5": "9780fe243aa44e0d",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_missingness_mcar.csv",
@@ -277,7 +293,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 5,
       "md5": "8c97ea867131058f",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_offer_by_scenario_broad.csv",
@@ -285,7 +301,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "12e93068d00c522d",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_offer_by_scenario.csv",
@@ -293,7 +309,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "714152ed4a954131",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_paired_acceptance_mcnemar.csv",
@@ -301,7 +317,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "d1bf8aa6cab83d53",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_paired_offer_sensitivity.csv",
@@ -309,7 +325,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "f190039e5c574a25",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_paired_reached_mcnemar.csv",
@@ -317,7 +333,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "c7e1ddb6de77ad7f",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_paired_wait_within_practice.csv",
@@ -325,7 +341,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "aa7d223d13200384",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_reach_by_scenario.csv",
@@ -333,7 +349,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "f30938031ac02da2",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_service_prevalence.csv",
@@ -341,7 +357,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 5,
       "md5": "05036b0169f509c3",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_table1_included_complete.csv",
@@ -349,7 +365,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 39,
       "md5": "d368e78bcc1b26cf",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_wait_by_scenario_included_complete.csv",
@@ -357,7 +373,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "93be3d3e4382ff3d",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/mysterycall_wait_by_scenario_included.csv",
@@ -365,7 +381,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "93be3d3e4382ff3d",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/practice_name_review_nearduplicates.csv",
@@ -373,7 +389,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 0,
       "md5": "6d827af900483846",
-      "created": "2026-09-05 10:10:17 MDT"
+      "created": "2026-09-05 15:25:26 MDT"
     },
     {
       "artifact": "mysterycall_outputs/practice_name_review_phone_only.csv",
@@ -381,7 +397,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 0,
       "md5": "fb476fcd997ed89b",
-      "created": "2026-09-05 10:10:17 MDT"
+      "created": "2026-09-05 15:25:26 MDT"
     },
     {
       "artifact": "mysterycall_outputs/practice_name_review_singletons.csv",
@@ -389,7 +405,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 32,
       "md5": "67ce69cedef89e25",
-      "created": "2026-09-05 10:10:17 MDT"
+      "created": "2026-09-05 15:25:26 MDT"
     },
     {
       "artifact": "mysterycall_outputs/practice_scenario_coverage.csv",
@@ -397,7 +413,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 105,
       "md5": "bdb23ee0f7f4e5c6",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/precision_bounds.csv",
@@ -405,7 +421,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "d7ec059ef98ff196",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/protocol_deviation_cells.csv",
@@ -413,7 +429,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 2,
       "md5": "5201ced67b041b0f",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/restriction_checkbox_by_caller.csv",
@@ -421,7 +437,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 8,
       "md5": "5d6ece818199a326",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/restriction_checkbox_review.csv",
@@ -429,7 +445,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "1db98f60b634de21",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/scenario_counts_by_completion.csv",
@@ -437,7 +453,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "aea0f108d984f5ed",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/scenario_counts_by_inclusion.csv",
@@ -445,7 +461,7 @@
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
       "rows": 3,
       "md5": "daffb6ea846e99ff",
-      "created": "2026-09-05 10:10:36 MDT"
+      "created": "2026-09-05 15:25:36 MDT"
     },
     {
       "artifact": "mysterycall_outputs/single_mother_call_list.csv",
@@ -485,8 +501,8 @@
       "artifact": "mysterycall_outputs/mysterycall_evaluation.md",
       "script": "evaluate_labubu_mysterycall.R",
       "input": "LABUBU_DATA_LABELS_2026-09-04_1651.csv",
-      "md5": "822ba5219f81a8b6",
-      "created": "2026-09-05 10:11:22 MDT"
+      "md5": "f5373e9ce34e9fd5",
+      "created": "2026-09-05 15:26:19 MDT"
     },
     {
       "artifact": "data_review.md",

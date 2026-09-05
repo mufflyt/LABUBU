@@ -1284,6 +1284,19 @@ write.csv(wide_wait,                    file.path(out_dir, "matched_wait_wide.cs
 # ── STROBE flow diagram (Green Journal requires one) ──────────────────────────
 fig_dir <- file.path(out_dir, "figures")
 dir.create(fig_dir, showWarnings = FALSE)
+# Every count the diagram draws, written out before it is drawn. A figure that
+# does not publish its numbers cannot be audited by anything, which is how
+# Figure 1 shipped two different confidence intervals for the same six
+# proportions while every other check passed.
+strobe_counts <- data.frame(
+  quantity = c("n_total", "n_calldate", "n_reached", "n_offer_analysis",
+               "n_waittime", "excl_no_calldate"),
+  n = c(nrow(dat), sum(!is.na(dat$call_date)), sum(dat$reached),
+        nrow(offer_analytic), sum(!is.na(dat$biz_wait)), sum(is.na(dat$call_date))),
+  stringsAsFactors = FALSE)
+write.csv(strobe_counts, file.path(out_dir, "fig0_strobe_flow_data.csv"),
+          row.names = FALSE)
+
 strobe <- tryCatch(
   mysterycall_strobe_flow(
     n_total     = nrow(dat),

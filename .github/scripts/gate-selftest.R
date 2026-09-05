@@ -160,6 +160,14 @@ ok <- c(
   # ── Negative controls for the regression invariants ────────────────────────
   # One per mistake actually made. Each injects the defect that occurred.
 
+  mutate_and_test("detects a STROBE count that disagrees with the data",
+                  "figures/strobe-counts-match-data", function(dir) {
+    f <- file.path(dir, OUT, "fig0_strobe_flow_data.csv")
+    d <- utils::read.csv(f, stringsAsFactors = FALSE)
+    d$n[d$quantity == "n_reached"] <- d$n[d$quantity == "n_reached"] + 6
+    utils::write.csv(d, f, row.names = FALSE)
+  }),
+
   mutate_and_test("detects a figure plotting different numbers than its table",
                   "figures/plotted-values-match-tables", function(dir) {
     f <- file.path(dir, OUT, "fig5_service_forest_data.csv")

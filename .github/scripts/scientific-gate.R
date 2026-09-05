@@ -260,6 +260,51 @@ try_check("privacy/no-practice-names-in-submission-artifacts", {
 # text: a number appears in exactly one place in the code. A figure must publish
 # the data it drew so that data can be checked against the table, rather than
 # being an opaque PNG nobody can audit.
+# INCIDENT: Figure 1 shipped two different intervals for the same six numbers
+# and nothing noticed. Figures 2 and 3 draw six counts apiece and were equally
+# unchecked; they happened to be right. "Happened to be right" is not a control.
+try_check("figures/strobe-counts-match-data", {
+  fd <- file.path(OUT, "fig0_strobe_flow_data.csv")
+  an <- file.path(OUT, "labubu_cleaned_analysis.csv")
+  if (!file.exists(fd))
+    return(structure(FALSE, detail = paste(basename(fd),
+      "absent: the STROBE diagram does not publish the counts it draws, so they cannot be checked")))
+  if (!file.exists(an))
+    return(structure(FALSE, detail = "labubu_cleaned_analysis.csv absent"))
+  f <- read.csv(fd, stringsAsFactors = FALSE)
+  d <- read.csv(an, stringsAsFactors = FALSE)
+  tf <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+  got <- function(q) { v <- f$n[f$quantity == q]; if (length(v)) v[1] else NA_integer_ }
+
+  expected <- c(
+    n_total          = nrow(d),
+    n_calldate       = sum(!is.na(d$call_date)),
+    n_reached        = sum(tf(d$reached)),
+    n_offer_analysis = sum(tf(d$in_offer_den) & !is.na(d$appt_offered)),
+    n_waittime       = sum(tf(d$analytic_inclusion) & !is.na(d$business_days) &
+                           d$business_days >= 0),
+    excl_no_calldate = sum(is.na(d$call_date)))
+
+  bad <- character(0)
+  for (q in names(expected)) {
+    g <- got(q)
+    if (is.na(g)) { bad <- c(bad, paste("figure publishes no", q)); next }
+    if (g != expected[[q]])
+      bad <- c(bad, sprintf("%s: figure draws %d, data give %d", q, g, expected[[q]]))
+  }
+  # The cascade must nest, or the diagram's arrows assert something false.
+  if (!any(is.na(c(got("n_total"), got("n_calldate"), got("n_reached"),
+                   got("n_offer_analysis"), got("n_waittime"))))) {
+    chain <- c(got("n_total"), got("n_calldate"), got("n_reached"),
+               got("n_offer_analysis"), got("n_waittime"))
+    if (any(diff(chain) > 0))
+      bad <- c(bad, sprintf("the flow does not nest: %s", paste(chain, collapse = " -> ")))
+  }
+  structure(length(bad) == 0,
+            detail = if (length(bad)) paste(bad, collapse = "; ")
+                     else sprintf("%d STROBE counts match the data and nest", length(expected)))
+})
+
 try_check("figures/plotted-values-match-tables", {
   fd <- file.path(OUT, "fig5_service_forest_data.csv")
   sv <- file.path(OUT, "mysterycall_service_prevalence.csv")

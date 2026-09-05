@@ -122,6 +122,7 @@ layers:
 
     - id: figures/opaque-background
     - id: figures/plotted-values-match-tables
+    - id: figures/strobe-counts-match-data
 
   privacy:
     - id: privacy/callers-de-identified
