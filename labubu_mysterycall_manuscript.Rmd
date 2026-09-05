@@ -189,6 +189,7 @@ cov  <- rd("practice_scenario_coverage.csv")
 casc <- rd("mysterycall_access_cascade_by_scenario.csv")
 cdom <- rd("caller_dominance_by_scenario.csv")
 covl <- rd("caller_overlap_by_contrast.csv")
+miss <- rd("missingness_by_arm.csv")
 cstr <- if (file.exists(file.path(OUT, "caller_stratified_contrast.csv")))
   rd("caller_stratified_contrast.csv") else NULL
 crat <- rd("caller_rates.csv")
@@ -339,6 +340,10 @@ cram <- tryCatch(round(mysterycall_test_categorical(
   Data Audit &amp; Provenance: Automatically compiled from active dataset LABUBU_DATA_LABELS_2026-08-11_2017.csv (`r N_REC` calls across `r N_PRAC` practices)
 </div>
 
+<div class="meta-block" style="font-size:11pt">
+  Tables: 2 &nbsp;|&nbsp; Figures: 3 &nbsp;|&nbsp; Supplemental digital content: 4 items
+</div>
+
 <div class="precis-box">
   <div class="precis-title">Pr&eacute;cis</div>
   Restorative Reproductive Medicine practices almost never offer intrauterine insemination, in vitro fertilization, or donor sperm care, the services required to conceive without a male partner.
@@ -411,7 +416,12 @@ Within-practice matched contrasts used exact McNemar tests. Power in paired audi
 ## RESULTS
 
 ### Reproductive Services Offered — primary outcome
-Among the `r N_INC` calls that reached staff and completed the service interview, RRM practices almost uniformly offered natural cycle tracking and hormonal monitoring, and almost never offered assisted reproductive technology or donor gametes (Table 1).
+Among the `r N_INC` calls that reached staff and completed the service interview, RRM practices almost uniformly offered natural cycle tracking and hormonal monitoring, and almost never offered assisted reproductive technology or donor gametes (Figure 1; numeric detail in Appendix Table S3).
+
+```{r ForestPrimary, fig.cap="Figure 1. Reproductive services offered by RRM practices, with 95% confidence intervals.", out.width="95%"}
+forest_png <- file.path(OUT, "figures", "fig5_service_forest.png")
+if (file.exists(forest_png)) knitr::include_graphics(forest_png)
+```
 
 ```{r TableServices}
 t_services <- data.frame(
@@ -424,7 +434,7 @@ t_services <- data.frame(
     svc("service_ovulation_induction"), svc("service_iui"),
     svc("service_ivf"), svc("donor_sperm_yes")),
   check.names = FALSE)
-kable(t_services, caption = sprintf("Table 1. Reproductive services offered by RRM practices (N = %d calls reaching staff).", N_INC))
+kable(t_services, caption = sprintf("Appendix Table S3. Reproductive services offered by RRM practices, numeric detail for Figure 1 (N = %d calls reaching staff).", N_INC))
 ```
 
 Cycle tracking was offered by `r svc("service_cycle_tracking")` and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. Ovulation induction was offered by `r svc("service_ovulation_induction")`. IUI and IVF were each offered by `r svc("service_iui")` — a single practice in each case — and donor sperm care by `r svc("donor_sperm_yes")`. The IUI and IVF estimates rest on one practice apiece and should be read as an upper bound on availability rather than as stable rates; the confidence intervals reflect that.
@@ -434,12 +444,12 @@ The services a single woman or same-sex female couple requires to conceive are t
 ### Access Cascade
 A total of `r N_REC` telephone calls were placed to `r N_PRAC` unique RRM practices. A live office was reached on `r N_RCH` calls (`r pci(d, "reached")`). Of these, `r N_DECL` reached calls ended in a stated refusal or extended hold, and `r N_INC` proceeded to the full interview. `r N_TRIAD` practices completed all three scenario calls (complete triads), `r sum(cov$n_scenarios == 2)` completed two, and `r sum(cov$n_scenarios == 1)` completed one.
 
-```{r strobe, fig.cap="Figure 1. STROBE flow diagram. Reaching a live office and being offered an appointment are separate stages with separate denominators.", out.width="85%", fig.align="center"}
+```{r strobe, fig.cap="Figure 2. STROBE flow diagram. Reaching a live office and being offered an appointment are separate stages with separate denominators.", out.width="85%", fig.align="center"}
 strobe_png <- file.path(OUT, "figures", "fig0_strobe_flow.png")
 if (file.exists(strobe_png)) knitr::include_graphics(strobe_png)
 ```
 
-```{r strobe_by_scenario, fig.cap="Figure 2. STROBE flow by caller scenario. The three arms enter the cascade at comparable widths and leave at very different ones.", out.width="100%"}
+```{r strobe_by_scenario, fig.cap="Figure 3. STROBE flow by caller scenario. The three arms enter the cascade at comparable widths and leave at very different ones.", out.width="100%"}
 panel_png <- file.path(OUT, "figures", "fig0b_strobe_flow_by_scenario.png")
 if (file.exists(panel_png)) knitr::include_graphics(panel_png)
 ```
@@ -454,7 +464,7 @@ t1 <- casc |>
     `Offered (strict)`             = sprintf("%d (%.1f%%)", offered_strict, pct_offered_strict),
     `Offered (broad)`              = sprintf("%d (%.1f%%)", offered_broad,  pct_offered_broad)
   )
-kable(t1, caption = "Table 2. Access cascade by caller scenario. Each stage is nested within the preceding one.")
+kable(t1, caption = "Table 1. Access cascade by caller scenario. Each stage is nested within the preceding one.")
 ```
 
 ### Appointment Availability by Caller Identity
@@ -473,7 +483,7 @@ t3 <- mc |>
     `Discordant`           = discordant,
     `Exact McNemar P`      = sprintf("%.3f", mcnemar_p),
     `MDE (80% Power)`      = sprintf("OR %.1f", mde_or_80power))
-kable(t3, caption = "Table 3. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
+kable(t3, caption = "Table 2. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
 ```
 
 Within-practice paired differences in inferred availability were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. Practices treated callers identically in `r conc_range` of paired reachability comparisons.
@@ -489,6 +499,17 @@ t4 <- cdom |>
     `Largest single caller`     = top_caller,
     `Their share of the arm`    = sprintf("%d (%.1f%%)", top_caller_n, top_caller_pct))
 kable(t4, caption = "Appendix Table S1. Concentration of each scenario arm in a single caller.")
+```
+
+```{r TableS2}
+t_s2 <- miss |>
+  transmute(
+    Scenario                 = scenario,
+    `Calls placed`           = calls_placed,
+    `No call date`           = sprintf("%d (%.1f%%)", no_call_date, pct_no_call_date),
+    `Reached staff`          = reached,
+    `No appointment date`    = sprintf("%d (%.1f%%)", no_appt_date, pct_no_appt_date))
+kable(t_s2, caption = "Appendix Table S2. Documentation completeness by caller scenario. Differential documentation and differential availability cannot be separated in these data.")
 ```
 
 ### Wait Time to First Available Appointment
@@ -529,15 +550,38 @@ Limitations:
 1. **The offer outcome is derived, not measured.** No instrument item recorded whether staff agreed to schedule the caller. Results are sensitive to the coding rule, as shown by the strict versus broad comparison.
 2. **Caller is confounded with scenario.** Scenario arms were dominated by different callers, and caller-level availability rates vary widely. Scenario effects cannot be distinguished from caller effects.
 3. **Limited statistical power for matched contrasts.** With `r paste(mc$discordant, collapse = ", ")` discordant practices, only very large effects (`r mde_range`) are detectable.
-4. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
-5. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
-6. **Single call per scenario.** Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
+4. **Data completeness differed by arm, in the same direction as the outcome.** A call date was absent for `r miss$pct_no_call_date[miss$scenario=="Straight couple"]`% of straight-couple calls but `r miss$pct_no_call_date[miss$scenario=="Lesbian couple"]`% of lesbian-couple and `r miss$pct_no_call_date[miss$scenario=="Single mother"]`% of single-mother calls; among calls that reached staff, an appointment date was absent for `r miss$pct_no_appt_date[miss$scenario=="Straight couple"]`%, `r miss$pct_no_appt_date[miss$scenario=="Lesbian couple"]`% and `r miss$pct_no_appt_date[miss$scenario=="Single mother"]`% respectively (Appendix Table S2). Because the derived availability outcome is read off the appointment date, differential documentation and differential availability are confounded: a call recorded less completely is scored as less available regardless of what the practice said. We cannot distinguish the two, and the direction of this asymmetry matches the direction of the exploratory finding, which is a reason to treat that finding with more caution rather than less.
+5. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
+6. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
+7. **Single call per scenario.** Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
 
 ### Recommendations for the Next Wave
 Adding an explicit item asking whether staff agreed to schedule the caller, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The three "restrictions on the individuals you would provide care to" checkboxes are the only directly measured discrimination item in the instrument, and they are deliberately **excluded from all analyses reported here**: their semantics are unresolved, since the straight-couple box is ticked on straight-couple calls and a checked box may denote either restricted or provided care. Resolving them requires the original REDCap field labels, choices, branching logic and coded values, not inference from the observed pattern. Should the codebook confirm that they record restriction, they would be a stronger primary measure of discrimination than any outcome inferred from call documentation, and adopting them would warrant an explicit protocol amendment rather than a substitution.
 
 ### Conclusion
 Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management, a structural limitation for patients who require donor gametes. Observed differences in appointment offers by caller family structure were sensitive to outcome definition and confounded with caller assignment, and require a randomized-caller design with an explicit offer measure to evaluate.
+
+---
+
+## FIGURE LEGENDS
+
+**Figure 1.** Reproductive services offered by Restorative Reproductive Medicine practices, among the `r N_INC` calls that reached staff and completed the service interview. Points are proportions with 95% Clopper-Pearson confidence intervals; the dotted line marks 50%. Services shown in red are those a patient requires to conceive without a male partner. Intrauterine insemination and in vitro fertilization each rest on a single practice, which the intervals reflect.
+
+**Figure 2.** STROBE flow for the whole cohort. Of `r N_REC` calls placed, `r sum(!is.na(d$call_date))` had a call date recorded, `r N_RCH` reached a live office, `r N_OFFER` were eligible for the appointment-availability analysis, and `r N_WAIT` had an observed appointment date. Exclusions are itemized by disposition code.
+
+**Figure 3.** STROBE flow by caller scenario. The three arms enter the cascade at comparable widths (`r paste(casc$reached, collapse = ", ")` reached for straight couple, lesbian couple and single mother respectively) and leave at very different ones (`r paste(casc$offered_strict, collapse = ", ")` with an observed appointment date). Documentation completeness also differed by arm (Appendix Table S2), so this figure should be read alongside that table rather than as an access finding on its own.
+
+---
+
+## SUPPLEMENTAL DIGITAL CONTENT
+
+**Appendix Table S1.** Concentration of each scenario arm in a single caller, with the caller-overlap analysis showing which contrasts can be separated from caller effects.
+
+**Appendix Table S2.** Documentation completeness by caller scenario.
+
+**Appendix Table S3.** Reproductive services offered, numeric detail underlying Figure 1.
+
+**Appendix Figure S1.** Wait time to first available appointment (raincloud, ridgeline, empirical cumulative distribution, and within-practice pairs), restricted to the `r N_WAIT` calls with an observed appointment date.
 
 ---
 
