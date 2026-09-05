@@ -114,6 +114,23 @@ if (!is.null(fit_wait) && !is.null(fit_wait$gmr_table)) {
   }
 }
 
+# Paired contrasts are headline results but were not tracked as estimands, so a
+# change to the duplicate-call rule moved them without registering as drift.
+paired_path <- file.path(output_dir, "mysterycall_paired_acceptance_mcnemar.csv")
+if (file.exists(paired_path)) {
+  paired <- readr::read_csv(paired_path, show_col_types = FALSE, progress = FALSE)
+  for (i in seq_len(nrow(paired))) {
+    key <- gsub("[^a-z]", "_", tolower(paired$contrast[i]))
+    estimand_rows <- c(estimand_rows, list(
+      row_for(paste0("paired_discordant_", key),
+              paste("discordant practices --", paired$contrast[i]),
+              paired$discordant[i], n = paired$n_paired[i]),
+      row_for(paste0("paired_p_", key),
+              paste("exact McNemar p --", paired$contrast[i]),
+              paired$mcnemar_p[i], n = paired$n_paired[i])))
+  }
+}
+
 cramers <- tryCatch(
   mysterycall_test_categorical(dplyr::filter(call_records, !is.na(scenario)),
                                row_var = "caller", col_var = "scenario")$cramers_v,

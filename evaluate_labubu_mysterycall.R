@@ -87,18 +87,70 @@ checkbox <- function(x) {
 
 
 # Reshape long -> wide by scenario, one row per practice.
-# Returns practice_id + one column per scenario level.
+#
+# SELECTING A CALL WHEN A PRACTICE-SCENARIO CELL HOLDS MORE THAN ONE
+#
+# The design is one call per practice per scenario, but eight cells hold two.
+# This previously resolved with match(), which returns the FIRST matching row --
+# an undocumented software accident, not a methodology, and one that could let
+# a voicemail outrank the completed call that followed it.
+#
+# PI decision (2026-09-05, docs/OPEN-DECISIONS.md):
+#
+#   Shape A -- a failed attempt followed by a successful call. Voicemail, wrong
+#     numbers and abandoned/over-long holds are contact ATTEMPTS, not completed
+#     mystery calls. Use the first protocol-valid completed contact; keep the
+#     failed attempts in the call-level data as audit trail.
+#
+#   Shape B -- two protocol-valid completed calls. A protocol deviation. The
+#     cell is EXCLUDED from the primary paired analysis rather than resolved by
+#     arbitrarily preferring first or last, either of which would amount to
+#     choosing the observation that gives the preferred answer. Both calls stay
+#     in the call-level dataset, and first-vs-last is reported as sensitivity.
+#
+# `rule` selects among protocol-valid calls: "primary" excludes Shape B cells,
+# "first"/"last" force a choice for the sensitivity analyses.
+#
+# A protocol-valid completed call is one eligible for the offer model
+# (exclusion codes 0, 7, 9, 10) -- staff engaged and the call ran to a
+# disposition. Codes 2, 3, 5, 6, 8 are attempts that never became a call.
 make_wide <- function(df, value_col,
-                      scenarios = c("Straight couple", "Lesbian couple", "Single mother")) {
+                      scenarios = c("Straight couple", "Lesbian couple", "Single mother"),
+                      rule = c("primary", "first", "last")) {
+  rule <- match.arg(rule)
   ids  <- sort(unique(df$practice_id[!is.na(df$practice_id)]))
   wide <- data.frame(practice_id = ids)
   for (s in scenarios) {
     sub <- df[!is.na(df$scenario) & as.character(df$scenario) == s, ]
     col <- gsub(" ", "_", s)
-    m   <- match(wide$practice_id, sub$practice_id)
-    wide[[col]] <- sub[[value_col]][m]
+    wide[[col]] <- vapply(wide$practice_id, function(pid) {
+      cell <- sub[sub$practice_id %in% pid, ]
+      if (!nrow(cell)) return(NA)
+      valid <- cell[cell$in_offer_den %in% TRUE, ]
+      # No completed call: fall back to the attempts, which is what a
+      # reachability outcome legitimately describes.
+      if (!nrow(valid)) valid <- cell
+      if (nrow(valid) > 1) {
+        if (rule == "primary") return(NA)          # Shape B: excluded
+        ord   <- order(valid$call_date, valid$record_id, na.last = TRUE)
+        valid <- valid[if (rule == "first") ord[1] else ord[length(ord)], ]
+      }
+      valid[[value_col]][1]
+    }, FUN.VALUE = df[[value_col]][NA_integer_])
   }
   wide
+}
+
+# Cells excluded from the primary paired analysis under the Shape B rule.
+protocol_deviation_cells <- function(df,
+                                     scenarios = c("Straight couple", "Lesbian couple", "Single mother")) {
+  out <- df[!is.na(df$scenario) & !is.na(df$practice_id) & df$in_offer_den %in% TRUE, ]
+  if (!nrow(out)) return(out[0, c("practice_id", "scenario"), drop = FALSE])
+  counts <- aggregate(list(n_completed = out$record_id),
+                      by = list(practice_id = out$practice_id,
+                                scenario = as.character(out$scenario)),
+                      FUN = length)
+  counts[counts$n_completed > 1, ]
 }
 
 included_value <- "Included where physician was able to be contacted"
@@ -930,10 +982,34 @@ paired_mcnemar <- function(wide) {
   }))
 }
 
-# PRIMARY paired contrast: appointment offered, within practice.
+# PRIMARY paired contrast: appointment offered, within practice. Shape B cells
+# are excluded (rule = "primary"), so `n_paired` here is smaller than the raw
+# count of practices called for both scenarios -- deliberately.
 paired_acc_df     <- paired_mcnemar(wide_acc)
 # SECONDARY: reachability, within practice (what the old table reported).
 paired_reached_df <- paired_mcnemar(wide_reached)
+
+# SENSITIVITY to the Shape B rule. If first-successful and last-successful give
+# the same substantive answer, the excluded cells were not load-bearing; if
+# they diverge, that is itself the finding and belongs in the manuscript.
+paired_acc_first <- paired_mcnemar(make_wide(dat, "appt_offered", rule = "first"))
+paired_acc_last  <- paired_mcnemar(make_wide(dat, "appt_offered", rule = "last"))
+paired_sensitivity <- data.frame(
+  contrast        = paired_acc_df$contrast,
+  primary_n       = paired_acc_df$n_paired,
+  primary_disc    = paired_acc_df$discordant,
+  primary_p       = paired_acc_df$mcnemar_p,
+  first_n         = paired_acc_first$n_paired,
+  first_disc      = paired_acc_first$discordant,
+  first_p         = paired_acc_first$mcnemar_p,
+  last_n          = paired_acc_last$n_paired,
+  last_disc       = paired_acc_last$discordant,
+  last_p          = paired_acc_last$mcnemar_p,
+  stringsAsFactors = FALSE
+)
+
+deviation_cells <- protocol_deviation_cells(dat)
+deviation_cells$practice_key <- practice_levels[deviation_cells$practice_id]
 
 paired_wait_df <- do.call(rbind, lapply(paired_contrasts, function(cc) {
   a <- wide_wait[[cc[1]]]; b <- wide_wait[[cc[2]]]
@@ -965,6 +1041,8 @@ write.csv(cascade_by_scenario,          file.path(out_dir, "mysterycall_access_c
 if (!inherits(cascade, "cascade_error"))
   write.csv(as.data.frame(cascade$table), file.path(out_dir, "mysterycall_access_cascade.csv"),                        row.names = FALSE)
 write.csv(paired_reached_df,            file.path(out_dir, "mysterycall_paired_reached_mcnemar.csv"),                  row.names = FALSE)
+write.csv(paired_sensitivity,           file.path(out_dir, "mysterycall_paired_offer_sensitivity.csv"),                row.names = FALSE)
+write.csv(deviation_cells,              file.path(out_dir, "protocol_deviation_cells.csv"),                            row.names = FALSE)
 write.csv(as.data.frame.matrix(caller_scenario_tab),
                                         file.path(out_dir, "caller_by_scenario.csv"))
 write.csv(caller_rates,                 file.path(out_dir, "caller_rates.csv"),                                        row.names = FALSE)
@@ -1202,6 +1280,22 @@ report <- c(
   "",
   "```",
   capture(paired_acc_df),
+  "```",
+  "",
+  paste0("**Duplicate-call rule (PI decision, 2026-09-05).** A practice-scenario ",
+         "cell holding two protocol-valid completed calls is a protocol ",
+         "deviation and is EXCLUDED from this primary analysis rather than ",
+         "resolved by preferring first or last -- either of which would mean ",
+         "choosing the observation that gives the preferred answer. ",
+         nrow(deviation_cells), " cell(s) excluded (see ",
+         "protocol_deviation_cells.csv). Failed attempts -- voicemail, wrong ",
+         "number, over-long hold -- never determine a cell; the completed call ",
+         "does."),
+  "",
+  "Sensitivity to that rule (first-successful vs last-successful):",
+  "",
+  "```",
+  capture(paired_sensitivity),
   "```",
   "",
   "Secondary — same pairing on reachability (a live office answered):",

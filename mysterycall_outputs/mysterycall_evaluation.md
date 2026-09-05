@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-04 18:26:05 MDT
+Generated: 2026-09-04 21:04:48 MDT
 
 ## Package
 
@@ -181,25 +181,40 @@ Each contrast uses only practices called for BOTH scenarios; only DISCORDANT pra
 ```
                            contrast n_paired concordant discordant disc_favor_A
 1  Straight couple vs Single mother       16          9          7            6
-2   Lesbian couple vs Single mother       21         19          2            0
-3 Straight couple vs Lesbian couple       21         13          8            8
+2   Lesbian couple vs Single mother       22         20          2            0
+3 Straight couple vs Lesbian couple       19         11          8            8
   disc_favor_B mcnemar_p mde_or_80power
 1            1     0.125            8.1
 2            2     0.500            8.1
 3            0     0.008            9.0
 ```
 
+**Duplicate-call rule (PI decision, 2026-09-05).** A practice-scenario cell holding two protocol-valid completed calls is a protocol deviation and is EXCLUDED from this primary analysis rather than resolved by preferring first or last -- either of which would mean choosing the observation that gives the preferred answer. 2 cell(s) excluded (see protocol_deviation_cells.csv). Failed attempts -- voicemail, wrong number, over-long hold -- never determine a cell; the completed call does.
+
+Sensitivity to that rule (first-successful vs last-successful):
+
+```
+                           contrast primary_n primary_disc primary_p first_n
+1  Straight couple vs Single mother        16            7     0.125      16
+2   Lesbian couple vs Single mother        22            2     0.500      22
+3 Straight couple vs Lesbian couple        19            8     0.008      21
+  first_disc first_p last_n last_disc last_p
+1          7   0.125     16         7  0.125
+2          2   0.500     22         2  0.500
+3          8   0.008     20         8  0.008
+```
+
 Secondary — same pairing on reachability (a live office answered):
 
 ```
                            contrast n_paired concordant discordant disc_favor_A
-1  Straight couple vs Single mother       54         37         17           11
-2   Lesbian couple vs Single mother       65         50         15            9
-3 Straight couple vs Lesbian couple       50         37         13            7
+1  Straight couple vs Single mother       53         36         17           10
+2   Lesbian couple vs Single mother       63         51         12            6
+3 Straight couple vs Lesbian couple       47         35         12            7
   disc_favor_B mcnemar_p mde_or_80power
-1            6     0.332            3.3
-2            6     0.607            3.8
-3            6     1.000            4.6
+1            7     0.629            3.3
+2            6     1.000            4.3
+3            5     0.774            4.3
 ```
 
 **Power / precision:** discordant practices number only 7, 2, 8 across the three contrasts. At 80% power (alpha 0.05, exact McNemar) the smallest detectable effect is an odds ratio of roughly 8.1/8.1/9. Plausible audit-study effects (OR ~1.5-2.5) are well below this floor: the matched data can rule out a LARGE differential but is underpowered for small-to-moderate effects. Report as estimation with this precision statement, not as a null hypothesis test.
