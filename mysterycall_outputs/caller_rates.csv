@@ -1,9 +1,9 @@
 "caller","n_calls","pct_reached","n_offer_eligible","pct_offered"
-"Beth",18,88.9,15,26.7
-"BS",1,100,1,100
-"Melanie",68,48.5,33,69.7
-"Muffly",56,48.2,23,82.6
-"Sam",1,100,1,100
-"Sofie",15,100,15,21.4
-"SR",16,50,8,75
+"Caller A",18,88.9,15,26.7
+"Caller B",1,100,1,100
+"Caller C",68,48.5,33,69.7
+"Caller D",56,48.2,23,82.6
+"Caller E",1,100,1,100
+"Caller F",15,100,15,21.4
+"Caller G",16,50,8,75
 "Unrecorded",59,11.9,6,0

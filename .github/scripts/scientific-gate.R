@@ -164,6 +164,43 @@ try_check("report/models-present", {
             else "all protocol models present")
 })
 
+# ── 5c. No identifiable people in committed analysis artifacts ────────────────
+# Study staff are human subjects of this measurement even though they are also
+# its authors. The caller-confounding analysis needs caller STRATA, not caller
+# identities, so committed artifacts carry stable de-identified labels.
+#
+# Asserted positively -- every caller value must MATCH the de-identified form --
+# rather than by a denylist of real names, because a denylist would itself have
+# to contain the names it is protecting.
+try_check("privacy/callers-de-identified", {
+  if (!"caller" %in% names(d))
+    return(structure(FALSE, detail = "caller column absent"))
+  if ("caller_raw" %in% names(d))
+    return(structure(FALSE, detail = "caller_raw is present in a committed artifact"))
+  allowed <- grepl("^(Caller [A-Z]|Unrecorded)$", d$caller)
+  offenders <- unique(d$caller[!allowed])
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste0(length(offenders), " non-de-identified caller value(s)")
+            else paste0(length(unique(d$caller)), " de-identified caller labels"))
+})
+
+try_check("privacy/no-contact-details-in-artifacts", {
+  artifact_files <- list.files(OUT, pattern = "\\.(csv|md)$", full.names = TRUE)
+  phone_re <- "\\(?[0-9]{3}\\)?[-. ][0-9]{3}[-. ][0-9]{4}"
+  email_re <- "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+  offenders <- character(0)
+  for (f in artifact_files) {
+    txt <- paste(readLines(f, warn = FALSE), collapse = "\n")
+    if (grepl(phone_re, txt) || grepl(email_re, txt))
+      offenders <- c(offenders, basename(f))
+  }
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste("contact details in:", paste(offenders, collapse = ", "))
+            else paste(length(artifact_files), "artifacts clean"))
+})
+
 # ── 6. Caller confounding must be surfaced ────────────────────────────────────
 try_check("report/caller-confounding-reported", {
   f <- file.path(OUT, "caller_dominance_by_scenario.csv")

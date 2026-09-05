@@ -31,3 +31,6 @@ phase1_needs*.csv
 
 # CI gate scratch output
 ci-results/
+
+# CI manuscript render output
+rendered-manuscript/

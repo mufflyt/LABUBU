@@ -178,6 +178,11 @@ jobs:
       - name: Scientific gate on freshly generated outputs
         run: Rscript .github/scripts/scientific-gate.R
 
+      # Nothing previously proved the manuscript still knits. It renders here
+      # from the outputs this run just generated, not from committed ones.
+      - name: Manuscript render
+        run: Rscript .github/scripts/check-manuscript-render.R
+
       - name: Upload execution artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -186,6 +191,7 @@ jobs:
           path: |
             ci-results/
             mysterycall_outputs/
+            rendered-manuscript/
           retention-days: 14
           if-no-files-found: warn
 
@@ -310,5 +316,6 @@ jobs:
           path: |
             ci-results/
             mysterycall_outputs/
+            rendered-manuscript/
           retention-days: 14
           if-no-files-found: warn

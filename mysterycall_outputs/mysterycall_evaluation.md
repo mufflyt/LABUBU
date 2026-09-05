@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-04 17:06:06 MDT
+Generated: 2026-09-04 17:56:19 MDT
 
 ## Package
 
@@ -30,15 +30,15 @@ Each analysis uses a different denominator. Quote none of these without its rule
 
 Study design: each RRM practice called once per scenario (straight couple, lesbian couple, single mother using donor sperm). Primary analysis: mixed-effects logistic regression on the appointment-offer outcome with a practice random intercept (lme4::glmer). Note: REI comparison arm removed from scope; analysis is within-RRM only.
 
-- Total unique practices: 106
+- Total unique practices: 105
 - Complete triads (all 3 scenarios): 48
 - Dyads (2 of 3 scenarios): 25
-- Singletons (1 scenario only): 33
+- Singletons (1 scenario only): 32
 
 Missing calls by scenario:
-  - Missing straight-couple call: 33 practices
+  - Missing straight-couple call: 32 practices
   - Missing lesbian-couple call:  25 practices
-  - Missing single-mother call:   33 practices
+  - Missing single-mother call:   32 practices
 
 ## ACCESS CASCADE — reachability and offer are different things
 
@@ -116,13 +116,13 @@ Calls by caller and scenario:
 ```
             
              Straight couple Lesbian couple Single mother
-  Beth                     0             14             4
-  BS                       0              0             1
-  Melanie                  2             28            38
-  Muffly                  53              3             0
-  Sam                      1              0             0
-  Sofie                    2              9             4
-  SR                      16              0             0
+  Caller A                 0             14             4
+  Caller B                 0              0             1
+  Caller C                 2             28            38
+  Caller D                53              3             0
+  Caller E                 1              0             0
+  Caller F                 2              9             4
+  Caller G                16              0             0
   Unrecorded               3             29            27
 ```
 
@@ -132,22 +132,22 @@ Single-caller dominance of each scenario:
 
 ```
                   scenario n_calls top_caller top_caller_n top_caller_pct
-Muffly     Straight couple      77     Muffly           53           68.8
+Caller D   Straight couple      77   Caller D           53           68.8
 Unrecorded  Lesbian couple      83 Unrecorded           29           34.9
-Melanie      Single mother      74    Melanie           38           51.4
+Caller C     Single mother      74   Caller C           38           51.4
 ```
 
 Per-caller reach and offer rates (callers differ substantially, which is the mechanism):
 
 ```
       caller n_calls pct_reached n_offer_eligible pct_offered
-1       Beth      18        88.9               15        26.7
-2         BS       1       100.0                1       100.0
-3    Melanie      68        48.5               33        69.7
-4     Muffly      56        48.2               23        82.6
-5        Sam       1       100.0                1       100.0
-6      Sofie      15       100.0               15        21.4
-7         SR      16        50.0                8        75.0
+1   Caller A      18        88.9               15        26.7
+2   Caller B       1       100.0                1       100.0
+3   Caller C      68        48.5               33        69.7
+4   Caller D      56        48.2               23        82.6
+5   Caller E       1       100.0                1       100.0
+6   Caller F      15       100.0               15        21.4
+7   Caller G      16        50.0                8        75.0
 8 Unrecorded      59        11.9                6         0.0
 ```
 
@@ -158,12 +158,12 @@ Offer model adjusted for caller (scenario + caller + practice random intercept):
 (Intercept)             3.3310729   4.454300  0.747833011 0.4545609
 scenarioLesbian couple -4.7426485   4.531931 -1.046496246 0.2953320
 scenarioSingle mother  -5.0336075   4.306174 -1.168928047 0.2424326
-callerBS               11.1099901  46.437168  0.239247796 0.8109134
-callerMelanie           3.1010438   1.737978  1.784282305 0.0743778
-callerMuffly            0.0336122   3.754765  0.008951879 0.9928575
-callerSam               4.7459294  15.957413  0.297412204 0.7661518
-callerSofie            -1.4604792   2.269238 -0.643598889 0.5198356
-callerSR               -0.7766047   3.769480 -0.206024359 0.8367719
+callerCaller B         11.1099901  46.437168  0.239247796 0.8109134
+callerCaller C          3.1010438   1.737978  1.784282305 0.0743778
+callerCaller D          0.0336122   3.754765  0.008951879 0.9928575
+callerCaller E          4.7459294  15.957413  0.297412204 0.7661518
+callerCaller F         -1.4604792   2.269238 -0.643598889 0.5198356
+callerCaller G         -0.7766047   3.769480 -0.206024359 0.8367719
 callerUnrecorded       -9.5947732   8.791394 -1.091382409 0.2751046
 ```
 
@@ -263,12 +263,12 @@ Note: mysterycall_logistic_model() [lme4::glmer]. Reference: Straight couple. OR
 
 ```
                    Term    OR CI_lo CI_hi     p
-            (Intercept) 0.938 0.472 1.861 0.854
- scenarioLesbian couple 0.730 0.327 1.633 0.444
-  scenarioSingle mother 0.643 0.283 1.457 0.290
+            (Intercept) 0.941 0.472 1.877 0.863
+ scenarioLesbian couple 0.736 0.328 1.654 0.459
+  scenarioSingle mother 0.641 0.282 1.458 0.289
 ```
 
-Note: mysterycall_logistic_model() [lme4::glmer]. Reference: Straight couple. OR < 1 = lower odds of the modelled outcome. n = 234 records across 106 practices. Practice random-intercept variance: 3.999. 
+Note: mysterycall_logistic_model() [lme4::glmer]. Reference: Straight couple. OR < 1 = lower odds of the modelled outcome. n = 234 records across 105 practices. Practice random-intercept variance: 4.1. 
 
 ## TWO-PART (HURDLE) MODEL — offer and wait estimated jointly
 
@@ -412,7 +412,7 @@ The only directly measured discrimination item. Currently unanalysable because t
       p_value significant
 1 0.001701222        TRUE
 2 0.544511965       FALSE
-3 0.471264368       FALSE
+3 0.483758121       FALSE
 4 0.526965892       FALSE
 5 0.008117469        TRUE
 ```

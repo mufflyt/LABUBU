@@ -161,6 +161,22 @@ dat$caller <- sub("^Mufflly$", "Muffly", dat$caller)
 dat$caller <- sub("^sr$",      "SR",     dat$caller)
 dat$caller <- sub("^sofie$",   "Sofie",  dat$caller)
 
+# De-identify. The caller-confounding analysis needs caller STRATA, not caller
+# identities: "Caller A placed 53/77 straight-couple calls" carries exactly the
+# scientific content of the named version. Study staff are human subjects of
+# this measurement even though they are also its authors, so their names do not
+# belong in a committed analysis artifact unless disclosure is intended.
+#
+# The mapping is alphabetical on the normalised name, so it is stable across
+# runs and reproducible from the raw export, but the crosswalk lives only in
+# the gitignored export -- never in the repo.
+caller_people <- sort(setdiff(unique(dat$caller), "Unrecorded"))
+caller_labels <- stats::setNames(
+  paste("Caller", LETTERS[seq_along(caller_people)]), caller_people)
+dat$caller <- ifelse(dat$caller %in% names(caller_labels),
+                     unname(caller_labels[dat$caller]), dat$caller)
+dat$caller_raw <- NULL   # never written to a committed artifact
+
 # ── Outcome architecture: REACHED is not OFFERED ──────────────────────────────
 # mysterycall_exclusion_crosswalk() is the package's canonical mapping and keeps
 # three distinct concepts apart. Collapsing them (the previous
@@ -247,7 +263,23 @@ dat$scenario           <- factor(dat$scenario,
 # Normalise practice name so minor entry variants collapse to one canonical key:
 #   1. strip trailing call-list number  (" 37", ", 95", etc.)
 #   2. fix known typos that can't easily be corrected in REDCap
+# A practice name that is (or contains) a phone number is a data-entry error:
+# the caller typed contact details into the identity field. That both leaks
+# contact information into every committed artifact -- bypassing the .gitignore
+# rule that keeps raw exports out -- and creates a phantom singleton practice.
+# Redact the digits and treat the practice as unidentified; the affected
+# records are written out for repair in REDCap.
+PHONE_RE <- "\\(?[0-9]{3}\\)?[-. ] ?[0-9]{3}[-. ][0-9]{4}"
+
+redact_phone <- function(x) trimws(gsub(PHONE_RE, "[redacted]", x))
+
 normalize_practice <- function(x) {
+  # Test emptiness on the string with the phone REMOVED, not on the redacted
+  # form: "[redacted]" contains letters and would always look like a name.
+  without_phone <- trimws(gsub(PHONE_RE, "", x))
+  x <- redact_phone(x)
+  # Nothing identifying survived -> we genuinely do not know the practice.
+  x[gsub("[^A-Za-z]", "", without_phone) == ""] <- NA_character_
   x <- trimws(x)
   x <- sub(",?\\s+\\d+$", "", x)                          # trailing call-list number
   x <- gsub("Costal FertilityCare", "Coastal FertilityCare", x)  # Lisa Cote typo
@@ -281,6 +313,7 @@ normalize_practice <- function(x) {
   trimws(x)
 }
 
+dat$practice <- redact_phone(dat$practice)
 dat$practice_key <- ifelse(
   is.na(dat$practice) | dat$practice == "",
   NA_character_,
@@ -351,6 +384,15 @@ name_near_dupes <- local({
 })
 singleton_practices <- coverage_df[coverage_df$n_scenarios == 1,
   c("practice_id", "practice_key", "has_straight", "has_lesbian", "has_sm")]
+phone_only_records <- dat[is.na(dat$practice_key) & !is.na(dat$scenario),
+                          c("record_id", "scenario", "practice")]
+write.csv(phone_only_records,
+          file.path(out_dir, "practice_name_review_phone_only.csv"), row.names = FALSE)
+if (nrow(phone_only_records) > 0)
+  message("PRIVACY: ", nrow(phone_only_records), " record(s) had contact details ",
+          "in the practice-name field. Digits redacted and the practice treated as ",
+          "unidentified; fix these in REDCap (see practice_name_review_phone_only.csv).")
+
 write.csv(name_near_dupes,     file.path(out_dir, "practice_name_review_nearduplicates.csv"), row.names = FALSE)
 write.csv(singleton_practices, file.path(out_dir, "practice_name_review_singletons.csv"),     row.names = FALSE)
 if (nrow(name_near_dupes) > 0)
