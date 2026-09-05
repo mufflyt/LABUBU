@@ -190,6 +190,7 @@ casc <- rd("mysterycall_access_cascade_by_scenario.csv")
 cdom <- rd("caller_dominance_by_scenario.csv")
 covl <- rd("caller_overlap_by_contrast.csv")
 miss <- rd("missingness_by_arm.csv")
+rpat <- rd("restriction_checkbox_by_caller.csv")
 cstr <- if (file.exists(file.path(OUT, "caller_stratified_contrast.csv")))
   rd("caller_stratified_contrast.csv") else NULL
 crat <- rd("caller_rates.csv")
@@ -239,6 +240,14 @@ N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
 N_RCH   <- nrow(rch); N_INC <- nrow(inc); N_OFFER <- nrow(oa); N_WAIT <- nrow(wsub)
 N_TRIAD <- sum(cov$n_scenarios == 3)
 N_DECL  <- sum(tf(d$reached) & !tf(d$analytic_inclusion))
+
+# Restriction-checkbox diagnostics. The field is excluded from analysis; these
+# quantify WHY, so the paragraph saying so is generated rather than asserted.
+N_RESTRICT_ANY <- sum(rpat$n)
+.all3          <- rpat[grepl("Lesbian \\+ Straight \\+ SingleMother", rpat$boxes_ticked), ]
+N_ALL_THREE    <- sum(.all3$n)
+N_ONE_BOX      <- sum(rpat$n[!grepl("\\+", rpat$boxes_ticked)])
+PCT_NO_CALLER  <- 100 * mean(!nzchar(d$caller) | d$caller %in% c("Unrecorded", "unrecorded"))
 
 # Geographic coverage. Practice location was never recorded as a field; some
 # practice names carry a parenthesised state tag. Parsed, not geocoded, so this
@@ -518,7 +527,7 @@ Limitations:
 8. **Geographic representativeness is unverified.** The instrument recorded no practice address. A state was identifiable from the practice name for `r N_ST_PRAC` of `r N_PRAC` practices, spanning `r N_STATES` states, so the roster is not regionally concentrated; but with location missing for the remainder and no population weighting, we cannot establish that the sample represents the national distribution of RRM practices.
 
 ### Recommendations for the Next Wave
-Adding an explicit item asking whether staff agreed to schedule the caller, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The three "restrictions on the individuals you would provide care to" checkboxes are the only directly measured discrimination item in the instrument, and they are deliberately **excluded from all analyses reported here**: their semantics are unresolved, since the straight-couple box is ticked on straight-couple calls and a checked box may denote either restricted or provided care. Resolving them requires the original REDCap field labels, choices, branching logic and coded values, not inference from the observed pattern. Should the codebook confirm that they record restriction, they would be a stronger primary measure of discrimination than any outcome inferred from call documentation, and adopting them would warrant an explicit protocol amendment rather than a substitution.
+Adding an explicit item asking whether staff agreed to schedule the caller, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The instrument's only directly measured discrimination item, three checkboxes asking whether there are "restrictions to the individuals you would provide care to" (lesbian couple, straight couple, single mother), is **excluded from all analyses reported here**, and the study codebook establishes that it cannot be recovered. The codebook defines a ticked box as a restriction applying to that group, with no field note or branching logic. The recorded responses are inconsistent with that definition and with one another. A box was ticked on `r N_RESTRICT_ANY` of `r N_REC` calls. One caller ticked all three boxes on `r N_ALL_THREE` occasions, which under the codebook definition would mean those practices serve no one and plainly means its inverse, while every other caller ticked only the box matching the scenario they themselves called as, an echo of the assignment rather than an observation about the practice (`r N_ONE_BOX` calls). The convention is therefore a property of the caller rather than of the response, and `r sprintf("%.0f", PCT_NO_CALLER)`% of calls record no caller at all, so no post hoc recoding can separate the two. This is an instrument defect rather than an analytic one, and the fix belongs in the next wave: three explicit yes/no items with the direction stated in the stem, made required so that blank is distinguishable from "no restriction", and caller identity mandatory on every record.
 
 ### Conclusion
 Restorative Reproductive Medicine practices in the United States uniformly provide natural cycle tracking but rarely offer IUI, IVF, or donor sperm management, a structural limitation for patients who require donor gametes. Observed differences in appointment offers by caller family structure were sensitive to outcome definition and confounded with caller assignment, and require a randomized-caller design with an explicit offer measure to evaluate.
@@ -546,6 +555,8 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 **Appendix Table S4.** Completed STROBE checklist for cross-sectional studies.
 
 **Appendix Table S5.** Adjudication of the eight practice-scenario cells containing duplicate calls, with the primary and sensitivity cell assignments side by side.
+
+**Appendix Table S6.** Combination of restriction checkboxes ticked, by person completing the form, showing the two incompatible conventions that make the item unusable.
 
 **Appendix Figure S1.** Wait time to first available appointment (raincloud, ridgeline, empirical cumulative distribution, and within-practice pairs), restricted to the `r N_WAIT` calls with an observed appointment date.
 

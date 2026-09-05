@@ -30,6 +30,7 @@ crat  <- rd("caller_rates.csv")
 miss  <- rd("missingness_by_arm.csv")
 strb  <- rd("strobe_checklist.csv")
 dups  <- rd("duplicate_practice_scenario_calls.csv")
+rpat  <- rd("restriction_checkbox_by_caller.csv")
 devs  <- rd("protocol_deviation_cells.csv")
 
 tf   <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
@@ -167,7 +168,6 @@ preferring the earlier or later call. Practice identifiers are redacted.
 # this file is a public submission artifact. Join to the numeric study ID and
 # never print the key.
 kable(dups |>
-  left_join(d |> select(record_id, practice_id), by = "record_id") |>
   transmute(
     `Record ID`          = record_id,
     `Practice ID`        = practice_id,
@@ -185,6 +185,29 @@ kable(devs |> transmute(
   `Completed calls`     = n_completed,
   Disposition           = "Excluded from the primary paired analysis as a protocol deviation"),
   caption = "Table S5b. Cells with two protocol-valid completed calls. Practices are identified by study ID only.")
+```
+
+---
+
+## Appendix Table S6. Restriction checkbox, why it is excluded
+
+The instrument's three "restrictions to the individuals you would provide care
+to" checkboxes are excluded from every analysis. The codebook defines a ticked
+box as a restriction applying to that group, with no field note or branching
+logic, but the recorded responses follow two incompatible conventions keyed to
+the person completing the form. One caller ticked all three boxes on most of
+her entries, which under the codebook definition would mean those practices
+serve no one. Every other caller ticked only the box matching the scenario they
+called as, which echoes the assignment rather than describing the practice.
+Because the convention belongs to the caller rather than the response, and a
+quarter of calls record no caller, no recoding rule can separate them.
+
+```{r S6}
+kable(rpat |> transmute(
+  Caller          = caller,
+  `Boxes ticked`  = boxes_ticked,
+  Calls           = n),
+  caption = "Table S6. Combination of restriction boxes ticked, by person completing the form.")
 ```
 
 ---
