@@ -1813,13 +1813,18 @@ days.</p>
 <p>Within-practice matched contrasts used exact McNemar tests.[11] Power
 in paired audit designs is governed by the number of discordant
 practices, which here was small; minimum detectable effect odds ratios
-at 80% power (α = .05) ranged from OR 30.9 to OR 35.4 and are reported
-alongside every paired contrast. In accordance with the Statistical
-Analyses and Methods in the Published Literature (SAMPL) guidelines,[12]
-point estimates are presented with 95% confidence intervals to establish
-precision limits rather than relying on underpowered null hypothesis
-significance tests. All analyses were conducted in R version 4.4.2 using
-the <code>mysterycall</code> package.</p>
+at 80% power (α = .05) are reported alongside every paired contrast and
+were OR 30.9 to OR 35.4; one of the three contrasts has no attainable
+minimum detectable effect, the discordant count being too small for the
+exact test to reject at any effect size. These are computed from the
+exact rejection region of the binomial test rather than from a normal
+approximation, which at this many discordant pairs overstates power
+roughly twofold. In accordance with the Statistical Analyses and Methods
+in the Published Literature (SAMPL) guidelines,[12] point estimates are
+presented with 95% confidence intervals to establish precision limits
+rather than relying on underpowered null hypothesis significance tests.
+All analyses were conducted in R version 4.4.2 using the
+<code>mysterycall</code> package.</p>
 <hr />
 </div>
 </div>
@@ -1987,7 +1992,7 @@ contribute information.</caption>
 <td align="right">20</td>
 <td align="right">2</td>
 <td align="left">0.500</td>
-<td align="left">OR NA</td>
+<td align="left">None attainable</td>
 </tr>
 <tr class="odd">
 <td align="left">Straight couple vs Lesbian couple</td>
@@ -2077,7 +2082,15 @@ with minimum detectable effects of OR 30.9 to OR 35.4. Audit-study
 effects of interest are far below that floor. For the Lesbian couple
 versus Single mother contrast in particular, the number of discordant
 practices is small enough that the exact test cannot return a
-significant result at any effect size.</p>
+significant result at any effect size. It is more informative to state
+what the data exclude than what they fail to detect. The paired
+differences in inferred availability were +31 percentage points (95% CI
+-7 to +43) for straight couple versus single mother, -9 percentage
+points (95% CI -9 to +6) for lesbian couple versus single mother, and
++42 percentage points (95% CI +11 to +42) for straight couple versus
+lesbian couple. The upper limit of each interval is the largest
+disadvantage compatible with these data, and in every case it is wide
+enough to contain effects that would matter clinically.</p>
 <p>Second, <strong>caller assignment</strong>. Callers were not
 randomised across scenarios. Of the three contrasts, 2 had no caller who
 placed at least three calls under both scenarios (Straight couple vs
@@ -2087,7 +2100,13 @@ and no covariate adjustment recovers the difference. Where overlap did
 exist, in Lesbian couple versus Single mother, in which three callers
 placed calls under both, the caller-stratified estimate was OR 0.57 (95%
 CI 0.15-2.15, p = 0.61; n = 59), consistent with the unadjusted estimate
-and with no difference.</p>
+and with no difference. The magnitude of the caller contribution can be
+stated directly: in a variance-components model the proportion of
+outcome variance lying between callers rather than within them was 0.29
+for reaching a live office, 0.31 for inferred appointment availability,
+and 0.36 for the business-day wait. Roughly a third of the variation in
+each outcome tracks who placed the call, which is the same order of
+magnitude as any scenario effect the study could detect.</p>
 <p>The contrast with enough discordant practices to be informative is
 therefore the one with no caller overlap, and the contrast free of
 caller confounding is the one with too few discordant practices to test.
@@ -2127,8 +2146,10 @@ were dominated by different callers, and caller-level availability rates
 vary widely. Scenario effects cannot be distinguished from caller
 effects.</li>
 <li><strong>Limited statistical power for matched contrasts.</strong>
-With 7, 2, 8 discordant practices, only very large effects (OR 30.9 to
-OR 35.4) are detectable.</li>
+With 7, 2, 8 discordant practices, only very large effects are
+detectable (OR 30.9 to OR 35.4; one of the three contrasts has no
+attainable minimum detectable effect, the discordant count being too
+small for the exact test to reject at any effect size).</li>
 <li><strong>Data completeness differed by arm, in the same direction as
 the outcome.</strong> A call date was absent for 7.8% of straight-couple
 calls but 22.9% of lesbian-couple and 16.2% of single-mother calls;
@@ -2238,6 +2259,12 @@ sensitivity cell assignments side by side.</p>
 <p><strong>Appendix Table S6.</strong> Combination of restriction
 checkboxes ticked, by person completing the form, showing the two
 incompatible conventions that make the item unusable.</p>
+<p><strong>Appendix Table S7.</strong> Proportion of outcome variance
+attributable to the caller, as variance-component intraclass correlation
+coefficients.</p>
+<p><strong>Appendix Table S8.</strong> Paired differences in inferred
+appointment availability with the range of effects the data are
+compatible with.</p>
 <p><strong>Appendix Figure S1.</strong> Wait time to first available
 appointment (raincloud, ridgeline, empirical cumulative distribution,
 and within-practice pairs), restricted to the 57 calls with an observed

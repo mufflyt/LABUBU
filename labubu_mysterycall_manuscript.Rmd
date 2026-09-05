@@ -191,6 +191,8 @@ cdom <- rd("caller_dominance_by_scenario.csv")
 covl <- rd("caller_overlap_by_contrast.csv")
 miss <- rd("missingness_by_arm.csv")
 rpat <- rd("restriction_checkbox_by_caller.csv")
+cicc <- rd("caller_icc.csv")
+prec <- rd("precision_bounds.csv")
 cstr <- if (file.exists(file.path(OUT, "caller_stratified_contrast.csv")))
   rd("caller_stratified_contrast.csv") else NULL
 crat <- rd("caller_rates.csv")
@@ -328,8 +330,37 @@ wait_med <- function(s) {
 conc_range <- sprintf("%.0f%%-%.0f%%",
                       100 * min(mcr$concordant / mcr$n_paired),
                       100 * max(mcr$concordant / mcr$n_paired))
-mde_range  <- sprintf("OR %.1f to OR %.1f", min(mc$mde_or_80power, na.rm = TRUE),
-                      max(mc$mde_or_80power, na.rm = TRUE))
+# A contrast whose discordant count admits no rejection region at alpha has no
+# MDE at all; NA here means "undetectable at any effect size", not "missing",
+# and must not be dropped silently by na.rm.
+n_no_mde   <- sum(is.na(mc$mde_or_80power))
+# mde_range stays a bare noun phrase because it is spliced into four different
+# sentences; the caveat about undetectable contrasts is a separate string used
+# only where it reads.
+mde_range  <- {
+  fin <- mc$mde_or_80power[!is.na(mc$mde_or_80power)]
+  if (length(fin) > 1) sprintf("OR %.1f to OR %.1f", min(fin), max(fin))
+  else if (length(fin) == 1) sprintf("OR %.1f", fin[1])
+  else "not attainable at any effect size"
+}
+# Precision: what an interval EXCLUDES, on the percentage-point scale, rather
+# than only what the design could have detected. Borrowed from
+# mufflyt/lizeth null_verification.R: "the upper CI is the LARGEST delay
+# compatible with our data."
+prec_txt <- function(contrast_name) {
+  r <- prec[prec$contrast == contrast_name, ]
+  if (!nrow(r)) return("not estimable")
+  sprintf("%+.0f percentage points (95%% CI %+.0f to %+.0f)",
+          r$diff_pp[1], r$lower_pp[1], r$upper_pp[1])
+}
+icc_txt <- function(outcome_name) {
+  r <- cicc[cicc$outcome == outcome_name, ]
+  if (!nrow(r) || is.na(r$icc[1])) return("not estimable")
+  sprintf("%.2f", r$icc[1])
+}
+mde_caveat <- if (n_no_mde)
+  sprintf("; %s of the three contrasts %s no attainable minimum detectable effect, the discordant count being too small for the exact test to reject at any effect size",
+          c("one","two","three")[n_no_mde], if (n_no_mde > 1) "have" else "has") else ""
 # Contrasts with no caller placing calls under both scenarios: the scenario
 # column and that caller's column are the same numbers.
 n_no_overlap <- sum(covl$n_callers_with_both == 0)
@@ -409,7 +440,7 @@ Proportions carry 95% Wilson score confidence intervals.[10] The access cascade 
 
 Mixed-effects logistic regression with a practice random intercept was fitted to the availability outcome, first on the subset of complete practice triads (N = `r N_TRIAD` practices) to remove practice-selection dialing bias, then on the full offer sample, and finally under the broad definition. Because the appointment date was missing for a scenario-dependent share of calls, a two-part hurdle model estimated the obtainment and wait-given-obtainment steps jointly rather than conditioning on complete cases. Wait time was additionally modeled with a linear mixed model on the log scale, with estimates back-transformed to geometric mean ratios (GMR) rather than reported as differences in days.
 
-Within-practice matched contrasts used exact McNemar tests.[11] Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect odds ratios at 80% power (α = .05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with the Statistical Analyses and Methods in the Published Literature (SAMPL) guidelines,[12] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
+Within-practice matched contrasts used exact McNemar tests.[11] Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect odds ratios at 80% power (α = .05) are reported alongside every paired contrast and were `r mde_range``r mde_caveat`. These are computed from the exact rejection region of the binomial test rather than from a normal approximation, which at this many discordant pairs overstates power roughly twofold. In accordance with the Statistical Analyses and Methods in the Published Literature (SAMPL) guidelines,[12] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
 
 ---
 
@@ -469,7 +500,10 @@ t3 <- mc |>
     `Concordant`           = concordant,
     `Discordant`           = discordant,
     `Exact McNemar P`      = sprintf("%.3f", mcnemar_p),
-    `MDE (80% Power)`      = sprintf("OR %.1f", mde_or_80power))
+    # "None attainable" rather than a blank: the reader must see that the row
+    # has no detectable effect size, not that a number went missing.
+    `MDE (80% Power)`      = ifelse(is.na(mde_or_80power), "None attainable",
+                                    sprintf("OR %.1f", mde_or_80power)))
 kable(t3, caption = "Table 2. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
 ```
 
@@ -501,9 +535,9 @@ We had also intended to test whether practices differ in willingness to schedule
 
 Two features are responsible, and they are separable.
 
-First, **power**. Within-practice matched contrasts draw information only from practices that answered differently to two callers. Concordance was high, since most practices treated callers alike, leaving `r paste(mc$discordant, collapse = ", ")` discordant practices across the three contrasts, with minimum detectable effects of `r mde_range`. Audit-study effects of interest are far below that floor. For the Lesbian couple versus Single mother contrast in particular, the number of discordant practices is small enough that the exact test cannot return a significant result at any effect size.
+First, **power**. Within-practice matched contrasts draw information only from practices that answered differently to two callers. Concordance was high, since most practices treated callers alike, leaving `r paste(mc$discordant, collapse = ", ")` discordant practices across the three contrasts, with minimum detectable effects of `r mde_range`. Audit-study effects of interest are far below that floor. For the Lesbian couple versus Single mother contrast in particular, the number of discordant practices is small enough that the exact test cannot return a significant result at any effect size. It is more informative to state what the data exclude than what they fail to detect. The paired differences in inferred availability were `r prec_txt("Straight couple vs Single mother")` for straight couple versus single mother, `r prec_txt("Lesbian couple vs Single mother")` for lesbian couple versus single mother, and `r prec_txt("Straight couple vs Lesbian couple")` for straight couple versus lesbian couple. The upper limit of each interval is the largest disadvantage compatible with these data, and in every case it is wide enough to contain effects that would matter clinically.
 
-Second, **caller assignment**. Callers were not randomised across scenarios. Of the three contrasts, `r n_no_overlap` had no caller who placed at least three calls under both scenarios (`r no_overlap_contrasts`): for those, the scenario variable and the caller variable are the same column of data, and no covariate adjustment recovers the difference. Where overlap did exist, in Lesbian couple versus Single mother, in which three callers placed calls under both, the caller-stratified estimate was OR `r mh_txt`, consistent with the unadjusted estimate and with no difference.
+Second, **caller assignment**. Callers were not randomised across scenarios. Of the three contrasts, `r n_no_overlap` had no caller who placed at least three calls under both scenarios (`r no_overlap_contrasts`): for those, the scenario variable and the caller variable are the same column of data, and no covariate adjustment recovers the difference. Where overlap did exist, in Lesbian couple versus Single mother, in which three callers placed calls under both, the caller-stratified estimate was OR `r mh_txt`, consistent with the unadjusted estimate and with no difference. The magnitude of the caller contribution can be stated directly: in a variance-components model the proportion of outcome variance lying between callers rather than within them was `r icc_txt("Reached a live office")` for reaching a live office, `r icc_txt("Inferred appointment availability")` for inferred appointment availability, and `r icc_txt("Business-day wait")` for the business-day wait. Roughly a third of the variation in each outcome tracks who placed the call, which is the same order of magnitude as any scenario effect the study could detect.
 
 The contrast with enough discordant practices to be informative is therefore the one with no caller overlap, and the contrast free of caller confounding is the one with too few discordant practices to test. That is a property of how the calls were allocated, not a result about how practices behave, and it cannot be repaired analytically.
 
@@ -519,7 +553,7 @@ Limitations:
 
 1. **The offer outcome is derived, not measured.** No instrument item recorded whether staff agreed to schedule the caller. Results are sensitive to the coding rule, as shown by the strict versus broad comparison.
 2. **Caller is confounded with scenario.** Scenario arms were dominated by different callers, and caller-level availability rates vary widely. Scenario effects cannot be distinguished from caller effects.
-3. **Limited statistical power for matched contrasts.** With `r paste(mc$discordant, collapse = ", ")` discordant practices, only very large effects (`r mde_range`) are detectable.
+3. **Limited statistical power for matched contrasts.** With `r paste(mc$discordant, collapse = ", ")` discordant practices, only very large effects are detectable (`r mde_range``r mde_caveat`).
 4. **Data completeness differed by arm, in the same direction as the outcome.** A call date was absent for `r miss$pct_no_call_date[miss$scenario=="Straight couple"]`% of straight-couple calls but `r miss$pct_no_call_date[miss$scenario=="Lesbian couple"]`% of lesbian-couple and `r miss$pct_no_call_date[miss$scenario=="Single mother"]`% of single-mother calls; among calls that reached staff, an appointment date was absent for `r miss$pct_no_appt_date[miss$scenario=="Straight couple"]`%, `r miss$pct_no_appt_date[miss$scenario=="Lesbian couple"]`% and `r miss$pct_no_appt_date[miss$scenario=="Single mother"]`% respectively (Appendix Table S2). Because the derived availability outcome is read off the appointment date, differential documentation and differential availability are confounded: a call recorded less completely is scored as less available regardless of what the practice said. We cannot distinguish the two, and the direction of this asymmetry matches the direction of the exploratory finding, which is a reason to treat that finding with more caution rather than less.
 5. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
 6. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
@@ -557,6 +591,10 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 **Appendix Table S5.** Adjudication of the eight practice-scenario cells containing duplicate calls, with the primary and sensitivity cell assignments side by side.
 
 **Appendix Table S6.** Combination of restriction checkboxes ticked, by person completing the form, showing the two incompatible conventions that make the item unusable.
+
+**Appendix Table S7.** Proportion of outcome variance attributable to the caller, as variance-component intraclass correlation coefficients.
+
+**Appendix Table S8.** Paired differences in inferred appointment availability with the range of effects the data are compatible with.
 
 **Appendix Figure S1.** Wait time to first available appointment (raincloud, ridgeline, empirical cumulative distribution, and within-practice pairs), restricted to the `r N_WAIT` calls with an observed appointment date.
 

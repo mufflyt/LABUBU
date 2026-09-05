@@ -191,3 +191,63 @@ Not enabled — branch protection is unchanged. Recommended:
 `re-derive from REDCap` should stay optional: it depends on an external API and
 a token, and a required check must not be able to fail for reasons unrelated to
 the code under review.
+
+## Borrowed strategies and attribution
+
+Four of the checks here are adapted from sibling repositories rather than
+invented locally. Recording the debt is not a courtesy: it tells a reader where
+the fuller version of each idea lives.
+
+| Technique | Borrowed from | What it does here |
+|---|---|---|
+| Independent reference implementations | [`mufflyt/isochrones-ci`](https://github.com/mufflyt/isochrones-ci), `test-statistics-crosscheck.R` | `tools/reference_implementations.R` recomputes Wilson intervals, exact McNemar, paired MDE and business-day waits from the published formulae, never calling `mysterycall`. `check-reference-crosscheck.R` requires agreement. |
+| Metamorphic tests | `mufflyt/isochrones-ci`, `test-metamorphic.R` | `check-metamorphic.R` re-runs the pipeline under row shuffling and practice relabelling and requires every estimand to be unchanged. |
+| Mutation / sabotage testing | `mufflyt/isochrones-ci`, `test-mutation-sabotage.R` | `mutation-sabotage.R` breaks the analysis code in plausible ways and requires a check to go red for each. |
+| Caller ICC and precision bounds | `mufflyt/lizeth` (Acosta & Muffly), `caller_icc.R` and `null_verification.R` | Quantifies caller confounding, and reports what the paired intervals exclude rather than only what the design could detect. |
+
+The governing arguments are quoted at the top of each script. The one worth
+repeating is `isochrones-ci`'s reason for existing at all:
+
+> A test suite that lives inside the code it tests shares that code's blind
+> spots. If a helper is subtly wrong, both the implementation and its tests use
+> the wrong helper, and the suite certifies the wrong answer with total
+> confidence.
+
+### What the first runs found
+
+Each technique earned its place on the first run rather than passing vacuously.
+
+- **The reference cross-check found a real defect.** `mcnemar_mde_or()` built
+  its rejection region from `qbinom(0.025, n, 0.5)`, which is not a valid 5%
+  region: at seven discordant pairs it admits a split whose exact two-sided p
+  is 0.125, and at two pairs it admits a "test" that rejects half the time
+  under the null. Reported minimum detectable odds ratios of 8.1 and 9.0
+  delivered about 44% power, not 80%. The exact values are 30.9 and 35.4, and
+  one contrast has no attainable MDE at all. Monte Carlo confirmed both the
+  defect and the correction. The manuscript understated its own underpowering
+  roughly fourfold.
+
+- **A metamorphic test caught its author first.** The practice-relabelling
+  transformation initially reported 47 lost triads. That was the test's fault,
+  not the pipeline's: relabelling raw strings splits practices that
+  `normalize_practice()` deliberately collapses, and the replacement tokens
+  ended in digits, which the normalizer strips as call-list indices, collapsing
+  every practice onto one name. The repository's fixture builder had made the
+  same mistake earlier. Tokens are now fixed points of the normalizer, asserted
+  as such.
+
+- **A mutant survived, and the reason was worth more than the mutant.**
+  Reordering the duplicate-resolution preference list changed zero of thirty
+  estimands. Ambiguous cells are excluded outright, so the rule never chooses
+  between two valid calls, and the `"first"` branch sorts by call date and
+  record id. The analysis is order-independent by construction. The mutant was
+  replaced with the mistake that would actually break it.
+
+Every other invariant in this repository is structural: it checks that a number
+came from the right denominator, was labelled correctly, or was not aliased to
+something else. None of them recompute a number, and all of them call the same
+`mysterycall` package the pipeline calls. `check-reference-crosscheck.R` is the
+first thing here that does not, and it found a real defect on its first run: a
+minimum detectable odds ratio built from a `qbinom` rejection region, which is
+not a valid 5% region and overstated power roughly twofold.
+
