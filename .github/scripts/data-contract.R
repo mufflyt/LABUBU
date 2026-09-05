@@ -146,7 +146,10 @@ duplicate_records <- call_records |>
   dplyr::semi_join(duplicate_cells, by = c("practice_id", "scenario")) |>
   dplyr::arrange(practice_id, scenario, record_id) |>
   dplyr::mutate(both_included = NA) |>
-  dplyr::select(record_id, practice_key, scenario, call_date,
+  # practice_id travels with practice_key so downstream artifacts (the
+  # supplement in particular) can identify a cell without printing the name of
+  # a practice or clinician that was called under a secret-shopper protocol.
+  dplyr::select(record_id, practice_id, practice_key, scenario, call_date,
                 exclusion_reason, analytic_inclusion)
 readr::write_csv(duplicate_records,
                  file.path(output_dir, "duplicate_practice_scenario_calls.csv"))

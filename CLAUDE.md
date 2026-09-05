@@ -86,12 +86,17 @@ Rscript call_progress.R    # how many single-mother calls remain / triads comple
    `mysterycall_lmm(auto_log = TRUE)` log-transforms a right-skewed outcome and
    returns log-scale coefficients; the back-transform is in `$gmr_table`. An
    intercept of 2.9 is 2.9 log-units (≈18 business days), not 2.9 days.
-7. **The three "restrictions on the individuals you would provide care to"
-   checkboxes are the only directly measured discrimination item and are not
-   yet analysable** — the straight-couple box is ticked on straight-couple
-   calls, so "checked" may mean restricted or served. Adjudicate against the
-   codebook (`restriction_checkbox_review.csv`), then reconsider as a primary
-   outcome.
+7. **The `restrictions` checkbox is unusable and the question is closed.**
+   The codebook (`LABUBU_DataDictionary_2026-09-05.csv`) says a ticked box
+   means a restriction applies to that group, with no note, branching logic or
+   annotation. The data contradict it: one caller ticked all three boxes on 19
+   of her 24 entries (= "serves nobody" under the label, plainly meaning the
+   inverse), and every other caller only ever ticked the box matching the
+   scenario they called as, which is a scenario echo carrying no information.
+   Two incompatible conventions, keyed to caller, with 25% of calls recording
+   no caller. **Do not attempt to recode or rescue it, and do not poll the
+   callers** — see `docs/PI-QUERY-restriction-checkbox.md`. Fix the instrument
+   next wave, not the analysis.
 8. **Finishing the single-mother arm remains worthwhile** but does not fix
    items 1–3 (targeted lists:
    `mysterycall_outputs/single_mother_calls_priority1_triads.csv` and

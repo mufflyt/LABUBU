@@ -1,114 +1,94 @@
-# Resolution needed: the restriction checkbox
+# Resolved: the restriction checkbox is unusable this wave
 
-**Status:** unresolved. The variable is excluded from all inferential analyses
-and CI enforces that exclusion (`restriction/excluded-from-inference`).
+**Status: RESOLVED, and the resolution is that the variable cannot be used.**
+It stays excluded from all inferential analyses and CI continues to enforce
+that exclusion (`restriction/excluded-from-inference`). This is no longer a
+question awaiting an answer from the callers.
 
-**Who to ask:** every caller who entered data — not one person. A convention
-one caller used is not evidence about what another recorded.
+Superseded the earlier plan to poll all seven callers. The codebook plus the
+raw coded export answer the question directly, and they answer it against use.
 
-**Seven callers** entered data (`Caller A`–`Caller G`; the raw export holds ten
-distinct name strings, three of which are typos that `normalize_practice`-style
-cleanup collapses). Their call volumes are very uneven:
+## What the codebook says
 
-| caller | calls |
+`LABUBU_DataDictionary_2026-09-05.csv`, field `restrictions`:
+
+| Property | Value |
 |---|---|
-| Caller C | 68 |
-| Caller D | 56 |
-| Caller A | 18 |
-| Caller G | 16 |
-| Caller F | 15 |
-| Caller B | 1 |
-| Caller E | 1 |
+| Field type | checkbox |
+| Field label | "Are there any restrictions to the individuals you would provide care to?" |
+| Choices | `1, Lesbian couple` \| `2, Straight couple` \| `3, Single mother` |
+| Field note | *(none)* |
+| Branching logic | *(none)* |
+| Field annotation | *(none)* |
 
-**A limit on what any answer can establish.** 59 of 234 calls — 25% — record no
-caller at all. Nobody can be asked about those, so even unanimous agreement
-among all seven leaves a quarter of the checkbox responses unattributable to
-any stated convention. Two callers contributed a single call each, so their
-answers describe one observation apiece.
+The intended semantics are therefore unambiguous: **a ticked box means a
+restriction applies to that group.** There is no note, no branching logic and
+no annotation that would suggest any other reading.
 
-If the convention is to be relied on, that 25% has to be accounted for
-explicitly: either the unattributed calls are also excluded, or the analysis
-states that it assumes a convention it cannot verify for a quarter of the data.
-That is a further decision, not something this query resolves.
+## What the data show
 
----
+The intended semantics are not what was recorded. 43 of 234 calls have any box
+ticked. Cross-tabulated against the scenario actually called:
 
-## The question to send
+| scenario called | n | any box | Lesbian ticked | Straight ticked | Single mother ticked |
+|---|---:|---:|---:|---:|---:|
+| Straight couple | 77 | 13 | 0 | 13 | 0 |
+| Lesbian couple | 83 | 17 | 16 | 11 | 9 |
+| Single mother | 74 | 13 | 11 | 13 | 10 |
 
-> In REDCap there is a question that reads **"Are there any restrictions to the
-> individuals you would provide care to?"** with checkboxes for *Lesbian
-> couple*, *Straight couple* and *Single mother*.
->
-> When you checked one of those boxes, did you check the groups the practice
-> said it **WOULD NOT** serve, or the groups the practice said it **WOULD**
-> serve?
+Two things falsify the codebook reading:
 
-Ask it exactly that way. Do not supply the frequency table with the question,
-and do not mention which reading the data appear to support — a caller shown
-the pattern first may reconstruct an intent rather than recall one.
+1. **On straight-couple calls, only the straight-couple box is ever ticked**
+   (13 of 13), never the other two. Under the codebook reading, thirteen
+   practices volunteered to a straight caller that they restrict straight
+   couples, and no practice restricted anyone else. That is not credible.
 
----
+2. **The all-three pattern.** `Les+Str+SM` is the single most common
+   combination (19 of 43). Under the codebook reading that practice restricts
+   every group it could serve, i.e. serves nobody.
 
-## Why this cannot be settled from the data
+## The conventions are caller-specific and mutually incompatible
 
-**The instrument is silent.** The REDCap metadata (pid 39546) gives:
+Splitting by the person who completed the form is decisive:
 
-```
-field_name : restrictions
-field_type : checkbox
-label      : "Are there any restrictions to the individuals you would provide care to?"
-choices    : 1, Lesbian couple | 2, Straight couple | 3, Single mother
-field_note : (none)
-branching  : (none)
-```
+| person completing | patterns used | n |
+|---|---|---:|
+| Melanie | `Les+Str+SM` x19, `Str` x3, `Les+Str` x2 | 24 |
+| SR / sr / Sam | `Str` x9 | 9 |
+| Muffly | `Str` x4 | 4 |
+| Beth | `Les` x3 | 3 |
+| Sofie | `Les` x2 | 2 |
+| *(blank)* | `Les` x1 | 1 |
 
-No field note, no branching logic. The instrument defines the item without
-constraining how it was recorded.
+- **Melanie ticks all three boxes on 19 of her 24 entries.** Read as
+  restrictions this is "serves nobody"; read as its inverse it is "serves
+  everyone", which is plausible and almost certainly what was meant. She was
+  recording who the practice *would* care for, the opposite of the label.
+- **Every other caller only ever ticks the box matching the scenario they
+  called as.** Straight-couple callers tick Straight; lesbian-couple callers
+  tick Lesbian. That is an echo of the scenario, not an observation about the
+  practice, and carries no information at all.
 
-**The two readings point in opposite directions.**
+So the field holds at least two incompatible conventions, one of which is the
+logical inverse of the codebook label and the other of which is not a
+measurement. No recoding rule can separate them after the fact, because the
+convention is a property of the caller rather than of the response, and 59 of
+234 calls (25%) record no caller at all and so cannot be attributed to either
+convention.
 
-| reading | a ticked box means | implied by |
-|---|---|---|
-| literal | this group would be **restricted** | the label's wording |
-| inverse | this group **would be served** | the response pattern |
+## Consequence
 
-Observed ticks: straight couple 37, lesbian couple 27, single mother 19. Under
-the literal reading, 37 practices restrict straight couples — implausible for
-fertility practices, and the ordering straight > lesbian > single mother is
-exactly what "groups we will serve" produces.
+The variable is unusable for this wave and is not rescued by asking the
+callers: even a unanimous statement of intent cannot retroactively make two
+different conventions into one measurement, nor attribute the unlabelled
+quarter. It stays out of the analysis permanently for this dataset.
 
-**That inference is precisely what must not be made.** Reverse-coding a
-variable because its distribution looks wrong under the documented reading is
-circular: the pattern is the thing being explained, and this is the single
-variable whose direction, if flipped, would reverse a discrimination finding.
+**For the next wave**, this is a fixable instrument problem, not a fixable
+analysis problem:
 
----
-
-## Decision rule, set in advance
-
-Fixing the rule before seeing the answers prevents choosing whichever reading
-suits the result.
-
-1. **Callers agree, and the convention is clear.** Encode it explicitly in
-   `evaluate_labubu_mysterycall.R`, document it here, and lift the CI guard in
-   the same change. If the convention is "would restrict", this becomes a
-   candidate primary discrimination outcome — directly measured rather than
-   inferred from call documentation — and adopting it requires an explicit
-   protocol/SAP amendment, not a quiet substitution.
-2. **Callers disagree, or any answer is hedged or uncertain.** The variable is
-   **unusable for this wave.** It stays excluded and is reported as a
-   limitation. Do not reconstruct intent retrospectively from partial
-   agreement, seniority, or who placed the most calls.
-3. **In every case**, the raw checkbox values remain in the dataset unchanged.
-   Nothing here edits recorded data; the question is only how it may be read.
-
----
-
-## For the next wave
-
-Rewrite the item so the direction cannot be misread — a single question with
-explicit mutually exclusive options per group ("would serve" / "would not
-serve" / "not discussed"), rather than a checkbox whose meaning depends on
-reading the stem correctly. Alongside the other two instrument changes already
-agreed: an explicit appointment-offer item, and block-randomised callers
-across scenarios.
+1. Split the item into three explicit yes/no questions, one per group, with the
+   direction stated in the stem ("Would this practice provide care to a single
+   mother using donor sperm?").
+2. Make the item required, so blank is distinguishable from "no restriction".
+3. Require the caller's identity on every record, so a convention can be
+   audited during collection rather than reconstructed afterwards.

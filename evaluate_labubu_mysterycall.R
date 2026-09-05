@@ -8,7 +8,32 @@ set.seed(20260904L)
 
 # Default export. refresh.R sets `input_file` before sourcing this script to
 # point at the newest export; the guard lets it override this default.
-if (!exists("input_file")) input_file <- "LABUBU_DATA_LABELS_2026-07-04_1551.csv"
+#
+# The default used to be a hardcoded filename, which broke the moment that
+# export was archived to Old_redcap/: running this script on its own failed
+# with "does not exist in current working directory" rather than doing the
+# obvious thing. Resolve the newest export in the repo root instead, and pull
+# one from the REDCap API if none is present.
+if (!exists("input_file")) {
+  newest_export <- function() {
+    f <- list.files(".", pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = FALSE)
+    if (!length(f)) return(NA_character_)
+    f[order(f, decreasing = TRUE)][1]   # timestamped names sort chronologically
+  }
+  input_file <- newest_export()
+  if (is.na(input_file)) {
+    if (!nzchar(Sys.getenv("REDCAP_LABUBU_TOKEN")))
+      stop("No LABUBU_DATA_LABELS_*.csv in the repo root and no ",
+           "REDCAP_LABUBU_TOKEN set. Add the token to ~/.Renviron and run ",
+           "`Rscript redcap_pull.R`, or place an export here.", call. = FALSE)
+    message("No local export found; pulling from REDCap.")
+    source("redcap_pull.R", local = TRUE)
+    redcap_pull(".")
+    input_file <- newest_export()
+    if (is.na(input_file)) stop("REDCap pull produced no export.", call. = FALSE)
+  }
+  message("Using export: ", input_file)
+}
 out_dir    <- "mysterycall_outputs"
 dir.create(out_dir, showWarnings = FALSE)
 
@@ -723,6 +748,31 @@ restrict_tab <- do.call(rbind, lapply(restrict_vars, function(v)
              stringsAsFactors = FALSE)))
 names(restrict_tab)[4] <- "by_scenario_included"
 
+# Which COMBINATION of boxes each caller ticked. The by-scenario table above
+# shows the field is odd; this shows why it is unusable. The convention is a
+# property of the caller, not of the response: one caller ticks all three boxes
+# (which under the codebook label "restrictions to the individuals you would
+# provide care to" means the practice serves nobody, so she plainly meant the
+# inverse), while every other caller ticks only the box matching the scenario
+# they called as, which is an echo carrying no information. No recoding rule
+# can separate two conventions after the fact, so the field stays excluded.
+# See docs/PI-QUERY-restriction-checkbox.md.
+restrict_pattern <- local({
+  short <- c(restrict_lesbian = "Lesbian", restrict_straight = "Straight",
+             restrict_single_mother = "SingleMother")
+  ticked <- apply(dat[restrict_vars], 1, function(r)
+    paste(short[restrict_vars][as.logical(r)], collapse = " + "))
+  keep <- nzchar(ticked)
+  if (!any(keep)) return(data.frame(caller = character(0), boxes_ticked = character(0),
+                                    n = integer(0), stringsAsFactors = FALSE))
+  out <- as.data.frame(table(caller = ifelse(nzchar(dat$caller[keep]), dat$caller[keep], "(unrecorded)"),
+                             boxes_ticked = ticked[keep]),
+                       stringsAsFactors = FALSE)
+  out <- out[out$Freq > 0, ]
+  names(out)[names(out) == "Freq"] <- "n"
+  out[order(-out$n, out$caller), ]
+})
+
 # ── MISSINGNESS — Little's MCAR instead of an asserted MAR ───────────────────
 mcar <- tryCatch(
   build_missingness_mcar_table(
@@ -1120,6 +1170,7 @@ if (!is.null(caller_stratified))
   write.csv(caller_stratified,          file.path(out_dir, "caller_stratified_contrast.csv"),                          row.names = FALSE)
 write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
 write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
+write.csv(restrict_pattern,             file.path(out_dir, "restriction_checkbox_by_caller.csv"),                       row.names = FALSE)
 if (!is.null(service_prev))
   write.csv(service_prev,               file.path(out_dir, "mysterycall_service_prevalence.csv"),                       row.names = FALSE)
 if (!is.null(mcar) && !is.null(mcar$missingness))
