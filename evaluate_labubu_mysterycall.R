@@ -628,6 +628,48 @@ drift <- tryCatch({
                            caller_col = "caller", plot = FALSE)
 }, error = function(e) NULL)
 
+# ── CALLER OVERLAP — which contrasts are estimable within caller ──────────────
+# Caller-scenario confounding is not uniform. A contrast can only be separated
+# from caller effects where the SAME caller placed calls under BOTH scenarios.
+# Where no caller did, the scenario column and that caller's column are the
+# same numbers, and no adjustment recovers the difference.
+caller_overlap <- local({
+  eligible <- dat[dat$in_offer_den & !is.na(dat$appt_offered) &
+                  !is.na(dat$scenario), ]
+  counts <- table(eligible$caller, eligible$scenario)
+  contrasts <- list(c("Straight couple", "Lesbian couple"),
+                    c("Straight couple", "Single mother"),
+                    c("Lesbian couple",  "Single mother"))
+  do.call(rbind, lapply(contrasts, function(cc) {
+    shared <- rownames(counts)[counts[, cc[1]] >= 3 & counts[, cc[2]] >= 3]
+    data.frame(contrast = paste(cc, collapse = " vs "),
+               n_callers_with_both = length(shared),
+               callers = if (length(shared)) paste(shared, collapse = ", ") else "none",
+               n_calls = if (length(shared)) sum(counts[shared, cc]) else 0L,
+               stringsAsFactors = FALSE)
+  }))
+})
+
+# Where overlap exists, estimate the contrast stratified by caller
+# (Mantel-Haenszel). This is a diagnostic, not a rescue analysis: it says
+# whether the crude contrast survives holding caller fixed.
+caller_stratified <- local({
+  row <- caller_overlap[caller_overlap$n_callers_with_both > 0, ]
+  if (!nrow(row)) return(NULL)
+  scen <- strsplit(row$contrast[1], " vs ")[[1]]
+  shared <- strsplit(row$callers[1], ", ")[[1]]
+  sub <- dat[dat$in_offer_den & !is.na(dat$appt_offered) &
+             dat$scenario %in% scen & dat$caller %in% shared, ]
+  sub$scenario <- droplevels(factor(sub$scenario, levels = scen))
+  tabs <- table(sub$scenario, sub$appt_offered, sub$caller)
+  mh <- tryCatch(mantelhaen.test(tabs, exact = FALSE), error = function(e) NULL)
+  if (is.null(mh)) return(NULL)
+  data.frame(contrast = row$contrast[1], n = nrow(sub),
+             mh_or = unname(mh$estimate),
+             ci_lo = mh$conf.int[1], ci_hi = mh$conf.int[2],
+             p_value = mh$p.value, stringsAsFactors = FALSE)
+})
+
 # ── SERVICE MENU — Wilson CIs via the package ────────────────────────────────
 service_vars <- c("service_cycle_tracking", "service_hormonal_timing",
                   "service_ovulation_induction", "service_iui", "service_ivf")
@@ -1047,6 +1089,9 @@ write.csv(as.data.frame.matrix(caller_scenario_tab),
                                         file.path(out_dir, "caller_by_scenario.csv"))
 write.csv(caller_rates,                 file.path(out_dir, "caller_rates.csv"),                                        row.names = FALSE)
 write.csv(caller_dominance,             file.path(out_dir, "caller_dominance_by_scenario.csv"),                         row.names = FALSE)
+write.csv(caller_overlap,               file.path(out_dir, "caller_overlap_by_contrast.csv"),                          row.names = FALSE)
+if (!is.null(caller_stratified))
+  write.csv(caller_stratified,          file.path(out_dir, "caller_stratified_contrast.csv"),                          row.names = FALSE)
 write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
 write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
 if (!is.null(service_prev))
