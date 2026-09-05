@@ -149,6 +149,16 @@ jobs:
       - name: Scientific gate
         run: Rscript .github/scripts/scientific-gate.R
 
+      # Headline estimands in one diffable table, then classified against the
+      # committed baseline. Exit 2 means something moved beyond tolerance and a
+      # human should look; it does not fail the run on its own, because the
+      # drift check below decides whether that warrants a pull request.
+      - name: Estimand report
+        run: Rscript .github/scripts/estimand-report.R
+
+      - name: Estimand drift
+        run: Rscript .github/scripts/estimand-diff.R || true
+
       - name: Render Reproducible Manuscript (Word & HTML)
         run: |
           Rscript -e 'rmarkdown::render("labubu_mysterycall_manuscript.Rmd", output_format="all")'
@@ -167,7 +177,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add mysterycall_outputs/ PROVENANCE.md \
+          git add mysterycall_outputs/ PROVENANCE.md ci-results/estimand-diff.csv \
                   labubu_mysterycall_manuscript.html \
                   labubu_mysterycall_manuscript.docx || true
 
