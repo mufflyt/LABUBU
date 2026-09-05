@@ -16,6 +16,7 @@ mysterycall,1.6.3.9000,github:mufflyt/mysterycall@42d66d92ef52
 openssl,2.4.2,cran
 patchwork,1.3.2,cran
 pbkrtest,0.5.5,cran
+png,0.1.8,cran
 readr,2.2.0,cran
 rmarkdown,2.31,cran
 scales,1.4.0,cran

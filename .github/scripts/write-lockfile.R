@@ -17,7 +17,7 @@ analysis_packages <- c(
   "mysterycall", "lme4", "glmmTMB", "geepack", "Deriv", "doBy", "pbkrtest",
   "dplyr", "readr", "tibble", "ggplot2", "ggbeeswarm", "ggridges", "patchwork",
   "scales", "forcats", "knitr", "rmarkdown", "survival", "jsonlite", "openssl",
-  "yaml", "Matrix", "TMB")
+  "yaml", "png", "Matrix", "TMB")
 
 installed <- vapply(analysis_packages, function(pkg) {
   if (requireNamespace(pkg, quietly = TRUE))
