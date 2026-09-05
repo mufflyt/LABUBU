@@ -3,6 +3,41 @@
 Short, dated notes for people returning to LABUBU. For the full record see
 `CHANGELOG.md`; for why the CI is shaped the way it is, `docs/APPENDIX-lessons.md`.
 
+## 2026-09-05 (evening) — manuscript sent to coauthors
+
+**The paper went out.** Manuscript, supplement, three figures and a draft cover
+letter emailed to all four coauthors. **Comments are due October 1**, after
+which revisions, submission and reviewer responses pass to the remaining
+authors.
+
+**We were four times more underpowered than the paper admitted.** The minimum
+detectable effect had been computed with a normal approximation, reporting
+OR 8.1 and 9.0. Those deliver about 44% power, not 80%. The exact values are
+OR 30.9 and 35.4 — and for Lesbian couple versus Single mother, with two
+discordant practices, **no effect size is detectable at all**; the exact test
+cannot reject at any odds ratio. This was found by an independent
+recalculation, confirmed by simulation, and corrected everywhere. It makes the
+existing "exploratory, underpowered" framing more true rather than less.
+
+**The restriction checkbox question is closed.** Do not poll the callers. The
+codebook says a ticked box means a restriction; the data show two incompatible
+conventions keyed to who filled in the form, and a quarter of calls record no
+caller. Two conventions cannot be merged into one measurement after the fact.
+
+**Figures were the blind spot.** All 27 invariants passed while Figure 1 plotted
+Clopper-Pearson intervals and its own supplemental table printed Wilson ones.
+Every check read a CSV, a model, or text; none had ever looked at what a figure
+plots. Figures now publish the data they draw, and two checks compare them
+against the tables they duplicate. A human found this one, in Preview, minutes
+before the email went out.
+
+**If you take one thing from this session:** coverage is not a count of checks.
+Ask which classes of artifact can still ship a wrong number with nothing
+noticing. See `docs/APPENDIX-lessons.md` §7.
+
+**One thing still outstanding:** the REDCap token was pasted in plaintext on
+2026-09-05 and **has not been rotated**.
+
 ## 2026-09-05
 
 **The primary outcome changed, and the old one was not measuring what it said.**

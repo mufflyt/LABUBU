@@ -22,6 +22,22 @@ Secret-shopper (audit) study of Restorative Reproductive Medicine (RRM) practice
 
 ## 🖼️ Figures
 
+### The service menu — the study's primary finding
+
+![Reproductive services offered](mysterycall_outputs/figures/fig5_service_forest.png)
+
+Cycle tracking is offered by 94.9% of practices reached. Intrauterine
+insemination and in vitro fertilization are each offered by **one practice out
+of 98**, and donor sperm by three. The services shown in red are those a patient
+needs to conceive without a male partner, and they are essentially absent from
+the RRM menu.
+
+This is a structural property of the model of care, not a finding about how
+staff treat anyone: it does not depend on which caller placed the call, and it
+is measured directly rather than derived. Intervals are Wilson score intervals,
+the same ones in Appendix Table S3 — the figure and that table are checked
+against each other by `figures/plotted-values-match-tables`.
+
 ### Cohort flow
 
 ![STROBE flow](mysterycall_outputs/figures/fig0_strobe_flow.png)
@@ -35,8 +51,28 @@ analysis → 57 with an observed appointment date.
 
 The three arms enter the funnel at comparable widths and leave at very
 different ones — 39/37/32 reached, but 28/14/15 reaching the wait analysis.
-That asymmetry is the study's central observation, and it is visible here
-before any model is fitted.
+That asymmetry is real, but it is **not** the study's finding. Documentation
+completeness differs by arm in the same direction (appointment date missing for
+28.2% / 62.2% / 53.1% of reached calls), so differential documentation and
+differential availability cannot be separated. Read this figure alongside
+Appendix Table S2, and treat the scenario comparison as exploratory.
+
+### Validation, in one picture
+
+The repository does not ask you to trust a green badge. `mutation_report.csv`
+records six deliberately broken versions of the analysis and which check caught
+each one:
+
+| Mutant | Caught by |
+|---|---|
+| MDE computed at α = .50 | `crosscheck/mde-attains-claimed-power` |
+| MDE from a normal approximation | `crosscheck/mde-attains-claimed-power` |
+| Wilson intervals replaced by Wald | `crosscheck/wilson-intervals` |
+| Business days off by one | `crosscheck/business-days` |
+| Practice grouping keyed on raw text | `metamorphic/practice-name-invariant` |
+| Duplicate cell resolved by row order | `metamorphic/make-wide-order-invariant` |
+
+Six mutants, six killed, zero survivors.
 
 ### Wait time to first available appointment
 
@@ -149,6 +185,8 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 | [`evaluate_labubu_mysterycall.R`](evaluate_labubu_mysterycall.R) | Core data cleaning, normalization, GLMER/LMM modeling, McNemar tests, and report generation. |
 | [`figures_wait_time.R`](figures_wait_time.R) | Generates publication-ready figures (raincloud, ridge plot, ECDF, within-practice pairs, 2x2 panel). |
 | [`provenance.R`](provenance.R) | Computes MD5 checksums, Git state, package versions, and denominator levels into `PROVENANCE.md`. |
+| [`tools/reproduce.R`](tools/reproduce.R) | Rebuilds every artifact from the export `PROVENANCE.md` names and fails if any estimand moved. Use after a clean clone. |
+| [`tools/reference_implementations.R`](tools/reference_implementations.R) | Wilson, Clopper-Pearson, exact McNemar, paired MDE, business days and ICC written from the published formulae. Never calls `mysterycall`. |
 | [`call_progress.R`](call_progress.R) | Lightweight progress utility to count remaining single-mother calls and complete practice triads. |
 | [`app.R`](app.R) | Interactive Shiny application for exploring practice-level data and scheduling distributions. |
 | `tools/check_figure_opacity.R` | Reports the alpha channel of every figure. A transparent background is invisible by inspection — it looks correct on white and vanishes in a dark viewer. |
@@ -165,8 +203,9 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 | [`NEWS.md`](NEWS.md) | The short version for someone returning to the project |
 | [`docs/CI.md`](docs/CI.md) | What a green check means, and what it does not |
 | [`docs/OPEN-DECISIONS.md`](docs/OPEN-DECISIONS.md) | PI decisions made, and the questions still open |
-| [`docs/PI-QUERY-restriction-checkbox.md`](docs/PI-QUERY-restriction-checkbox.md) | The exact question to send the callers, and the decision rule set in advance |
+| [`docs/PI-QUERY-restriction-checkbox.md`](docs/PI-QUERY-restriction-checkbox.md) | Why the restriction checkbox is unusable and the question is **closed**, not pending |
 | [`docs/APPENDIX-lessons.md`](docs/APPENDIX-lessons.md) | Why each CI check exists — every one traces to something that went wrong |
+| [`docs/APPENDIX-borrowed-techniques.md`](docs/APPENDIX-borrowed-techniques.md) | The five validation strategies taken from sibling repos, and what each one found |
 | [`PROVENANCE.md`](PROVENANCE.md) | Which export, commit and package versions produced the current results |
 
 ---

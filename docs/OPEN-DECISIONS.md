@@ -46,74 +46,60 @@ registers as drift instead of moving silently.
 
 ---
 
-## 2. Restriction-checkbox interpretation — DECIDED: do not analyse yet
+## 2. Restriction-checkbox interpretation — CLOSED 2026-09-05: unusable this wave
 
-**PI decision, 2026-09-05.** These variables are **excluded from all
-inferential analyses and labelled unresolved** until the REDCap semantics are
-verified from the instrument itself.
+**This is no longer an open decision and no longer awaits an answer from the
+callers.** The variables stay excluded from every analysis, permanently for this
+dataset. `restriction/excluded-from-inference` continues to enforce that.
 
-**Codebook retrieved 2026-09-05** via the REDCap metadata API (pid 39546):
+**Supersedes the earlier plan to poll all seven callers.** That plan assumed the
+ambiguity was about intent and could be resolved by asking. It cannot: the
+codebook establishes the intended meaning, and the recorded data contradict it
+in two mutually incompatible ways.
 
-```
-field_name : restrictions
-field_type : checkbox
-label      : "Are there any restrictions to the individuals you would provide care to?"
-choices    : 1, Lesbian couple | 2, Straight couple | 3, Single mother
-field_note : (none)
-branching  : (none)
-```
+**What the codebook says** (`LABUBU_DataDictionary_2026-09-05.csv`, field
+`restrictions`, checkbox): label *"Are there any restrictions to the individuals
+you would provide care to?"*, choices `1, Lesbian couple | 2, Straight couple |
+3, Single mother`, with **no field note, no branching logic and no annotation**.
+A ticked box means a restriction applies to that group. There is no second
+reading available from the instrument.
 
-**This narrows the question but does not close it.** The instrument carries no
-field note and no branching logic, so it defines the item without constraining
-how callers recorded it. The literal reading of the label is that a ticked box
-marks a group the practice *would restrict*.
+**What the data show.** A box is ticked on 43 of 234 calls, and the pattern is a
+property of the person completing the form, not of the practice:
 
-The observed frequencies point the other way:
+| Person completing | Patterns used | n |
+|---|---|---:|
+| Caller C | `Les+Str+SM` ×19, `Str` ×3, `Les+Str` ×2 | 24 |
+| Caller F | `Str` ×9 | 9 |
+| Caller D | `Str` ×4 | 4 |
+| Caller A | `Les` ×3 | 3 |
+| Caller E | `Les` ×2 | 2 |
 
-| box ticked | n |
-|---|---|
-| Straight couple | 37 |
-| Lesbian couple | 27 |
-| Single mother | 19 |
+One caller ticked all three boxes on 19 of 24 entries. Under the codebook
+definition that asserts the practice restricts lesbian couples *and* straight
+couples *and* single mothers — serves nobody — and plainly means the inverse.
+Every other caller ticked only the box matching the scenario they themselves
+called as: on straight-couple calls the straight box is ticked 13 times out of
+13 and the other two never. That is an echo of the assignment, carrying no
+information about the practice.
 
-Under the literal reading, 37 practices restrict straight couples — implausible
-for fertility practices, and the ordering straight > lesbian > single mother is
-exactly what "groups this practice **will** serve" would produce. Reading the
-data against the label is what suggests the field was used inversely.
+**Why asking cannot fix it.** Two conventions cannot be merged into one
+measurement after the fact, and 59 of 234 calls (25%) record no caller, so those
+records cannot be attributed to either convention even with unanimous answers.
+This is a question-design failure, not a data-entry failure, and not anyone's
+error: the item had no instruction and invited both readings.
 
-**CI now enforces the exclusion.** `restriction/excluded-from-inference` fails
-the build if a restriction variable is used as a model outcome or predictor, or
-appears as a reported estimand or manuscript claim. Descriptive tabulation for
-review stays allowed; the point is that these must not become evidence while
-their meaning is unknown.
+**Consequence for a future wave** — an instrument change, not an analytic one:
 
-**Still needed, and not inferable from the export:** confirmation from the
-callers of what they recorded when they ticked a box. The exact wording to
-send, the pre-set decision rule, and why the frequency pattern must not settle
-it are in `docs/PI-QUERY-restriction-checkbox.md`. Ask all seven callers who entered data; if answers conflict, the variable is
-unusable for this wave. Note that 59 of 234 calls (25%) record no caller, so no
-answer can cover them. Deciding this
-from the frequency pattern alone would be reverse-coding on intuition, which
-this decision explicitly rules out — and it is the one reading that would
-reverse the direction of a discrimination finding.
+1. Split into three explicit yes/no items with the direction stated in the stem
+   ("Would this practice provide care to a single mother using donor sperm?").
+2. Make the item required, so blank is distinguishable from "no restriction".
+3. Require caller identity on every record, so a convention can be audited
+   during collection rather than reconstructed afterwards.
 
-**If the codebook confirms they measure restriction,** this becomes a candidate
-**primary discrimination outcome** — it is directly observed rather than
-inferred from call documentation, which is a real improvement over the offer
-proxy. Appointment access would then be reported as a separate operational
-outcome. That swap requires an explicit manuscript/SAP amendment, not a quiet
-substitution.
-
-**Evidence** `mysterycall_outputs/restriction_checkbox_review.csv`.
-
-The three "restrictions to the individuals you would provide care to"
-checkboxes are the only directly measured discrimination item, and their coding
-is ambiguous: the straight-couple box is ticked on straight-couple calls, so
-"checked" may mean *restricted* or *served*. Resolve against the REDCap
-codebook. If it means restricted, this becomes a candidate primary outcome and
-is better measured than the derived offer proxy.
-
----
+**Evidence** `mysterycall_outputs/restriction_checkbox_by_caller.csv`,
+`restriction_checkbox_review.csv`, Appendix Table S6, and the full argument in
+`docs/PI-QUERY-restriction-checkbox.md`.
 
 ## 3. The offer outcome is a derived proxy
 

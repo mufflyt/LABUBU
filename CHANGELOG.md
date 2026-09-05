@@ -8,6 +8,85 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com).
 
 ---
 
+## 2026-09-05 (evening)
+
+Manuscript restructured around the service-menu finding and sent to coauthors.
+A statistical defect that had understated the study's own underpowering was
+found and corrected, and figures gained numeric coverage for the first time.
+
+### Science — power and precision
+
+- **The minimum detectable effect was wrong by roughly fourfold, and one
+  contrast had none at all.** `mcnemar_mde_or()` built its rejection region from
+  `qbinom(0.025, n, 0.5)`, which is not a valid 5% region: at seven discordant
+  pairs it admits a split whose exact two-sided p is 0.125. Reported MDEs of
+  OR 8.1 and 9.0 deliver about 44% power, not 80%. Exact values are OR 30.9 and
+  35.4, and the Lesbian-vs-Single-mother contrast (2 discordant pairs) has **no
+  attainable MDE**: the exact test cannot reject at any effect size. Confirmed
+  by Monte Carlo before changing anything. Table 2 now prints "None attainable".
+- **Caller confounding has a number.** Variance-components ICCs: 0.29 for
+  reaching a live office, 0.31 for inferred availability, 0.36 for the
+  business-day wait. Roughly a third of outcome variance tracks who dialled.
+- **Precision bounds replace bare nulls.** `precision_bounds.csv` and Appendix
+  Table S8 report what the paired intervals *exclude* on the percentage-point
+  scale, not only what the design failed to detect.
+- **Figure 1 and its own table disagreed.** The forest plot computed
+  Clopper-Pearson intervals via `binom.test()` while Appendix Table S3 used
+  Wilson. Both now use Wilson, computed once, and the legend says so.
+
+### Instrument and data
+
+- **The restriction checkbox is closed, not pending.** The data dictionary
+  defines a ticked box as a restriction. The recorded data follow two
+  incompatible conventions keyed to the caller — one caller ticked all three
+  boxes on 19 of 24 entries (the inverse of the label), everyone else echoed the
+  scenario they called as — and 25% of calls record no caller. No poll can merge
+  two conventions after the fact. See `docs/PI-QUERY-restriction-checkbox.md`.
+- **Practice and clinician names were about to ship in a public supplement.**
+  `protocol_deviation_cells.csv` carries real names including individual
+  clinicians with credentials. Both S5 tables now show study IDs only.
+- **The pipeline could not run on its own.** The default `input_file` named an
+  export archived to `Old_redcap/`. It now resolves the newest export and pulls
+  from the REDCap API if none is present.
+
+### Manuscript
+
+- Restructured around the service menu as the primary outcome; Methods
+  compressed 813 → 703 words; abstract to 267, précis to 22.
+- Three miscitations fixed, including SAMPL cited as the source for the Wilson
+  interval and a housing-discrimination study cited for the RRM clinical menu.
+  References renumbered into Vancouver first-appearance order.
+- Supplemental digital content created as a separate document (Tables S1–S8,
+  Figure S1); three appendix tables had been printed inline in the main text
+  while being listed as supplemental.
+- Green Journal cover letter drafted, resolving its numbers through the same
+  claims table the manuscript uses.
+
+### Machinery
+
+- **Gate grew from 18 to 29 invariants, each with a negative control** (32
+  injected defects, all caught).
+- **Five validation techniques adopted from sibling repositories**, documented
+  with attribution in `docs/APPENDIX-borrowed-techniques.md`: independent
+  reference implementations and metamorphic and mutation testing from
+  `mufflyt/isochrones-ci`; caller ICC and precision bounds from
+  `mufflyt/lizeth`.
+- **`tools/reference_implementations.R`** recomputes every reported quantity
+  from published formulae and never calls `mysterycall`. It found the MDE defect
+  on its first run.
+- **Figures now publish the data they plot.** `figures/plotted-values-match-tables`
+  and `figures/strobe-counts-match-data` verify seven and six failure modes
+  respectively. Previously every invariant read CSVs, models or text, and
+  figures were the only artifact class carrying numbers with no numeric check.
+- **Seven regression invariants added, one per mistake actually made here** —
+  missing supplement, duplicate tables, over-length abstract, rotting default
+  export, `try()` swallowing a failure, duplicate contract registration, and a
+  fixture whose pseudonymisation destroyed its triads.
+- `tools/reproduce.R` rebuilds every artifact from the export `PROVENANCE.md`
+  names and fails if any estimand moved.
+
+---
+
 ## 2026-09-05
 
 A single session that rebuilt the study's primary outcome, corrected two data

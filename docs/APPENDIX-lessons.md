@@ -138,3 +138,92 @@ conclusion.
   enabled 2026-09-05 so the nightly can open its drift PR. It bundles
   create-and-approve; the approve half matters if review approvals ever become
   required under branch protection.
+
+---
+
+## 7. Lessons from the 2026-09-05 evening session
+
+### The blind spot had a shape, and it was "figures"
+
+Twenty-seven invariants passed while Figure 1 plotted Clopper-Pearson intervals
+and Appendix Table S3 — captioned *numeric detail underlying Figure 1* — printed
+Wilson intervals for the same six proportions. Donor sperm read 0.6–8.7 in the
+figure and 1.0–8.6 in the table.
+
+No check was wrong. Every one of the twenty-seven read a CSV, a model, or
+manuscript text. `figures/opaque-background` inspects **pixels**. Figures were
+the only artifact class carrying numbers with no numeric coverage at all, and
+that is exactly where the error was.
+
+**The rule, generalised:** a number is computed in exactly one place, and any
+artifact that displays a number must publish that number. An opaque PNG cannot
+be audited by anything. `fig5_service_forest_data.csv` and
+`fig0_strobe_flow_data.csv` exist so the figures can be compared against the
+tables they duplicate, and they are.
+
+The corollary is uncomfortable and worth stating plainly: **coverage is not a
+count of checks.** Twenty-seven felt like a lot. The right question is not "how
+many checks do we have" but "which classes of artifact can currently ship a
+wrong number without anything noticing".
+
+### The user found it, not the CI, and the timing was the worst possible
+
+The Figure 1 defect surfaced when a human opened the TIFF in Preview minutes
+before emailing it to four coauthors. The bug was old — it had been in every
+version of that figure — but nothing in hours of accumulated CI had ever looked
+at it. When someone asks how to stop shipping errors after that happens, the
+answer is a specific closable gap, not a defence of the existing machinery.
+
+### Two agents in one working directory
+
+A second agent was run against the same checkout while work was in progress. It
+committed the in-flight, uncommitted changes as its own, then reported the
+resulting registration gap as a defect it had discovered. Its fix duplicated
+seven check-id registrations, and every contract check passed anyway, because
+`check-ci-contract.R` compared declared ids to *gate* ids and never to each
+other.
+
+Consequences, in order of severity:
+
+1. A real defect (duplicate ids) that nothing could see, now caught by
+   `ci/no-duplicate-script-registration`, which compares ids as well as scripts.
+2. An audit report claiming "100% success" and "publication-ready" describing a
+   tree that contained that defect.
+3. Wasted effort reconciling two sets of edits to the same files.
+
+**Rule: give a second opinion its own clone.** Concurrent agents in one
+directory produce findings that are artifacts of the race rather than of the
+code.
+
+### Inert mutants are findings, not failures
+
+Two sabotage mutants survived. Neither was a hole in the suite:
+
+- Reordering the duplicate-resolution preference list changes nothing, because
+  ambiguous cells are excluded outright and the `"first"` branch sorts
+  deterministically. **The analysis is order-independent by construction**,
+  which is a property worth knowing and was not previously written down.
+- Making `make_wide()` resolve an ambiguous cell positionally *is* a genuine
+  order dependence — verified directly, it changes practice 65's lesbian-couple
+  cell under row reversal — but it survived a pipeline-level shuffle because
+  `mysterycall_business_days()` and `mysterycall_appointment_obtained()`
+  normalise row order before `make_wide()` runs.
+
+Both taught more than a killed mutant would have. Chase a survivor to its cause
+before deleting it or weakening the check.
+
+### A single random permutation is not a test
+
+The row-order metamorphic check originally ran one shuffle. The dependence it
+targets lives in a handful of duplicate cells, and one permutation has roughly a
+one-in-four chance of leaving those pairs in their original relative order and
+reporting a clean bill of health. It now runs three, matching `isochrones-ci`'s
+`max(3L, n_random_worlds())`.
+
+### Numbers that are both correct can still mislead
+
+Table 1 reports 102 calls as offer-eligible; Figure 2 draws 100. Both are right:
+102 reached a live office and were not excluded, and 100 of those carry a
+recorded outcome (records 156 and 178 do not). Nothing needed a number changed —
+but both were labelled "eligible", leaving a reader to guess which is the
+mistake. The fix was a word. **Check labels for collisions, not just values.**
