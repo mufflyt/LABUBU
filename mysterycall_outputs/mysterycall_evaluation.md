@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-04 23:24:18 MDT
+Generated: 2026-09-05 06:24:02 MDT
 
 ## Package
 
@@ -120,9 +120,8 @@ Calls by caller and scenario:
   Caller B                 0              0             1
   Caller C                 2             28            38
   Caller D                53              3             0
-  Caller E                 1              0             0
-  Caller F                 2              9             4
-  Caller G                16              0             0
+  Caller E                 2              9             4
+  Caller F                17              0             0
   Unrecorded               3             29            27
 ```
 
@@ -145,26 +144,24 @@ Per-caller reach and offer rates (callers differ substantially, which is the mec
 2   Caller B       1       100.0                1       100.0
 3   Caller C      68        48.5               33        69.7
 4   Caller D      56        48.2               23        82.6
-5   Caller E       1       100.0                1       100.0
-6   Caller F      15       100.0               15        21.4
-7   Caller G      16        50.0                8        75.0
-8 Unrecorded      59        11.9                6         0.0
+5   Caller E      15       100.0               15        21.4
+6   Caller F      17        52.9                9        77.8
+7 Unrecorded      59        11.9                6         0.0
 ```
 
 Offer model adjusted for caller (scenario + caller + practice random intercept):
 
 ```
-                         Estimate Std. Error      z value  Pr(>|z|)
-(Intercept)             3.3310729   4.454300  0.747833011 0.4545609
-scenarioLesbian couple -4.7426485   4.531931 -1.046496246 0.2953320
-scenarioSingle mother  -5.0336075   4.306174 -1.168928047 0.2424326
-callerCaller B         11.1099901  46.437168  0.239247796 0.8109134
-callerCaller C          3.1010438   1.737978  1.784282305 0.0743778
-callerCaller D          0.0336122   3.754765  0.008951879 0.9928575
-callerCaller E          4.7459294  15.957413  0.297412204 0.7661518
-callerCaller F         -1.4604792   2.269238 -0.643598889 0.5198356
-callerCaller G         -0.7766047   3.769480 -0.206024359 0.8367719
-callerUnrecorded       -9.5947732   8.791394 -1.091382409 0.2751046
+                          Estimate   Std. Error       z value   Pr(>|z|)
+(Intercept)               8.635342 8.500437e+00  1.015870e+00 0.30969113
+scenarioLesbian couple  -11.275161 8.017156e+00 -1.406379e+00 0.15961159
+scenarioSingle mother   -10.919325 8.147506e+00 -1.340205e+00 0.18017886
+callerCaller B          320.784026 6.710886e+07  4.780054e-06 0.99999619
+callerCaller C            6.228382 3.164188e+00  1.968398e+00 0.04902222
+callerCaller D           -2.433093 8.697874e+00 -2.797342e-01 0.77968144
+callerCaller E           -3.138982 5.393723e+00 -5.819695e-01 0.56058724
+callerCaller F           -2.262659 7.683996e+00 -2.944639e-01 0.76840347
+callerUnrecorded       -391.481156 3.001200e+07 -1.304416e-05 0.99998959
 ```
 
 > Inspect the standard errors above. Where they are very large, scenario and caller are not jointly identifiable and the adjusted estimate should not be reported as a corrected effect — it is evidence that the design cannot separate the two.
@@ -172,7 +169,7 @@ callerUnrecorded       -9.5947732   8.791394 -1.091382409 0.2751046
 Drift checks (a distinct threat: rates changing over the study period or over a caller's call sequence):
 
 - Calendar: Acceptance rates did not change significantly over the study period (slope=-0.064 per week, p = 0.539)
-- Sequence: Acceptance rates did not change significantly over call sequence (slope=-0.003 per call, p = 0.693)
+- Sequence: Acceptance rates did not change significantly over call sequence (slope=-0.003 per call, p = 0.687)
 
 ## MATCHED ANALYSIS — Within-Practice Paired Appointment Offer (exact McNemar)
 

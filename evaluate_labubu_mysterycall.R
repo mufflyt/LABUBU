@@ -218,6 +218,11 @@ dat$caller[is.na(dat$caller) | dat$caller == ""] <- "Unrecorded"
 dat$caller <- sub("^Mufflly$", "Muffly", dat$caller)
 dat$caller <- sub("^sr$",      "SR",     dat$caller)
 dat$caller <- sub("^sofie$",   "Sofie",  dat$caller)
+# "Sam" and "SR" are the same person (Sam Raine), recorded two ways -- same
+# class of variant as Mufflly/Muffly. Both entries are straight-couple calls
+# only, which is consistent. Left unmerged they inflate the caller count and
+# split one person's 17 calls into 16 and 1.
+dat$caller <- sub("^Sam$",     "SR",     dat$caller)
 
 # De-identify. The caller-confounding analysis needs caller STRATA, not caller
 # identities: "Caller A placed 53/77 straight-couple calls" carries exactly the
@@ -627,6 +632,68 @@ drift <- tryCatch({
   mysterycall_caller_drift(dd, outcome_col = "offered", date_col = "call_date",
                            caller_col = "caller", plot = FALSE)
 }, error = function(e) NULL)
+
+# ── MISSINGNESS BY ARM — a completeness asymmetry, reported not buried ────────
+# "No call date recorded" runs 6 / 19 / 12 across the three arms. That is a
+# data-completeness difference by scenario in a study about differential
+# treatment, and a reviewer will find it whether or not we volunteer it.
+missingness_by_arm <- local({
+  do.call(rbind, lapply(levels(dat$scenario), function(scen) {
+    arm <- dat[!is.na(dat$scenario) & dat$scenario == scen, ]
+    reached <- arm[arm$reached, ]
+    data.frame(
+      scenario            = scen,
+      calls_placed        = nrow(arm),
+      no_call_date        = sum(is.na(arm$call_date)),
+      pct_no_call_date    = round(100 * mean(is.na(arm$call_date)), 1),
+      reached             = nrow(reached),
+      no_appt_date        = sum(is.na(reached$first_appt_date)),
+      pct_no_appt_date    = round(100 * mean(is.na(reached$first_appt_date)), 1),
+      stringsAsFactors    = FALSE)
+  }))
+})
+
+# ── CALLER OVERLAP — which contrasts are estimable within caller ──────────────
+# Caller-scenario confounding is not uniform. A contrast can only be separated
+# from caller effects where the SAME caller placed calls under BOTH scenarios.
+# Where no caller did, the scenario column and that caller's column are the
+# same numbers, and no adjustment recovers the difference.
+caller_overlap <- local({
+  eligible <- dat[dat$in_offer_den & !is.na(dat$appt_offered) &
+                  !is.na(dat$scenario), ]
+  counts <- table(eligible$caller, eligible$scenario)
+  contrasts <- list(c("Straight couple", "Lesbian couple"),
+                    c("Straight couple", "Single mother"),
+                    c("Lesbian couple",  "Single mother"))
+  do.call(rbind, lapply(contrasts, function(cc) {
+    shared <- rownames(counts)[counts[, cc[1]] >= 3 & counts[, cc[2]] >= 3]
+    data.frame(contrast = paste(cc, collapse = " vs "),
+               n_callers_with_both = length(shared),
+               callers = if (length(shared)) paste(shared, collapse = ", ") else "none",
+               n_calls = if (length(shared)) sum(counts[shared, cc]) else 0L,
+               stringsAsFactors = FALSE)
+  }))
+})
+
+# Where overlap exists, estimate the contrast stratified by caller
+# (Mantel-Haenszel). This is a diagnostic, not a rescue analysis: it says
+# whether the crude contrast survives holding caller fixed.
+caller_stratified <- local({
+  row <- caller_overlap[caller_overlap$n_callers_with_both > 0, ]
+  if (!nrow(row)) return(NULL)
+  scen <- strsplit(row$contrast[1], " vs ")[[1]]
+  shared <- strsplit(row$callers[1], ", ")[[1]]
+  sub <- dat[dat$in_offer_den & !is.na(dat$appt_offered) &
+             dat$scenario %in% scen & dat$caller %in% shared, ]
+  sub$scenario <- droplevels(factor(sub$scenario, levels = scen))
+  tabs <- table(sub$scenario, sub$appt_offered, sub$caller)
+  mh <- tryCatch(mantelhaen.test(tabs, exact = FALSE), error = function(e) NULL)
+  if (is.null(mh)) return(NULL)
+  data.frame(contrast = row$contrast[1], n = nrow(sub),
+             mh_or = unname(mh$estimate),
+             ci_lo = mh$conf.int[1], ci_hi = mh$conf.int[2],
+             p_value = mh$p.value, stringsAsFactors = FALSE)
+})
 
 # ── SERVICE MENU — Wilson CIs via the package ────────────────────────────────
 service_vars <- c("service_cycle_tracking", "service_hormonal_timing",
@@ -1047,6 +1114,10 @@ write.csv(as.data.frame.matrix(caller_scenario_tab),
                                         file.path(out_dir, "caller_by_scenario.csv"))
 write.csv(caller_rates,                 file.path(out_dir, "caller_rates.csv"),                                        row.names = FALSE)
 write.csv(caller_dominance,             file.path(out_dir, "caller_dominance_by_scenario.csv"),                         row.names = FALSE)
+write.csv(missingness_by_arm,           file.path(out_dir, "missingness_by_arm.csv"),                                  row.names = FALSE)
+write.csv(caller_overlap,               file.path(out_dir, "caller_overlap_by_contrast.csv"),                          row.names = FALSE)
+if (!is.null(caller_stratified))
+  write.csv(caller_stratified,          file.path(out_dir, "caller_stratified_contrast.csv"),                          row.names = FALSE)
 write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
 write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
 if (!is.null(service_prev))
@@ -1120,6 +1191,63 @@ if (!is.null(strobe) && inherits(strobe, "ggplot")) {
                                          conditionMessage(e)))
   }
 }
+
+# ── Figure 1: service-menu forest plot ────────────────────────────────────────
+# The primary finding as a figure rather than a table. The accepted sibling
+# audit study (mufflyt/lizeth) carries one table and six figures; a forest plot
+# shows both the estimate and its precision, which matters here because the IUI
+# and IVF proportions rest on a single practice each.
+local({
+  inc_f <- dat[dat$analytic_inclusion, ]; n_f <- nrow(inc_f)
+  svc_row <- function(v, lab) {
+    x <- sum(inc_f[[v]]); ci <- binom.test(x, n_f)$conf.int
+    data.frame(service = lab, k = x, pct = 100 * x / n_f,
+               lo = 100 * ci[1], hi = 100 * ci[2], stringsAsFactors = FALSE)
+  }
+  fp <- rbind(
+    svc_row("service_cycle_tracking",      "Cycle tracking"),
+    svc_row("service_hormonal_timing",     "Hormonal labs / fertility timing"),
+    svc_row("service_ovulation_induction", "Ovulation induction"),
+    svc_row("donor_sperm_yes",             "Works with donor sperm"),
+    svc_row("service_iui",                 "Intrauterine insemination (IUI)"),
+    svc_row("service_ivf",                 "In vitro fertilization (IVF)"))
+  fp$service <- factor(fp$service, levels = rev(fp$service))
+  # Grouped by CLINICAL CATEGORY, not by observed percentage: deriving the
+  # grouping from the data mislabelled ovulation induction, which is a
+  # fertility treatment but not a service donor conception depends on.
+  required <- c("Works with donor sperm", "Intrauterine insemination (IUI)",
+                "In vitro fertilization (IVF)")
+  fp$grp <- ifelse(as.character(fp$service) %in% required,
+                   "Required to conceive without a male partner",
+                   "Other reproductive services")
+  p_forest <- ggplot2::ggplot(fp, ggplot2::aes(pct, service, colour = grp)) +
+    ggplot2::geom_vline(xintercept = 50, linetype = "dotted", colour = "grey55") +
+    ggplot2::geom_errorbarh(ggplot2::aes(xmin = lo, xmax = hi), height = 0.16,
+                            linewidth = 0.7) +
+    ggplot2::geom_point(size = 3.1) +
+    ggplot2::geom_text(ggplot2::aes(x = 104,
+        label = sprintf("%.1f%% (%d/%d)", pct, k, n_f)), hjust = 0, size = 3.5,
+        colour = "grey20") +
+    ggplot2::scale_x_continuous("Practices offering the service (%), 95% CI",
+        limits = c(0, 132), breaks = seq(0, 100, 25)) +
+    ggplot2::scale_colour_manual(values = c(
+        "Other reproductive services" = "#2166AC",
+        "Required to conceive without a male partner" = "#D6604D")) +
+    ggplot2::labs(y = NULL, colour = NULL) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(legend.position = "bottom",
+        panel.grid.minor = ggplot2::element_blank(),
+        panel.grid.major.y = ggplot2::element_blank(),
+        plot.background = ggplot2::element_rect(fill = "white", colour = NA),
+        panel.background = ggplot2::element_rect(fill = "white", colour = NA))
+  for (ext in c("png", "tiff")) {
+    a <- list(filename = file.path(fig_dir, paste0("fig5_service_forest.", ext)),
+              plot = p_forest, width = 8.6, height = 4.2, dpi = 300, bg = "white")
+    if (ext == "tiff") a$compression <- "lzw"
+    tryCatch(do.call(ggplot2::ggsave, a),
+             error = function(e) message("forest save failed: ", conditionMessage(e)))
+  }
+})
 
 # ── STROBE flow, split by caller scenario ─────────────────────────────────────
 # The combined diagram shows the cohort, which is what STROBE asks for, but it
