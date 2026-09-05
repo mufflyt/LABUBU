@@ -1303,7 +1303,9 @@ strobe <- tryCatch(
     label_included = "Reached a live office\n(exclusion codes 0, 2, 7, 9, 10)",
     label_logistic = "Offer analysis\nOutcome: appointment offered (yes/no)",
     label_waittime = "Wait-time analysis\nBusiness days to first appointment",
-    title       = "LABUBU STROBE Flow - RRM Mystery-Caller Study",
+    # No title. The manuscript supplies the caption, and a title baked into the
+    # image duplicates it and gets in the way of journal typesetting.
+    title       = NULL,
     output_path = file.path(fig_dir, "fig0_strobe_flow.png")
   ),
   error = function(e) { message("STROBE flow not drawn: ", conditionMessage(e)); NULL })
@@ -1320,8 +1322,23 @@ strobe <- tryCatch(
 # Fixed upstream in mufflyt/mysterycall#260. This re-save keeps LABUBU correct
 # at the currently pinned SHA and is harmless once that lands; the
 # figures/opaque-background gate check is what actually holds the line.
+# Text in the flow diagram is set by the package at 2.6 to 3.1 mm, which is
+# roughly 7.5 to 8.8 pt on a 9 inch canvas and too small to read in print. The
+# boxes carry generous horizontal padding, so the labels are scaled up in place
+# and the fit of the tightest box is asserted below rather than assumed.
+scale_strobe_text <- function(p, k = 1.75) {
+  for (i in seq_along(p$layers)) {
+    sz <- p$layers[[i]]$aes_params$size
+    if (!is.null(sz) && inherits(p$layers[[i]]$geom, "GeomText"))
+      p$layers[[i]]$aes_params$size <- sz * k
+  }
+  p
+}
+
 if (!is.null(strobe) && inherits(strobe, "ggplot")) {
+  strobe <- scale_strobe_text(strobe)
   strobe_white <- strobe +
+    ggplot2::labs(title = NULL, subtitle = NULL) +
     ggplot2::theme(
       plot.background  = ggplot2::element_rect(fill = "white", colour = NA),
       panel.background = ggplot2::element_rect(fill = "white", colour = NA))
@@ -1344,11 +1361,24 @@ if (!is.null(strobe) && inherits(strobe, "ggplot")) {
 # shows both the estimate and its precision, which matters here because the IUI
 # and IVF proportions rest on a single practice each.
 local({
+  OUTDIR_FIG_DATA <- out_dir
   inc_f <- dat[dat$analytic_inclusion, ]; n_f <- nrow(inc_f)
+  # Wilson, via the same package call the manuscript's pci() and Appendix
+  # Table S3 use. This previously called binom.test(), which is Clopper-Pearson,
+  # so the figure and the table that is captioned "numeric detail underlying
+  # Figure 1" printed different intervals for the same six numbers (donor sperm
+  # 0.6-8.7 in the figure against 1.0-8.6 in the table). Methods declares Wilson,
+  # so Wilson it is, computed once.
   svc_row <- function(v, lab) {
-    x <- sum(inc_f[[v]]); ci <- binom.test(x, n_f)$conf.int
-    data.frame(service = lab, k = x, pct = 100 * x / n_f,
-               lo = 100 * ci[1], hi = 100 * ci[2], stringsAsFactors = FALSE)
+    tb <- as.data.frame(mysterycall::mysterycall_prevalence_ci(inc_f, var = v))
+    r  <- tb[tb$category %in% c("TRUE", "1"), ][1, ]
+    x  <- sum(inc_f[[v]])
+    if (nrow(r) == 0 || is.na(r$proportion))
+      return(data.frame(service = lab, k = x, pct = 0, lo = 0, hi = 0,
+                        stringsAsFactors = FALSE))
+    data.frame(service = lab, k = x, pct = 100 * r$proportion,
+               lo = 100 * r$ci_lower, hi = 100 * r$ci_upper,
+               stringsAsFactors = FALSE)
   }
   fp <- rbind(
     svc_row("service_cycle_tracking",      "Cycle tracking"),
@@ -1385,7 +1415,12 @@ local({
         panel.grid.minor = ggplot2::element_blank(),
         panel.grid.major.y = ggplot2::element_blank(),
         plot.background = ggplot2::element_rect(fill = "white", colour = NA),
-        panel.background = ggplot2::element_rect(fill = "white", colour = NA))
+        panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+        # "Hormonal labs / fertility timing" ran flush to the canvas edge.
+        plot.margin = ggplot2::margin(6, 6, 6, 14))
+  # Written out so figure/table agreement can be checked rather than assumed.
+  write.csv(fp, file.path(OUTDIR_FIG_DATA, "fig5_service_forest_data.csv"),
+            row.names = FALSE)
   for (ext in c("png", "tiff")) {
     a <- list(filename = file.path(fig_dir, paste0("fig5_service_forest.", ext)),
               plot = p_forest, width = 8.6, height = 4.2, dpi = 300, bg = "white")

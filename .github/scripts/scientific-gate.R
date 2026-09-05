@@ -249,6 +249,97 @@ try_check("privacy/no-practice-names-in-submission-artifacts", {
 # wondering what it was for.
 # ─────────────────────────────────────────────────────────────────────────────
 
+# INCIDENT: Figure 1 computed its six proportions with binom.test(), which is
+# Clopper-Pearson, while Appendix Table S3 -- captioned "numeric detail
+# underlying Figure 1" -- computed the same six with the Wilson formula. The
+# figure and its own table printed different intervals (donor sperm 0.6-8.7
+# against 1.0-8.6) and every one of the other invariants passed, because all of
+# them read CSVs and none had ever looked at what a figure plots.
+#
+# The rule this enforces is the one manuscript_claims.csv already enforces for
+# text: a number appears in exactly one place in the code. A figure must publish
+# the data it drew so that data can be checked against the table, rather than
+# being an opaque PNG nobody can audit.
+try_check("figures/plotted-values-match-tables", {
+  fd <- file.path(OUT, "fig5_service_forest_data.csv")
+  sv <- file.path(OUT, "mysterycall_service_prevalence.csv")
+  if (!file.exists(fd))
+    return(structure(FALSE, detail = paste(basename(fd),
+      "absent: a figure that does not publish its data cannot be checked against the table it duplicates")))
+  if (!file.exists(sv))
+    return(structure(FALSE, detail = "mysterycall_service_prevalence.csv absent"))
+  f <- read.csv(fd, stringsAsFactors = FALSE)
+  t <- read.csv(sv, stringsAsFactors = FALSE)
+  bad <- character(0)
+
+  # (a) Completeness. Six services, or the figure is not the figure described.
+  if (nrow(f) != 6)
+    bad <- c(bad, sprintf("figure has %d rows, expected 6 services", nrow(f)))
+
+  # (b) Internal coherence: the point must lie inside its own interval, the
+  #     interval must not be inverted, and everything must be a percentage.
+  if (any(f$lo > f$hi))
+    bad <- c(bad, "an interval is inverted (lower above upper)")
+  if (any(f$pct < f$lo - 1e-6 | f$pct > f$hi + 1e-6))
+    bad <- c(bad, "a point estimate lies outside its own confidence interval")
+  if (any(f$lo < 0 | f$hi > 100 | f$pct < 0 | f$pct > 100))
+    bad <- c(bad, "a plotted value falls outside 0 to 100 percent")
+
+  # (c) The count and the percentage must describe the same denominator.
+  #     k/n printed beside a percentage computed from something else is the
+  #     failure a reader can actually see.
+  n_inc <- nrow(read.csv(file.path(OUT, "labubu_cleaned_analysis.csv"),
+                         stringsAsFactors = FALSE))
+  # recover n from the first row rather than assuming it
+  n_fig <- round(f$k[which.max(f$pct)] / (f$pct[which.max(f$pct)] / 100))
+  if (any(abs(100 * f$k / n_fig - f$pct) > 0.05))
+    bad <- c(bad, sprintf("plotted percentages disagree with their own counts over n = %d", n_fig))
+
+  # (d) Colour grouping must come from CLINICAL CATEGORY, not from the observed
+  #     percentage. Deriving it from the data once mislabelled ovulation
+  #     induction, which is a fertility treatment but not a service donor
+  #     conception depends on, and the figure asserted the opposite.
+  required <- c("Works with donor sperm", "Intrauterine insemination (IUI)",
+                "In vitro fertilization (IVF)")
+  if ("grp" %in% names(f)) {
+    lab_req <- "Required to conceive without a male partner"
+    got <- sort(f$service[f$grp == lab_req])
+    if (!identical(got, sort(required)))
+      bad <- c(bad, sprintf("colour grouping is wrong: '%s' contains %s",
+                            lab_req, paste(got, collapse = ", ")))
+  } else {
+    bad <- c(bad, "figure data carries no grouping column; the colour split cannot be checked")
+  }
+
+  # (e) Agreement with the table captioned as this figure's numeric detail.
+  map <- c("Cycle tracking" = "cycle_tracking",
+           "Hormonal labs / fertility timing" = "hormonal_timing",
+           "Ovulation induction" = "ovulation_induction",
+           "Intrauterine insemination (IUI)" = "iui",
+           "In vitro fertilization (IVF)" = "ivf")
+  checked <- 0L
+  for (i in seq_len(nrow(f))) {
+    key <- unname(map[f$service[i]])          # single bracket: NA, not an error
+    if (is.na(key)) next                      # donor sperm has no row in that table
+    r <- t[t$option == key, ]
+    if (!nrow(r)) { bad <- c(bad, paste("no table row for", f$service[i])); next }
+    checked <- checked + 1L
+    if (abs(f$lo[i]  - 100 * r$ci_lower[1])  > 0.05 ||
+        abs(f$hi[i]  - 100 * r$ci_upper[1])  > 0.05 ||
+        abs(f$pct[i] - 100 * r$prevalence[1]) > 0.05)
+      bad <- c(bad, sprintf("%s: figure %.1f (%.1f-%.1f) vs table %.1f (%.1f-%.1f)",
+                            f$service[i], f$pct[i], f$lo[i], f$hi[i],
+                            100 * r$prevalence[1], 100 * r$ci_lower[1], 100 * r$ci_upper[1]))
+  }
+  if (checked == 0)
+    bad <- c(bad, "no figure row matched the table; the comparison could not evaluate")
+
+  structure(length(bad) == 0,
+            detail = if (length(bad)) paste(bad, collapse = "; ")
+                     else sprintf("6 services, %d cross-checked against the table, grouping and intervals coherent",
+                                  checked))
+})
+
 # INCIDENT: the manuscript listed six supplemental items and the supplement did
 # not exist. Three of the six were printed inline in the main text while being
 # listed as supplemental; the other three had no home at all.

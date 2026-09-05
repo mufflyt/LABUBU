@@ -160,6 +160,14 @@ ok <- c(
   # ── Negative controls for the regression invariants ────────────────────────
   # One per mistake actually made. Each injects the defect that occurred.
 
+  mutate_and_test("detects a figure plotting different numbers than its table",
+                  "figures/plotted-values-match-tables", function(dir) {
+    f <- file.path(dir, OUT, "fig5_service_forest_data.csv")
+    d <- utils::read.csv(f, stringsAsFactors = FALSE)
+    d$hi[1] <- d$hi[1] + 0.5        # the Clopper-Pearson/Wilson gap, roughly
+    utils::write.csv(d, f, row.names = FALSE)
+  }),
+
   mutate_and_test("detects a supplemental item promised but never written",
                   "manuscript/sdc-items-resolve", function(dir) {
     f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")

@@ -121,6 +121,7 @@ layers:
     - id: ci/no-duplicate-script-registration
 
     - id: figures/opaque-background
+    - id: figures/plotted-values-match-tables
 
   privacy:
     - id: privacy/callers-de-identified

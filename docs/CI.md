@@ -13,7 +13,7 @@ Three jobs run.
 
 | Job | What it proves | Needs data? |
 |---|---|---|
-| `scientific gate` | The committed outputs satisfy 27 scientific invariants, and the gate is provably able to fail | Only `yaml` |
+| `scientific gate` | The committed outputs satisfy 28 scientific invariants, and the gate is provably able to fail | Only `yaml` |
 | `pipeline execution` | The analysis code runs and *regenerates* its outputs from scratch | Committed fixture |
 | `re-derive from REDCap` | Full run against live REDCap | Manual dispatch only |
 
@@ -49,7 +49,7 @@ vanished". A scheduled job must not change reported results without review.
 
 ## The scientific gate
 
-27 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
+28 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
 claim, not a snapshot of today's numbers.
 
 | Check | Protects against |
@@ -72,6 +72,7 @@ claim, not a snapshot of today's numbers.
 | `manuscript/claims-resolve` | A manuscript claim no longer backed by an estimand |
 | `manuscript/references-consistent` | A citation with no reference entry, a reference nobody cites, or numbering out of first-appearance order |
 | `manuscript/sdc-items-resolve` | A supplemental item promised in the manuscript that the supplement never contains, or vice versa |
+| `figures/plotted-values-match-tables` | A figure plotting different numbers than the table captioned as its numeric detail, an inverted or incoherent interval, a wrong colour grouping, a missing service, or a figure that publishes no data at all |
 | `manuscript/no-duplicate-tables` | A repeated main-text table number, or a table printed in both the manuscript and the supplement |
 | `manuscript/abstract-and-precis-within-limits` | Abstract over 300 words or precis over 25 |
 | `pipeline/default-export-resolvable` | A hardcoded default export filename, which rots as soon as that export is archived |
@@ -219,6 +220,22 @@ repeating is `isochrones-ci`'s reason for existing at all:
 > spots. If a helper is subtly wrong, both the implementation and its tests use
 > the wrong helper, and the suite certifies the wrong answer with total
 > confidence.
+
+### Why figures were where the errors were
+
+Every invariant in this repository read a CSV, a model, or manuscript text.
+None had ever looked at what a figure plots. `figures/opaque-background`
+inspects pixels, not numbers. That was the whole of figure coverage, and it is
+why Figure 1 could compute its six proportions with `binom.test()`
+(Clopper-Pearson) while Appendix Table S3, captioned as that figure's numeric
+detail, computed the same six with the Wilson formula, printing different
+intervals for the same quantities while all 27 checks passed.
+
+The rule now matches the one `manuscript_claims.csv` already enforces for
+prose: **a number is computed in exactly one place, and a figure must publish
+the data it drew.** An opaque PNG cannot be audited by anything. A figure that
+writes `fig5_service_forest_data.csv` can be compared against the table it
+duplicates, and is.
 
 ### Regression invariants
 

@@ -1,0 +1,109 @@
+<!-- Email to LABUBU coauthors. Plain HTML so it pastes into Gmail intact. -->
+<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#111;max-width:760px">
+
+<p><strong>Subject:</strong> LABUBU manuscript ready for your review, plus an honest account of the power problem. Comments by October 1.</p>
+
+<hr>
+
+<p>Sofie, Melanie, Beth, Sam,</p>
+
+<p>The RRM secret shopper manuscript is ready for you to read. Everything is attached: the manuscript with Tables 1 and 2, the three figures, the supplemental digital content with Appendix Tables S1 through S8 and Figure S1, and the draft cover letter for <em>Obstetrics &amp; Gynecology</em>.</p>
+
+<p>I want to be direct with you about one thing before you read it, because it shaped the whole paper: <strong>the study cannot answer the question we originally set out to answer.</strong> It answers a different question, well, and I think that question is more important. Here is the reasoning in full so you can push back on it.</p>
+
+<h3 style="margin-bottom:6px">What the paper now claims</h3>
+
+<p>The primary finding is the service menu. Among the 98 calls that reached staff and completed the service interview:</p>
+
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin:8px 0">
+<tr style="background:#f4f4f4"><th align="left" style="border:1px solid #ddd">Service</th><th align="left" style="border:1px solid #ddd">Offered</th></tr>
+<tr><td style="border:1px solid #ddd">Cycle tracking</td><td style="border:1px solid #ddd">94.9% (95% CI 88.6 to 97.8)</td></tr>
+<tr><td style="border:1px solid #ddd">Hormonal labs and fertility timing</td><td style="border:1px solid #ddd">63.3% (53.4 to 72.1)</td></tr>
+<tr><td style="border:1px solid #ddd">Ovulation induction</td><td style="border:1px solid #ddd">11.2% (6.4 to 19.0)</td></tr>
+<tr><td style="border:1px solid #ddd">Intrauterine insemination</td><td style="border:1px solid #ddd"><strong>1.0% (0.2 to 5.6), one practice</strong></td></tr>
+<tr><td style="border:1px solid #ddd">In vitro fertilization</td><td style="border:1px solid #ddd"><strong>1.0% (0.2 to 5.6), one practice</strong></td></tr>
+<tr><td style="border:1px solid #ddd">Works with donor sperm</td><td style="border:1px solid #ddd"><strong>3.1% (1.0 to 8.6), three practices</strong></td></tr>
+</table>
+
+<p>A single woman or a same sex female couple needs donor sperm and usually IUI or IVF to conceive. Those services are essentially absent from the RRM menu. That is a structural fact about the model of care, not a judgment about how staff treat anyone, and it holds regardless of who answers the phone. It is also the part of the study that is well measured: staff reported it directly in response to a scripted question, it requires no derivation, and it does not depend on which of us placed the call.</p>
+
+<h3 style="margin-bottom:6px">Why we are underpowered for the scheduling question</h3>
+
+<p>We designed this to test whether practices schedule straight couples, lesbian couples, and single mothers differently. Four separate problems mean we cannot answer that, and they compound.</p>
+
+<p><strong>1. The paired design has almost nothing to work with.</strong> In a within practice comparison, only practices that treat two callers <em>differently</em> carry any information. Practices that treat both the same, in either direction, contribute nothing. Concordance was high, which is arguably reassuring, but it leaves us with very few informative practices:</p>
+
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin:8px 0">
+<tr style="background:#f4f4f4"><th align="left" style="border:1px solid #ddd">Comparison</th><th align="left" style="border:1px solid #ddd">Paired practices</th><th align="left" style="border:1px solid #ddd">Discordant</th><th align="left" style="border:1px solid #ddd">Smallest detectable odds ratio at 80% power</th></tr>
+<tr><td style="border:1px solid #ddd">Straight vs single mother</td><td style="border:1px solid #ddd">16</td><td style="border:1px solid #ddd">7</td><td style="border:1px solid #ddd">OR 30.9</td></tr>
+<tr><td style="border:1px solid #ddd">Straight vs lesbian</td><td style="border:1px solid #ddd">19</td><td style="border:1px solid #ddd">8</td><td style="border:1px solid #ddd">OR 35.4</td></tr>
+<tr><td style="border:1px solid #ddd">Lesbian vs single mother</td><td style="border:1px solid #ddd">22</td><td style="border:1px solid #ddd">2</td><td style="border:1px solid #ddd"><strong>None. No effect size is detectable.</strong></td></tr>
+</table>
+
+<p>An odds ratio of 31 is not a real world effect size in access research. Published audit studies find odds ratios in the range of 1.5 to 3. Our floor is an order of magnitude above anything anyone has ever measured, which means a null result here tells you nothing about whether an effect exists.</p>
+
+<p>The last row deserves a sentence of its own. With two discordant practices, the exact McNemar test <em>cannot produce a significant result at any effect size whatsoever</em>. Even if every RRM practice in the country refused single mothers and accepted lesbian couples, two discordant pairs could not reach p &lt; .05. That comparison is not weak, it is structurally incapable of returning an answer.</p>
+
+<p>I should tell you that we had this wrong until recently. The software was computing the detectable effect using a normal approximation, which reported OR 8.1 and 9.0. Those numbers actually deliver about 44% power, not 80%. An independent recalculation from the exact binomial, confirmed by simulating 40,000 trials, gives the correct values above. So the study was roughly four times more underpowered than our earlier drafts admitted. Better that we found it than a reviewer.</p>
+
+<p><strong>2. Caller identity is tangled up with scenario, and no statistical adjustment fixes it.</strong> We did not randomize who called under which scenario. Cramer's V for the caller by scenario association is 0.66, which is very high. One caller placed 53 of the 77 straight couple calls and zero single mother calls. Two of the three comparisons have <em>no caller at all</em> who placed calls under both scenarios, which means for those comparisons the scenario column and the caller column are literally the same data. You cannot adjust for a variable that is collinear with your exposure.</p>
+
+<p>We can now put a number on how much this matters. In a variance components model, the share of variance lying between callers rather than within them is:</p>
+
+<ul style="margin-top:4px">
+<li>0.29 for whether a live office was reached</li>
+<li>0.31 for inferred appointment availability</li>
+<li>0.36 for the business day wait</li>
+</ul>
+
+<p>Roughly a third of what we measured tracks <em>who dialed the phone</em>. That is the same order of magnitude as any scenario effect this study could have detected.</p>
+
+<p><strong>3. The scheduling outcome is derived, not measured.</strong> The REDCap instrument never asked "did they agree to schedule you?". We infer availability from whether an appointment date got written down. Throughout the paper this is called "appointment availability inferred from call documentation" rather than "the practice offered an appointment", because the second phrasing would assert something we never measured. This is named as the study's principal measurement limitation.</p>
+
+<p><strong>4. Documentation completeness differs by arm, in the same direction as the outcome.</strong> Among calls that reached staff, the appointment date is missing for 28.2% of straight couple calls, 62.2% of lesbian couple calls, and 53.1% of single mother calls. Since the outcome is read off that date, a call that was written up less completely scores as less available regardless of what the practice actually said. Differential documentation and differential availability are confounded and we cannot separate them. The direction of that asymmetry matches the direction of the exploratory finding, which is a reason to trust that finding less, not more.</p>
+
+<h3 style="margin-bottom:6px">What we do with the scheduling analysis</h3>
+
+<p>We keep it, clearly labeled exploratory, with the detectable effect floor printed next to every comparison and no p values used to support conclusions. We also report what the data <em>exclude</em> rather than only what we failed to detect, which is more useful. For straight versus single mother the paired difference is +31 percentage points with a 95% interval running from 7 points in the other direction to 43 points. That interval is compatible with a large disadvantage and also with no disadvantage, and saying so plainly is more honest than "no significant difference."</p>
+
+<p>My view is that reporting it transparently is better than dropping it. A reader who wonders whether we looked at differential scheduling should find our answer and its limits rather than silence. If any of you disagree and would rather cut it entirely, say so and I will make the case for your version.</p>
+
+<h3 style="margin-bottom:6px">One instrument problem you should know about</h3>
+
+<p>The instrument had three checkboxes asking about "restrictions to the individuals you would provide care to". On paper that is the only direct measure of discrimination we collected. We are excluding it from every analysis and I want to explain why, because it is not a judgment about anyone's work.</p>
+
+<p>The codebook defines a checked box as a restriction applying to that group. The recorded data follow two different conventions depending on who filled in the form. On some records all three boxes are checked, which under the codebook definition would mean the practice serves nobody, and clearly means the opposite. On other records only the box matching the scenario the caller was running is checked, which echoes the assignment rather than describing the practice. Both are entirely reasonable readings of an ambiguous question. The field had no note, no branching logic, and no instruction, so it invited exactly this. On top of that, a quarter of calls record no caller, so those records cannot be attributed to either convention.</p>
+
+<p>The conclusion is that the item cannot be recovered by asking us what we meant, because two different conventions cannot be merged into one measurement after the fact. It is a question design failure, not a data entry failure. The fix for a future wave is three separate yes/no questions with the direction stated in the stem, made required, with the caller recorded on every record.</p>
+
+<h3 style="margin-bottom:6px">What is attached</h3>
+
+<ul>
+<li><strong>labubu_mysterycall_manuscript.docx</strong>, the full manuscript. Abstract 267 words, precis 22 words, body roughly 3,350. Table 1 is the access cascade by scenario, Table 2 is the paired analysis.</li>
+<li><strong>supplemental_digital_content.docx</strong>, Appendix Tables S1 through S8 and Figure S1. S1 is the caller concentration and which comparisons can be separated from caller effects, S2 is documentation completeness by arm, S3 is the service numbers behind Figure 1, S4 is the STROBE checklist, S5 is the duplicate call adjudication, S6 is the restriction checkbox evidence, S7 is the caller variance components, S8 is what the intervals exclude.</li>
+<li><strong>fig5_service_forest.tiff</strong>, Figure 1, the service menu with confidence intervals. This is the paper's main figure.</li>
+<li><strong>fig0_strobe_flow.tiff</strong>, Figure 2, STROBE flow for the whole cohort. 234 calls placed, 108 reached a live office, 102 eligible, 57 with an observed appointment date.</li>
+<li><strong>fig0b_strobe_flow_by_scenario.tiff</strong>, Figure 3, the same flow split by scenario. Read it alongside Appendix Table S2, since the arms enter at similar widths and leave at very different ones partly because of documentation.</li>
+<li><strong>cover_letter_GREEN_JOURNAL.docx</strong>, the draft cover letter. Suggested reviewers and prior presentation are still blank.</li>
+</ul>
+
+<h3 style="margin-bottom:6px">Timeline</h3>
+
+<p>Please send me comments, corrections, disagreements, and rewrites <strong>by October 1</strong>. I will make every change I can and I would genuinely rather hear that I have framed something wrong now than after a reviewer says it.</p>
+
+<p>After October 1 I am handing the manuscript over. Revisions, submission, and reviewer responses become the responsibility of the remaining authors. That is not a threat or a deadline for its own sake, it is so nobody is waiting on me and the paper does not stall. If you need more time, tell me before October 1 and we will work it out.</p>
+
+<p>Specific things I would most like your eyes on:</p>
+<ul>
+<li>Whether the structural framing of the service menu finding is right, or whether it overreaches</li>
+<li>Whether to keep or cut the exploratory scheduling analysis</li>
+<li>Whether the restriction checkbox explanation is fair to how the data were collected</li>
+<li>Anything in the Discussion that reads as stronger than the data support</li>
+<li>Authorship order and the disclosure statements</li>
+</ul>
+
+<p>Thanks, all. This turned into a more interesting paper than the one we planned.</p>
+
+<p>Tyler</p>
+
+</div>

@@ -570,7 +570,7 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 
 ## FIGURE LEGENDS
 
-**Figure 1.** Reproductive services offered by Restorative Reproductive Medicine practices, among the `r N_INC` calls that reached staff and completed the service interview. Points are proportions with 95% Clopper-Pearson confidence intervals; the dotted line marks 50%. Services shown in red are those a patient requires to conceive without a male partner. Intrauterine insemination and in vitro fertilization each rest on a single practice, which the intervals reflect.
+**Figure 1.** Reproductive services offered by Restorative Reproductive Medicine practices, among the `r N_INC` calls that reached staff and completed the service interview. Points are proportions with 95% Wilson score confidence intervals, the same intervals reported in Appendix Table S3 and throughout the text; the dotted line marks 50%. Services shown in red are those a patient requires to conceive without a male partner. Intrauterine insemination and in vitro fertilization each rest on a single practice, which the intervals reflect.
 
 **Figure 2.** STROBE flow for the whole cohort. Of `r N_REC` calls placed, `r sum(!is.na(d$call_date))` had a call date recorded, `r N_RCH` reached a live office, `r N_OFFER` were eligible for the appointment-availability analysis, and `r N_WAIT` had an observed appointment date. Exclusions are itemized by disposition code.
 
