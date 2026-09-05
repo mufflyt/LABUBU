@@ -1,0 +1,17 @@
+record_id,practice_key,scenario,call_date,exclusion_reason,analytic_inclusion
+141,[redacted],Lesbian couple,NA,Went to voicemail,FALSE
+142,[redacted],Lesbian couple,NA,Went to voicemail,FALSE
+22,"Armando Garza, MD (TX)",Straight couple,2026-06-01,Number contacted did not correspond to expected office/specialty,FALSE
+30,"Armando Garza, MD (TX)",Straight couple,NA,Number contacted did not correspond to expected office/specialty,FALSE
+93,"Briana Mueller, FCP (Donum FertilityCare Center SD)",Lesbian couple,2026-06-01,Greater than 5 minutes on hold,FALSE
+102,"Briana Mueller, FCP (Donum FertilityCare Center SD)",Lesbian couple,2026-06-02,Went to voicemail,FALSE
+177,FertilityCare Center of the Big Horns (WY),Single mother,NA,Went to voicemail,FALSE
+179,FertilityCare Center of the Big Horns (WY),Single mother,2026-06-30,Included where physician was able to be contacted,TRUE
+126,Flourish FertilityCare (AL),Lesbian couple,2026-06-05,Included where physician was able to be contacted,TRUE
+156,Flourish FertilityCare (AL),Lesbian couple,NA,Included where physician was able to be contacted,TRUE
+164,Holy Family FertilityCare (MN),Straight couple,2026-06-10,Included where physician was able to be contacted,TRUE
+193,Holy Family FertilityCare (MN),Straight couple,2026-06-30,Included where physician was able to be contacted,TRUE
+37,"Sarah Pederson, MD (Westminster, CO)",Straight couple,2026-06-01,Went to voicemail,FALSE
+198,"Sarah Pederson, MD (Westminster, CO)",Straight couple,2026-07-14,Included where physician was able to be contacted,TRUE
+56,"Teresa Studer, M.D. (IA)",Straight couple,2026-06-01,Greater than 5 minutes on hold,FALSE
+163,"Teresa Studer, M.D. (IA)",Straight couple,2026-06-05,Went to voicemail,FALSE

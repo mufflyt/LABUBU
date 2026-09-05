@@ -146,6 +146,9 @@ jobs:
       - name: Pipeline completion receipt
         run: Rscript .github/scripts/pipeline-receipt.R
 
+      - name: Data contract
+        run: Rscript .github/scripts/data-contract.R
+
       - name: Scientific gate
         run: Rscript .github/scripts/scientific-gate.R
 

@@ -175,6 +175,10 @@ jobs:
       - name: Pipeline completion receipt
         run: Rscript .github/scripts/pipeline-receipt.R
 
+      # Row-level structural assertions, reported with offending record ids.
+      - name: Data contract
+        run: Rscript .github/scripts/data-contract.R
+
       - name: Scientific gate on freshly generated outputs
         run: Rscript .github/scripts/scientific-gate.R
 
