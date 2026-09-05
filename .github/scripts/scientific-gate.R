@@ -250,13 +250,16 @@ try_check("restriction/excluded-from-inference", {
     pipeline_src)
   # A model call spans several lines; inspect each call and the lines that
   # follow it up to the closing paren.
+  # Search the whole window rather than truncating at the first ")": a
+  # mysterycall_*() call opens its paren on the first line and the arguments
+  # follow, so truncating there cut the window off before `outcome =` and the
+  # check silently saw nothing. Over-capturing a few lines is the safe error.
   for (start in model_lines) {
     window <- pipeline_src[start:min(start + 12L, length(pipeline_src))]
     text   <- paste(window, collapse = " ")
-    text   <- sub("\\).*$", "", text)
     for (v in restriction_vars)
       if (grepl(v, text, fixed = TRUE))
-        offenders <- c(offenders, paste0(v, " in a model at line ", start))
+        offenders <- c(offenders, paste0(v, " near a model call at line ", start))
   }
 
   for (f in c("estimands.csv", "manuscript_claims.csv")) {
