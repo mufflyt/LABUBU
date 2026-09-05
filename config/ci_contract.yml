@@ -89,6 +89,8 @@ layers:
 
     - id: restriction/excluded-from-inference
 
+    - id: figures/opaque-background
+
   privacy:
     - id: privacy/callers-de-identified
     - id: privacy/no-contact-details-in-artifacts

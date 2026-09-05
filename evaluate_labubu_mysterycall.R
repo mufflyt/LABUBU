@@ -1091,6 +1091,36 @@ strobe <- tryCatch(
   ),
   error = function(e) { message("STROBE flow not drawn: ", conditionMessage(e)); NULL })
 
+# Paint the STROBE figure onto white.
+#
+# mysterycall_strobe_flow() builds on theme_void(), which leaves the plot
+# background blank; ggsave() honours that and writes an alpha channel, so the
+# PNG came out 72% fully transparent. The diagram is black text and black box
+# outlines, so it renders correctly on a white page and disappears against any
+# dark viewer or dark-mode PDF reader -- it looks fine right up until it does
+# not.
+#
+# Fixed upstream in mufflyt/mysterycall#260. This re-save keeps LABUBU correct
+# at the currently pinned SHA and is harmless once that lands; the
+# figures/opaque-background gate check is what actually holds the line.
+if (!is.null(strobe) && inherits(strobe, "ggplot")) {
+  strobe_white <- strobe +
+    ggplot2::theme(
+      plot.background  = ggplot2::element_rect(fill = "white", colour = NA),
+      panel.background = ggplot2::element_rect(fill = "white", colour = NA))
+  for (ext in c("png", "tiff")) {
+    target <- file.path(fig_dir, paste0("fig0_strobe_flow.", ext))
+    # `compression` is a TIFF-only argument; passing it as NULL to the PNG
+    # device is still passing it, and ggsave() rejects it outright.
+    save_args <- list(filename = target, plot = strobe_white,
+                      width = 9, height = 11, dpi = 300, bg = "white")
+    if (ext == "tiff") save_args$compression <- "lzw"
+    tryCatch(do.call(ggplot2::ggsave, save_args),
+             error = function(e) message("STROBE re-save failed for ", ext, ": ",
+                                         conditionMessage(e)))
+  }
+}
+
 # ── Issue IDs ─────────────────────────────────────────────────────────────────
 issue_ids <- list(
   missing_scenario                    = dat$record_id[is.na(dat$scenario)],
