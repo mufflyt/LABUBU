@@ -177,6 +177,16 @@ jobs:
             exit 0
           fi
 
+          # PROVENANCE.md and the evaluation report stamp a generation time and
+          # the current commit, and ggplot re-renders figures byte-differently
+          # every run. Without this, the nightly would open a pull request
+          # every night regardless of whether anything scientific moved --
+          # which trains reviewers to ignore nightly PRs.
+          if ! Rscript .github/scripts/check-drift.R; then
+            echo "DRIFT=cosmetic" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
           BRANCH="nightly/refresh-$(date -u +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git commit -m "Nightly refresh: regenerated outputs differ from main
