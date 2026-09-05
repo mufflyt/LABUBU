@@ -81,8 +81,17 @@ for fertility practices, and the ordering straight > lesbian > single mother is
 exactly what "groups this practice **will** serve" would produce. Reading the
 data against the label is what suggests the field was used inversely.
 
+**CI now enforces the exclusion.** `restriction/excluded-from-inference` fails
+the build if a restriction variable is used as a model outcome or predictor, or
+appears as a reported estimand or manuscript claim. Descriptive tabulation for
+review stays allowed; the point is that these must not become evidence while
+their meaning is unknown.
+
 **Still needed, and not inferable from the export:** confirmation from the
-callers or the PI of what they recorded when they ticked a box. Deciding this
+callers of what they recorded when they ticked a box. The exact wording to
+send, the pre-set decision rule, and why the frequency pattern must not settle
+it are in `docs/PI-QUERY-restriction-checkbox.md`. Ask every caller who entered
+data; if answers conflict, the variable is unusable for this wave. Deciding this
 from the frequency pattern alone would be reverse-coding on intuition, which
 this decision explicitly rules out — and it is the one reading that would
 reverse the direction of a discrimination finding.

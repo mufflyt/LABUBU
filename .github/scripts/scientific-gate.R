@@ -225,6 +225,56 @@ try_check("manuscript/claims-resolve", {
             else paste(nrow(claims), "claims resolve"))
 })
 
+# ── 5e. The restriction checkboxes stay out of inferential analysis ───────────
+# Their semantics are unresolved: the REDCap label reads as marking a
+# RESTRICTED group, while the response pattern (straight 37 > lesbian 27 >
+# single mother 19) is what marking groups SERVED would produce. Deciding
+# between those readings from the frequencies would be reverse-coding on
+# intuition, and it is the one reading that would flip the direction of a
+# discrimination finding.
+#
+# Excluding them by convention is not enough -- a future model specification
+# could pull them in without anyone noticing. This fails the build if a
+# restriction variable is used as a model outcome or predictor, or appears as a
+# reported estimand or manuscript claim. Descriptive tabulation for review
+# (restriction_checkbox_review.csv, table1) stays allowed: the point is that
+# they must not become evidence.
+try_check("restriction/excluded-from-inference", {
+  restriction_vars <- c("restrict_lesbian", "restrict_straight",
+                        "restrict_single_mother")
+  offenders <- character(0)
+
+  pipeline_src <- readLines("evaluate_labubu_mysterycall.R", warn = FALSE)
+  model_lines <- grep(
+    "mysterycall_(logistic_model|lmm|gee|hurdle_wait|poisson_model)\\(|glmer\\(|geeglm\\(|lmer\\(",
+    pipeline_src)
+  # A model call spans several lines; inspect each call and the lines that
+  # follow it up to the closing paren.
+  for (start in model_lines) {
+    window <- pipeline_src[start:min(start + 12L, length(pipeline_src))]
+    text   <- paste(window, collapse = " ")
+    text   <- sub("\\).*$", "", text)
+    for (v in restriction_vars)
+      if (grepl(v, text, fixed = TRUE))
+        offenders <- c(offenders, paste0(v, " in a model at line ", start))
+  }
+
+  for (f in c("estimands.csv", "manuscript_claims.csv")) {
+    path <- file.path(OUT, f)
+    if (!file.exists(path)) next
+    txt <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    for (v in restriction_vars)
+      if (grepl(v, txt, fixed = TRUE))
+        offenders <- c(offenders, paste0(v, " reported in ", f))
+  }
+
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste("restriction variables entered inference:",
+                    paste(offenders, collapse = "; "))
+            else "3 restriction variables held out of inference")
+})
+
 # ── 6. Caller confounding must be surfaced ────────────────────────────────────
 try_check("report/caller-confounding-reported", {
   f <- file.path(OUT, "caller_dominance_by_scenario.csv")

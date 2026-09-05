@@ -87,6 +87,8 @@ layers:
     - id: report/models-present
     - id: report/caller-confounding-reported
 
+    - id: restriction/excluded-from-inference
+
   privacy:
     - id: privacy/callers-de-identified
     - id: privacy/no-contact-details-in-artifacts
