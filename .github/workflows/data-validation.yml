@@ -187,6 +187,9 @@ jobs:
       - name: Estimand report
         run: Rscript .github/scripts/estimand-report.R
 
+      - name: Manuscript claims
+        run: Rscript .github/scripts/manuscript-claims.R
+
       - name: Manuscript render
         run: Rscript .github/scripts/check-manuscript-render.R
 

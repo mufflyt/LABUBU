@@ -1,0 +1,21 @@
+claim_id,claim,estimand_id,estimate,lower,upper,n
+offer_straight,"strict offer prevalence, straight couple",offer_strict_straight_couple,75.7,NA,NA,37
+offer_lesbian,"strict offer prevalence, lesbian couple",offer_strict_lesbian_couple,42.4,NA,NA,34
+offer_single_mother,"strict offer prevalence, single mother",offer_strict_single_mother,50,NA,NA,31
+offer_broad_straight,"broad offer prevalence, straight couple",offer_broad_straight_couple,78.4,NA,NA,37
+offer_broad_lesbian,"broad offer prevalence, lesbian couple",offer_broad_lesbian_couple,60.6,NA,NA,34
+offer_broad_single,"broad offer prevalence, single mother",offer_broad_single_mother,60,NA,NA,31
+or_triad_lesbian,"triad offer OR, lesbian vs straight",or_triad_lesbian_couple,0.03894,0.005498,0.275787,76
+or_triad_single_mother,"triad offer OR, single mother vs straight",or_triad_single_mother,0.094544,0.013796,0.64793,76
+or_broad_lesbian,"broad-definition OR, lesbian vs straight",or_broad_lesbian_couple,0.308118,0.076201,1.24587,100
+or_broad_single_mother,"broad-definition OR, single mother vs straight",or_broad_single_mother,0.285491,0.064211,1.269326,100
+gmr_wait_lesbian,"wait GMR, lesbian vs straight",gmr_wait_lesbian_couple,0.826118,0.468526,1.456635,57
+gmr_wait_single_mother,"wait GMR, single mother vs straight",gmr_wait_single_mother,0.818855,0.462761,1.448965,57
+service_cycle_tracking,cycle tracking offered,service_cycle_tracking,94.9,88.6,97.8,98
+service_iui,IUI offered,service_iui,1,0.2,5.6,98
+service_ivf,IVF offered,service_ivf,1,0.2,5.6,98
+n_calls,calls placed,n_all_calls,234,NA,NA,NA
+n_reached,calls reaching a live office,n_reached,108,NA,NA,NA
+n_offer_eligible,offer-eligible calls,n_offer_eligible,102,NA,NA,NA
+n_complete_triads,practices with all three scenarios,n_complete_triads,48,NA,NA,NA
+caller_cramers_v,caller x scenario association,caller_scenario_cramers_v,0.664,NA,NA,NA

@@ -202,6 +202,14 @@ ok <- c(
                file.path(dir, OUT, "leaky_artifact.csv"))
   }),
 
+  mutate_and_test("detects manuscript claim losing its estimand",
+                  "manuscript/claims-resolve", function(dir) {
+    f <- file.path(dir, OUT, "manuscript_claims.csv")
+    cc <- read.csv(f, stringsAsFactors = FALSE)
+    cc$estimand_id[1] <- "an_estimand_that_no_longer_exists"
+    write.csv(cc, f, row.names = FALSE)
+  }),
+
   # The skip must not swallow real drift: provenance naming an export that is
   # not the one actually present is a FAILURE, not a skip.
   mutate_and_test("detects provenance naming wrong export",

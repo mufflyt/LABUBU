@@ -214,6 +214,23 @@ pci <- function(data, var, digits = 1) {
 }
 svc <- function(v) pci(inc, v)
 
+# ── Manuscript claims ─────────────────────────────────────────────────────────
+# Headline numbers are looked up by claim id from the generated claims table,
+# not recomputed here. Two scripts computing "the offer rate" over different
+# denominators is the failure this prevents: a claim either resolves to a row
+# in manuscript_claims.csv or the render stops.
+claims_path <- file.path(OUT, "manuscript_claims.csv")
+claims <- if (file.exists(claims_path)) rd("manuscript_claims.csv") else NULL
+
+claim <- function(id, field = "estimate") {
+  if (is.null(claims)) stop("manuscript_claims.csv is absent; run ",
+                            ".github/scripts/manuscript-claims.R")
+  row <- claims[claims$claim_id == id, ]
+  if (!nrow(row)) stop("no such manuscript claim: ", id)
+  row[[field]][1]
+}
+claim_pct <- function(id, digits = 1) sprintf(paste0("%.", digits, "f%%"), claim(id))
+
 N_REC   <- nrow(d); N_PRAC <- dplyr::n_distinct(d$practice_id)
 N_RCH   <- nrow(rch); N_INC <- nrow(inc); N_OFFER <- nrow(oa); N_WAIT <- nrow(wsub)
 N_TRIAD <- sum(cov$n_scenarios == 3)
@@ -320,7 +337,7 @@ OBJECTIVE: To characterize reproductive health services offered by Restorative R
 
 METHODS: In a national mystery-caller (secret shopper) audit, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. Each practice was eligible for one call per scenario. Because the data-collection instrument contained no explicit "was an appointment offered" item, the offer outcome was derived: a call was scored as offered when a first-available appointment date was recorded, and as not offered when the practice stated it was not accepting new patients; a sensitivity definition additionally counted a concrete scheduling timeframe as an offer. Reaching a live office and being offered an appointment were analyzed as separate cascade stages. Mixed-effects logistic regression with a practice random intercept was fitted to complete practice triads; within-practice matched contrasts used exact McNemar tests with minimum detectable effect (MDE) specifications.
 
-RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices. A live office was reached on `r pci(d, "reached")` of calls; `r N_OFFER` calls were eligible for the offer analysis and `r N_TRIAD` practices completed all three scenarios. Among calls reaching staff (N = `r N_INC`), cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Appointment-offer rates were `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Straight couple"])` for straight couples, `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Lesbian couple"])` for lesbian couples, and `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Single mother"])` for single mothers. In complete-triad mixed-effects logistic regression, relative to straight couples, the odds of an appointment offer were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples (p = `r orp(fit_offer_triad, "scenarioLesbian couple")`) and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers (p = `r orp(fit_offer_triad, "scenarioSingle mother")`). Under the broader offer definition these attenuated to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` and OR `r orci(fit_offer_broad, "scenarioSingle mother")` respectively. Caller identity was strongly associated with scenario (Cramér's V = `r cram`), so scenario and caller effects are not separately identifiable.
+RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices. A live office was reached on `r pci(d, "reached")` of calls; `r N_OFFER` calls were eligible for the offer analysis and `r N_TRIAD` practices completed all three scenarios. Among calls reaching staff (N = `r N_INC`), cycle tracking was offered by `r svc("service_cycle_tracking")`, ovulation induction by `r svc("service_ovulation_induction")`, intrauterine insemination (IUI) by `r svc("service_iui")`, in vitro fertilization (IVF) by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. Appointment-offer rates were `r claim_pct("offer_straight")` for straight couples, `r claim_pct("offer_lesbian")` for lesbian couples, and `r claim_pct("offer_single_mother")` for single mothers. In complete-triad mixed-effects logistic regression, relative to straight couples, the odds of an appointment offer were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples (p = `r orp(fit_offer_triad, "scenarioLesbian couple")`) and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers (p = `r orp(fit_offer_triad, "scenarioSingle mother")`). Under the broader offer definition these attenuated to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` and OR `r orci(fit_offer_broad, "scenarioSingle mother")` respectively. Caller identity was strongly associated with scenario (Cramér's V = `r cram`), so scenario and caller effects are not separately identifiable.
 
 CONCLUSION: RRM practices uniformly provide cycle tracking but rarely provide IUI, IVF, or donor sperm care, a structural service limitation for single mothers and same-sex couples that does not depend on staff attitudes. Apparent differences in appointment offers by caller identity were sensitive to the outcome definition and confounded with caller assignment, and should be regarded as hypothesis-generating.
 
@@ -413,7 +430,7 @@ kable(t2, caption = sprintf("Table 2. Reproductive healthcare services offered b
 Cycle tracking was offered in `r svc("service_cycle_tracking")` of encounters. In contrast, IUI was offered in `r svc("service_iui")`, IVF in `r svc("service_ivf")`, and donor sperm management in `r svc("donor_sperm_yes")`. The IUI and IVF counts each reflect a single practice and should be read as an upper bound on availability rather than a stable rate estimate.
 
 ### Appointment Offers by Caller Identity
-Appointment-offer rates among offer-eligible calls were `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Straight couple"])` for straight couples, `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Lesbian couple"])` for lesbian couples, and `r sprintf("%.1f%%", casc$pct_offered_strict[casc$scenario == "Single mother"])` for single mothers (Table 1).
+Appointment-offer rates among offer-eligible calls were `r claim_pct("offer_straight")` for straight couples, `r claim_pct("offer_lesbian")` for lesbian couples, and `r claim_pct("offer_single_mother")` for single mothers (Table 1).
 
 In complete-triad mixed-effects logistic regression (N = `r N_TRIAD` practices), relative to straight-couple callers, the odds of an appointment offer were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples (p = `r orp(fit_offer_triad, "scenarioLesbian couple")`) and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers (p = `r orp(fit_offer_triad, "scenarioSingle mother")`). The confidence intervals span orders of magnitude, reflecting near-separation at this sample size; direction is interpretable, magnitude is not.
 
