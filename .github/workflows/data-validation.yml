@@ -80,6 +80,9 @@ jobs:
       - name: CI contract coverage
         run: Rscript .github/scripts/check-ci-contract.R
 
+      - name: Documentation sync
+        run: Rscript .github/scripts/check-docs-sync.R
+
       - name: Gate self-test
         run: Rscript .github/scripts/gate-selftest.R
 
