@@ -773,6 +773,50 @@ restrict_pattern <- local({
   out[order(-out$n, out$caller), ]
 })
 
+# ── CALLER ICC and PRECISION ─────────────────────────────────────────────────
+# Two analyses borrowed from the sibling urogynecology mystery-caller study,
+# mufflyt/lizeth (Acosta & Muffly, "The Clock is Ticking"):
+#
+#   caller_icc.R          variance-components ICC for the caller
+#   null_verification.R   "what the CIs RULE OUT", section 2
+#
+# Both address weaknesses LABUBU currently argues qualitatively. The caller ICC
+# puts a number on caller confounding, which we otherwise support with Cramer's
+# V, overlap counts and a non-identifiable adjusted model. The precision
+# analysis converts a null into the statement a reader actually needs: not
+# "no significant difference" but "our data are compatible with anything up to
+# this much".
+#
+# lizeth hit our exact problem and documented the fallback: a paired ICC was
+# unusable there with only one complete same-office caller pair, so a
+# mixed-model variance-components ICC was used instead. The same applies here.
+caller_icc <- local({
+  icc_of <- function(value, group) {
+    keep  <- !is.na(value) & !is.na(group) & nzchar(as.character(group))
+    v <- as.numeric(value[keep]); g <- factor(as.character(group[keep]))
+    g <- droplevels(g[table(g)[as.character(g)] >= 2])       # singletons carry no within-variance
+    v <- v[as.character(factor(as.character(group[keep]))) %in% levels(g)]
+    k <- nlevels(g); N <- length(v)
+    if (k < 2 || N <= k) return(c(icc = NA_real_, k = k, n = N))
+    ni <- as.numeric(table(g)); gm <- tapply(v, g, mean)
+    msb <- sum(ni * (gm - mean(v))^2) / (k - 1)
+    msw <- sum((v - gm[as.character(g)])^2) / (N - k)
+    n0  <- (N - sum(ni^2) / N) / (k - 1)
+    c(icc = max(0, min(1, (msb - msw) / (msb + (n0 - 1) * msw))), k = k, n = N)
+  }
+  wsub_i <- dat[!is.na(dat$business_days) & dat$business_days >= 0, ]
+  offer_i <- dat[na_false(dat$in_offer_den) & !is.na(dat$appt_offered), ]
+  rbind(
+    data.frame(outcome = "Business-day wait",
+               t(icc_of(wsub_i$business_days, wsub_i$caller)), stringsAsFactors = FALSE),
+    data.frame(outcome = "Inferred appointment availability",
+               t(icc_of(offer_i$appt_offered, offer_i$caller)), stringsAsFactors = FALSE),
+    data.frame(outcome = "Reached a live office",
+               t(icc_of(as.integer(na_false(dat$reached)), dat$caller)), stringsAsFactors = FALSE))
+})
+names(caller_icc) <- c("outcome", "icc", "n_callers", "n_calls")
+
+
 # ── MISSINGNESS — Little's MCAR instead of an asserted MAR ───────────────────
 mcar <- tryCatch(
   build_missingness_mcar_table(
@@ -1125,6 +1169,33 @@ paired_mcnemar <- function(wide) {
 # are excluded (rule = "primary"), so `n_paired` here is smaller than the raw
 # count of practices called for both scenarios -- deliberately.
 paired_acc_df     <- paired_mcnemar(wide_acc)
+
+# Precision: what the paired intervals RULE OUT. A minimum detectable effect
+# says what the design could have found; this says what the data actually
+# exclude, on the percentage-point scale the reader thinks in.
+precision_bounds <- local({
+  rows <- list()
+  for (i in seq_len(nrow(paired_acc_df))) {
+    b <- paired_acc_df$disc_favor_A[i]; cc <- paired_acc_df$disc_favor_B[i]
+    n <- paired_acc_df$n_paired[i]
+    if (is.na(n) || n < 1) next
+    # Exact CI for the paired difference in proportions via the discordant
+    # split: (b - c)/n with a Clopper-Pearson interval on b/(b+c) mapped back.
+    d  <- b + cc
+    est <- (b - cc) / n
+    if (d == 0) { lo <- hi <- 0 } else {
+      ci <- c(qbeta(0.025, b, d - b + 1), qbeta(0.975, b + 1, d - b))
+      ci[is.na(ci)] <- c(0, 1)[is.na(ci)]
+      lo <- (2 * ci[1] - 1) * d / n
+      hi <- (2 * ci[2] - 1) * d / n
+    }
+    rows[[length(rows) + 1]] <- data.frame(
+      contrast = paired_acc_df$contrast[i], n_paired = n, discordant = d,
+      diff_pp = 100 * est, lower_pp = 100 * lo, upper_pp = 100 * hi,
+      stringsAsFactors = FALSE)
+  }
+  do.call(rbind, rows)
+})
 # SECONDARY: reachability, within practice (what the old table reported).
 paired_reached_df <- paired_mcnemar(wide_reached)
 
@@ -1193,6 +1264,8 @@ if (!is.null(caller_stratified))
 write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
 write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
 write.csv(restrict_pattern,             file.path(out_dir, "restriction_checkbox_by_caller.csv"),                       row.names = FALSE)
+write.csv(caller_icc,                   file.path(out_dir, "caller_icc.csv"),                                          row.names = FALSE)
+write.csv(precision_bounds,             file.path(out_dir, "precision_bounds.csv"),                                    row.names = FALSE)
 if (!is.null(service_prev))
   write.csv(service_prev,               file.path(out_dir, "mysterycall_service_prevalence.csv"),                       row.names = FALSE)
 if (!is.null(mcar) && !is.null(mcar$missingness))

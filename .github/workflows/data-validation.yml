@@ -93,6 +93,9 @@ jobs:
       - name: Reference cross-check
         run: Rscript .github/scripts/check-reference-crosscheck.R
 
+      - name: Metamorphic invariance
+        run: Rscript .github/scripts/check-metamorphic.R
+
       - name: Upload CI artifacts
         if: always()
         uses: actions/upload-artifact@v4

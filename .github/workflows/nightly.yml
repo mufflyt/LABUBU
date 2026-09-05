@@ -159,6 +159,14 @@ jobs:
       - name: Reference cross-check
         run: Rscript .github/scripts/check-reference-crosscheck.R
 
+      - name: Metamorphic invariance
+        run: Rscript .github/scripts/check-metamorphic.R
+
+      # Breaks the analysis code and requires the responsible check to go red.
+      # One full pipeline run per mutant, so nightly only.
+      - name: Mutation sabotage
+        run: Rscript .github/scripts/mutation-sabotage.R
+
       # Headline estimands in one diffable table, then classified against the
       # committed baseline. Exit 2 means something moved beyond tolerance and a
       # human should look; it does not fail the run on its own, because the

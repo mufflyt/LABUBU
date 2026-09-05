@@ -31,6 +31,8 @@ miss  <- rd("missingness_by_arm.csv")
 strb  <- rd("strobe_checklist.csv")
 dups  <- rd("duplicate_practice_scenario_calls.csv")
 rpat  <- rd("restriction_checkbox_by_caller.csv")
+cicc  <- rd("caller_icc.csv")
+prec  <- rd("precision_bounds.csv")
 devs  <- rd("protocol_deviation_cells.csv")
 
 tf   <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
@@ -185,6 +187,47 @@ kable(devs |> transmute(
   `Completed calls`     = n_completed,
   Disposition           = "Excluded from the primary paired analysis as a protocol deviation"),
   caption = "Table S5b. Cells with two protocol-valid completed calls. Practices are identified by study ID only.")
+```
+
+---
+
+## Appendix Table S7. Caller variance components
+
+The proportion of outcome variance lying between callers rather than within
+them, from a one-way variance-components model. A scenario arm dominated by a
+single caller cannot be read as a scenario effect when this much of the
+variation tracks who placed the call. Method follows the sibling urogynecology
+mystery-caller study (mufflyt/lizeth, `caller_icc.R`), which reached the same
+fallback: a paired inter-caller ICC is not estimable with so few practices
+called by two callers, so a variance-components ICC is used instead.
+
+```{r S7}
+kable(cicc |> transmute(
+  Outcome            = outcome,
+  ICC                = ifelse(is.na(icc), "not estimable", sprintf("%.2f", icc)),
+  `Callers`          = n_callers,
+  `Calls`            = n_calls),
+  caption = "Table S7. Proportion of outcome variance attributable to the caller.")
+```
+
+---
+
+## Appendix Table S8. What the paired intervals exclude
+
+A minimum detectable effect states what the design could have found. This
+states what the data actually rule out, on the percentage-point scale. The
+upper limit of each interval is the largest disadvantage compatible with these
+data. Presentation follows mufflyt/lizeth, `null_verification.R`: "the upper CI
+is the LARGEST delay compatible with our data."
+
+```{r S8}
+kable(prec |> transmute(
+  Contrast             = contrast,
+  `Paired practices`   = n_paired,
+  Discordant           = discordant,
+  `Difference (pp)`    = sprintf("%+.1f", diff_pp),
+  `95% CI (pp)`        = sprintf("%+.1f to %+.1f", lower_pp, upper_pp)),
+  caption = "Table S8. Paired differences in inferred appointment availability, with the range of effects the data are compatible with.")
 ```
 
 ---

@@ -71,6 +71,25 @@ layers:
       note: >-
         Recomputes Wilson CIs, exact McNemar p-values, MDE ORs, and business days
         from independent reference formulas.
+    - id: crosscheck/metamorphic
+      script: .github/scripts/check-metamorphic.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Re-runs the pipeline under row shuffling and practice relabelling and
+        requires every estimand to be unchanged. Catches hidden dependence on
+        input order or on identifier text, which produces a plausible number
+        every time and so cannot be caught by comparing against a golden value.
+    - id: crosscheck/mutation-sabotage
+      script: .github/scripts/mutation-sabotage.R
+      workflows: [nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Breaks the analysis code in plausible ways and requires the check held
+        responsible for each defect to go red. Runs the pipeline once per
+        mutant, so it is nightly-only. A surviving mutant is a reported hole.
 
   data:
     - id: data/contract
