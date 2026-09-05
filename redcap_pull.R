@@ -25,6 +25,7 @@ redcap_pull <- function(dest_dir = ".",
          "and restart R (or run: readRenviron('~/.Renviron')).", call. = FALSE)
 
   stamp <- format(Sys.time(), "%Y-%m-%d_%H%M")
+  nm_prefix <- list(labels = "LABUBU_DATA_LABELS", raw = "LABUBU_DATA")
 
   # The two flavors REDCap's UI calls "Labels" and "Raw". The analysis keys off
   # field *labels* as column names, so rawOrLabelHeaders matters as much as
@@ -65,6 +66,28 @@ redcap_pull <- function(dest_dir = ".",
 
     path <- file.path(dest_dir, f$file)
     writeLines(txt, path, useBytes = TRUE)
+
+    # The filename carries the pull time, so an unchanged project still yields
+    # a "new" export on every pull. That churn propagated into PROVENANCE.md
+    # and the figures README and made the nightly report drift when nothing had
+    # changed. If an existing export has identical content, keep it and discard
+    # the newly named copy: the data are the identity, not the clock.
+    existing <- setdiff(
+      list.files(dest_dir, pattern = sprintf("^%s_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{4}\\.csv$",
+                                             nm_prefix[[nm]]), full.names = TRUE),
+      path)
+    identical_export <- existing[
+      vapply(existing, function(other)
+        isTRUE(unname(tools::md5sum(other)) == unname(tools::md5sum(path))),
+        logical(1))]
+    if (length(identical_export)) {
+      unlink(path)
+      path <- identical_export[which.min(nchar(identical_export))]
+      cat(sprintf("  %-7s unchanged since %s; keeping it\n",
+                  nm, basename(path)))
+      written[nm] <- path
+      next
+    }
 
     # Parse the CSV rather than counting lines: `notes` and several headers
     # contain embedded newlines, which made a line count over-report (235 for
