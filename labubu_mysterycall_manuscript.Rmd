@@ -373,9 +373,9 @@ CONCLUSION: RRM practices almost never offer IUI, IVF, or donor sperm care. Beca
 
 ## INTRODUCTION
 
-Restorative Reproductive Medicine (RRM) is an approach to reproductive healthcare that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF).[1,2] Because RRM clinical frameworks explicitly omit interventions like IVF or intrauterine insemination (IUI), prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.[8,9]
+Restorative Reproductive Medicine (RRM) is an approach to reproductive healthcare that emphasizes diagnosing and treating underlying physiological causes of subfertility rather than utilizing assisted reproductive technology (ART) such as in vitro fertilization (IVF).[1,2] Because RRM clinical frameworks explicitly omit interventions like IVF or intrauterine insemination (IUI), prospective patients may encounter service menus that differ substantially from conventional fertility clinics. Furthermore, access to these specialized practices may vary depending on patient family structure, particularly for patients requiring donor gametes or non-traditional family building.[3]
 
-Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to healthcare while eliminating social desirability bias.[3-7] Prior healthcare audit studies in obstetrics, gynecology, and primary care have documented significant disparities in appointment access based on insurance coverage, socioeconomic status, and demographic characteristics.[3-6] However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied in the peer-reviewed literature.
+Mystery-caller (audit) methodology employs standardized simulated callers to objectively evaluate real-world access to healthcare while eliminating social desirability bias.[4-9] Prior healthcare audit studies in obstetrics, gynecology, and primary care have documented significant disparities in appointment access based on insurance coverage, socioeconomic status, and demographic characteristics.[4-7] However, national audit data regarding service availability and scheduling access across RRM practices remain unstudied in the peer-reviewed literature.
 
 This national secret-shopper audit had one primary objective and one secondary, exploratory objective. The primary objective was to define the scope of reproductive services RRM practices actually offer, because that scope determines which patients can be served at all. For a single woman or a same-sex female couple, conception requires donor sperm and usually IUI or IVF; if a practice does not provide those services, the question of how its staff treat such a caller does not arise. The secondary objective was to explore whether willingness to schedule differs by caller family structure. We report the second as exploratory throughout, for reasons of statistical power and design that we set out explicitly in the Limitations.
 
@@ -396,11 +396,11 @@ The data-collection instrument contained no item asking whether staff agreed to 
 The protocol specifies one call per practice per scenario; eight cells contained two. Where a contact attempt (voicemail, wrong number, abandoned or over-long hold) preceded a completed call, the completed call determined the cell; where two protocol-valid completed calls existed, the cell was treated as a protocol deviation and excluded from the primary paired analysis rather than resolved by preferring the earlier or later call. All calls are retained in the call-level dataset, and first- versus last-successful selection is reported as a sensitivity analysis (Appendix Table S5).
 
 ### Statistical Analysis and Power
-Proportions carry 95% Wilson score confidence intervals.[13,14] The access cascade reports each stage against its own denominator, nested within the preceding stage.
+Proportions carry 95% Wilson score confidence intervals.[10] The access cascade reports each stage against its own denominator, nested within the preceding stage.
 
 Mixed-effects logistic regression with a practice random intercept was fitted to the availability outcome, first on the subset of complete practice triads (N = `r N_TRIAD` practices) to remove practice-selection dialing bias, then on the full offer sample, and finally under the broad definition. Because the appointment date was missing for a scenario-dependent share of calls, a two-part hurdle model estimated the obtainment and wait-given-obtainment steps jointly rather than conditioning on complete cases. Wait time was additionally modeled with a linear mixed model on the log scale, with estimates back-transformed to geometric mean ratios (GMR) rather than reported as differences in days.
 
-Within-practice matched contrasts used exact McNemar tests. Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect odds ratios at 80% power (α = .05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with SAMPL reporting guidelines,[14] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
+Within-practice matched contrasts used exact McNemar tests.[11] Power in paired audit designs is governed by the number of discordant practices, which here was small; minimum detectable effect odds ratios at 80% power (α = .05) ranged from `r mde_range` and are reported alongside every paired contrast. In accordance with the Statistical Analyses and Methods in the Published Literature (SAMPL) guidelines,[12] point estimates are presented with 95% confidence intervals to establish precision limits rather than relying on underpowered null hypothesis significance tests. All analyses were conducted in R version 4.4.2 using the `mysterycall` package.
 
 ---
 
@@ -531,7 +531,7 @@ Second, **caller assignment**. Callers were not randomised across scenarios. Of 
 The contrast with enough discordant practices to be informative is therefore the one with no caller overlap, and the contrast free of caller confounding is the one with too few discordant practices to test. That is a property of how the calls were allocated, not a result about how practices behave, and it cannot be repaired analytically.
 
 ### Interpretation and Literature Context
-Patients presenting to RRM clinics encounter a clinical menu focused on natural cycle monitoring.[8,9] For patients whose path to pregnancy requires donor gametes or ART, the absence of those services is a primary structural barrier to care, independent of staff attitudes.[9-12] Our estimates place that absence at approximately one practice in a hundred for IUI and IVF.
+Patients presenting to RRM clinics encounter a clinical menu focused on natural cycle monitoring.[1,2] For patients whose path to pregnancy requires donor gametes or ART, the absence of those services is a primary structural barrier to care, independent of staff attitudes.[3,13-15] Our estimates place that absence at approximately one practice in a hundred for IUI and IVF.
 
 ### Strengths and Limitations
 Strengths include the national scope, direct measurement of the primary outcome, business-day calendar modeling, and explicit cascade reporting with stage-specific denominators.
@@ -587,15 +587,16 @@ Restorative Reproductive Medicine practices in the United States uniformly provi
 
 1. Stanford JB, Parnell TA, Boyle PC. Restorative reproductive medicine: an overview. Curr Med Res Opin. 2012;28(9):1451-1463.
 2. Tham E, Schliep K, Stanford J. Natural procreative technology for infertility and recurrent miscarriage. Can Fam Physician. 2012;58(5):e267-e274.
-3. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. J Health Soc Behav. 2016;57(2):168-183.
-4. Kugelmass H. Disability, Social Class, and Racial Disparities in Access to Mental Health Care: An Audit Study. J Health Soc Behav. 2019;60(4):460-476.
-5. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. N Engl J Med. 2011;364(24):2326-2333.
-6. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. Ann Intern Med. 2014;160(12):813-820.
-7. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. JAMA. 2019;322(3):205-207.
-8. Lauster N, Easterbrook A. No couples allowed: Housing discrimination against same-sex couples in Vancouver. Can Stud Popul. 2011;38(3-4):57-75.
-9. Practice Committee of the American Society for Reproductive Medicine. Access to fertility care for LGBTQ+ individuals and single parents: a committee opinion. Fertil Steril. 2021;115(4):870-877.
-10. Agrawal S, Kallen AN. Infertility disparities: a review of care access and outcomes. Curr Opin Obstet Gynecol. 2020;32(3):210-215.
-11. Quinn GP, Sanchez JA, Sutton SK, et al. LGBTQ fertility and family building: a review of provider knowledge and attitudes. J Assist Reprod Genet. 2015;32(10):1507-1513.
-12. Cwiak C, Edelman A, Ross L. Family planning access and non-traditional family building. Obstet Gynecol Clin North Am. 2019;46(4):711-724.
-13. Agresti A, Min Y. Simple statistical methods for estimating relative risk in 2x2 contingency tables with paired data. Stat Med. 2005;24(5):729-740.
-14. Lang TA, Altman DG. Statistical analyses and methods in the published literature: the SAMPL guidelines. Int J Nurs Stud. 2015;52(1):5-9.
+3. Practice Committee of the American Society for Reproductive Medicine. Access to fertility care for LGBTQ+ individuals and single parents: a committee opinion. Fertil Steril. 2021;115(4):870-877.
+4. Kugelmass H. "Sorry, I'm Not Accepting New Patients": An Audit Study of Access to Mental Health Care. J Health Soc Behav. 2016;57(2):168-183.
+5. Kugelmass H. Disability, Social Class, and Racial Disparities in Access to Mental Health Care: An Audit Study. J Health Soc Behav. 2019;60(4):460-476.
+6. Bisgaier J, Rhodes KV. Auditing access to specialty care for children with public insurance. N Engl J Med. 2011;364(24):2326-2333.
+7. Rhodes KV, Kenney GM, Wissoker D, et al. Primary care access for new patients on Medicaid. Ann Intern Med. 2014;160(12):813-820.
+8. Gross CP, Andersen MS, Krumholz HM. Audit studies in health services research. JAMA. 2019;322(3):205-207.
+9. Lauster N, Easterbrook A. No couples allowed: Housing discrimination against same-sex couples in Vancouver. Can Stud Popul. 2011;38(3-4):57-75.
+10. Newcombe RG. Two-sided confidence intervals for the single proportion: comparison of seven methods. Stat Med. 1998;17(8):857-872.
+11. Agresti A, Min Y. Simple statistical methods for estimating relative risk in 2x2 contingency tables with paired data. Stat Med. 2005;24(5):729-740.
+12. Lang TA, Altman DG. Statistical analyses and methods in the published literature: the SAMPL guidelines. Int J Nurs Stud. 2015;52(1):5-9.
+13. Agrawal S, Kallen AN. Infertility disparities: a review of care access and outcomes. Curr Opin Obstet Gynecol. 2020;32(3):210-215.
+14. Quinn GP, Sanchez JA, Sutton SK, et al. LGBTQ fertility and family building: a review of provider knowledge and attitudes. J Assist Reprod Genet. 2015;32(10):1507-1513.
+15. Cwiak C, Edelman A, Ross L. Family planning access and non-traditional family building. Obstet Gynecol Clin North Am. 2019;46(4):711-724.

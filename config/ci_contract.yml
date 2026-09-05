@@ -98,6 +98,7 @@ layers:
   manuscript:
     - id: manuscript/no-hardcoded-statistics
     - id: manuscript/claims-resolve
+    - id: manuscript/references-consistent
     - id: manuscript/render
       script: .github/scripts/check-manuscript-render.R
       workflows: [data-validation]
