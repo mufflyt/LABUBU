@@ -94,6 +94,7 @@ layers:
   privacy:
     - id: privacy/callers-de-identified
     - id: privacy/no-contact-details-in-artifacts
+    - id: privacy/no-practice-names-in-submission-artifacts
 
   manuscript:
     - id: manuscript/no-hardcoded-statistics

@@ -1,0 +1,210 @@
+---
+title: "Supplemental Digital Content"
+subtitle: "Reproductive Services Offered by Restorative Reproductive Medicine Practices: A National Secret-Shopper Audit"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+    toc_depth: 2
+    df_print: kable
+  word_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+suppressMessages({library(dplyr); library(knitr); library(mysterycall)})
+
+# Same output directory and same CSVs the manuscript reads. Nothing here is
+# recomputed: a supplement that derives its own numbers is a second source of
+# truth, which is the failure the claims table exists to prevent.
+OUT <- "mysterycall_outputs"
+rd  <- function(f) read.csv(file.path(OUT, f), stringsAsFactors = FALSE)
+
+d     <- rd("labubu_cleaned_analysis.csv")
+cdom  <- rd("caller_dominance_by_scenario.csv")
+covl  <- rd("caller_overlap_by_contrast.csv")
+crat  <- rd("caller_rates.csv")
+miss  <- rd("missingness_by_arm.csv")
+strb  <- rd("strobe_checklist.csv")
+dups  <- rd("duplicate_practice_scenario_calls.csv")
+devs  <- rd("protocol_deviation_cells.csv")
+
+tf   <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+inc  <- d[tf(d$analytic_inclusion), ]
+N_INC  <- nrow(inc)
+N_WAIT <- sum(tf(d$analytic_inclusion) & !is.na(d$business_days) & d$business_days >= 0)
+
+# Identical to the manuscript's helpers. Duplicated deliberately rather than
+# recomputed a second way: the supplement must print the same digits as the
+# paper, so it uses the same package call over the same denominator.
+pci <- function(data, var, digits = 1) {
+  tb <- as.data.frame(mysterycall::mysterycall_prevalence_ci(data, var = var))
+  r  <- tb[tb$category %in% c("TRUE", "1"), ][1, ]
+  if (nrow(r) == 0 || is.na(r$proportion))
+    return(sprintf("0.0%% (0/%d)", nrow(data)))
+  sprintf("%.*f%% (95%% CI %.*f-%.*f%%; %d/%d)",
+          digits, 100 * r$proportion, digits, 100 * r$ci_lower,
+          digits, 100 * r$ci_upper, r$n, r$total)
+}
+svc <- function(v) pci(inc, v)
+```
+
+This supplement contains material referenced in the main text. It is generated
+from the same analysis outputs as the manuscript; no number here is
+independently recomputed.
+
+---
+
+## Appendix Table S1. Caller concentration and contrast separability
+
+Each scenario arm was dominated by a different caller, so a scenario contrast is
+also a caller contrast. The second table shows which contrasts have any caller
+placing calls under both scenarios; a contrast with zero such callers cannot be
+separated from a caller effect by any adjustment.
+
+```{r S1a}
+kable(cdom |> transmute(
+  Scenario                 = scenario,
+  `Calls placed`           = n_calls,
+  `Largest single caller`  = top_caller,
+  `Their share of the arm` = sprintf("%d (%.1f%%)", top_caller_n, top_caller_pct)),
+  caption = "Table S1a. Concentration of each scenario arm in a single caller.")
+```
+
+```{r S1b}
+kable(covl |> transmute(
+  Contrast                      = contrast,
+  `Callers placing both`        = n_callers_with_both,
+  `Which callers`               = callers,
+  `Calls contributed`           = n_calls,
+  `Separable from caller?`      = ifelse(n_callers_with_both == 0, "No", "Partly")),
+  caption = "Table S1b. Caller overlap by contrast.")
+```
+
+```{r S1c}
+kable(crat |> transmute(
+  Caller                  = caller,
+  `Calls placed`          = n_calls,
+  `Reached a live office` = sprintf("%.1f%%", pct_reached),
+  `Offer-eligible calls`  = n_offer_eligible,
+  `Appointment available` = sprintf("%.1f%%", pct_offered)),
+  caption = "Table S1c. Call volume and outcome rates by caller. Rates vary widely across callers, which is why a scenario arm dominated by one caller cannot be read as a scenario effect.")
+```
+
+---
+
+## Appendix Table S2. Documentation completeness by caller scenario
+
+Documentation completeness differed by arm in the same direction as the
+exploratory outcome. Because the derived availability outcome is read off the
+appointment date, a call recorded less completely is scored as less available
+regardless of what the practice said. Differential documentation and
+differential availability cannot be separated in these data.
+
+```{r S2}
+kable(miss |> transmute(
+  Scenario              = scenario,
+  `Calls placed`        = calls_placed,
+  `No call date`        = sprintf("%d (%.1f%%)", no_call_date, pct_no_call_date),
+  `Reached staff`       = reached,
+  `No appointment date` = sprintf("%d (%.1f%%)", no_appt_date, pct_no_appt_date)),
+  caption = "Table S2. Documentation completeness by caller scenario.")
+```
+
+---
+
+## Appendix Table S3. Reproductive services offered, numeric detail
+
+Numeric detail underlying Figure 1, among the `r N_INC` calls that reached staff
+and completed the service interview. Intrauterine insemination and in vitro
+fertilization each rest on a single practice; those two intervals should be read
+as an upper bound on availability rather than as stable rates.
+
+```{r S3}
+kable(data.frame(
+  `Reproductive Service` = c(
+    "Cycle tracking", "Hormonal labs / fertility timing", "Ovulation induction",
+    "Intrauterine insemination (IUI)", "In vitro fertilization (IVF)",
+    "Works with donor sperm"),
+  `Proportion Offered (95% CI)` = c(
+    svc("service_cycle_tracking"), svc("service_hormonal_timing"),
+    svc("service_ovulation_induction"), svc("service_iui"),
+    svc("service_ivf"), svc("donor_sperm_yes")),
+  check.names = FALSE),
+  caption = sprintf("Table S3. Reproductive services offered (N = %d calls reaching staff).", N_INC))
+```
+
+---
+
+## Appendix Table S4. STROBE checklist for cross-sectional studies
+
+```{r S4}
+kable(strb |> transmute(
+  Item             = item,
+  Section          = section,
+  Recommendation   = recommendation,
+  `Study response` = study_response),
+  caption = "Table S4. Completed STROBE checklist.")
+```
+
+---
+
+## Appendix Table S5. Duplicate practice-scenario calls and their adjudication
+
+The protocol specifies one call per practice per scenario. Eight cells contained
+two. Where a contact attempt (voicemail, wrong number, abandoned or over-long
+hold) preceded a completed call, the completed call determined the cell. Where
+two protocol-valid completed calls existed, the cell was treated as a protocol
+deviation and excluded from the primary paired analysis rather than resolved by
+preferring the earlier or later call. Practice identifiers are redacted.
+
+```{r S5a}
+# practice_key holds real practice and individual clinician names. This is a
+# secret-shopper study: the people called did not consent to being named, and
+# this file is a public submission artifact. Join to the numeric study ID and
+# never print the key.
+kable(dups |>
+  left_join(d |> select(record_id, practice_id), by = "record_id") |>
+  transmute(
+    `Record ID`          = record_id,
+    `Practice ID`        = practice_id,
+    Scenario             = scenario,
+    `Call date`          = call_date,
+    Disposition          = exclusion_reason,
+    `Analytic inclusion` = analytic_inclusion),
+  caption = "Table S5a. All calls in a practice-scenario cell containing more than one call. Practices are identified by study ID only.")
+```
+
+```{r S5b}
+kable(devs |> transmute(
+  `Practice ID`         = practice_id,
+  Scenario              = scenario,
+  `Completed calls`     = n_completed,
+  Disposition           = "Excluded from the primary paired analysis as a protocol deviation"),
+  caption = "Table S5b. Cells with two protocol-valid completed calls. Practices are identified by study ID only.")
+```
+
+---
+
+## Appendix Figure S1. Wait time to first available appointment
+
+Restricted to the `r N_WAIT` calls with an observed appointment date. Panels are
+a raincloud plot, a ridgeline density, the empirical cumulative distribution, and
+within-practice paired differences. These estimates condition on having been
+offered an appointment and are descriptive; see Limitation 5 in the main text.
+
+```{r S1fig, out.width="100%", fig.cap="Figure S1. Wait time to first available appointment by caller scenario."}
+knitr::include_graphics(file.path(OUT, "figures", "fig_panel_wait_times.png"))
+```
+
+---
+
+```{r stamp, results='asis'}
+commit <- tryCatch(trimws(system2("git", c("rev-parse","--short","HEAD"),
+                   stdout = TRUE, stderr = FALSE)), error = function(e) "unknown")
+cat("Generated ", format(Sys.time(), "%Y-%m-%d %H:%M %Z"),
+    " from commit `", commit, "`.\n", sep = "")
+```

@@ -406,7 +406,7 @@ Within-practice matched contrasts used exact McNemar tests.[11] Power in paired 
 
 ## RESULTS
 
-### Reproductive Services Offered — primary outcome
+### Reproductive Services Offered: primary outcome
 Among the `r N_INC` calls that reached staff and completed the service interview, RRM practices almost uniformly offered natural cycle tracking and hormonal monitoring, and almost never offered assisted reproductive technology or donor gametes (Figure 1; numeric detail in Appendix Table S3).
 
 ```{r ForestPrimary, fig.cap="Figure 1. Reproductive services offered by RRM practices, with 95% confidence intervals.", out.width="95%"}
@@ -414,21 +414,8 @@ forest_png <- file.path(OUT, "figures", "fig5_service_forest.png")
 if (file.exists(forest_png)) knitr::include_graphics(forest_png)
 ```
 
-```{r TableServices}
-t_services <- data.frame(
-  `Reproductive Service` = c(
-    "Cycle tracking", "Hormonal labs / fertility timing", "Ovulation induction",
-    "Intrauterine insemination (IUI)", "In vitro fertilization (IVF)",
-    "Works with donor sperm"),
-  `Proportion Offered (95% CI)` = c(
-    svc("service_cycle_tracking"), svc("service_hormonal_timing"),
-    svc("service_ovulation_induction"), svc("service_iui"),
-    svc("service_ivf"), svc("donor_sperm_yes")),
-  check.names = FALSE)
-kable(t_services, caption = sprintf("Appendix Table S3. Reproductive services offered by RRM practices, numeric detail for Figure 1 (N = %d calls reaching staff).", N_INC))
-```
 
-Cycle tracking was offered by `r svc("service_cycle_tracking")` and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. Ovulation induction was offered by `r svc("service_ovulation_induction")`. IUI and IVF were each offered by `r svc("service_iui")` — a single practice in each case — and donor sperm care by `r svc("donor_sperm_yes")`. The IUI and IVF estimates rest on one practice apiece and should be read as an upper bound on availability rather than as stable rates; the confidence intervals reflect that.
+Cycle tracking was offered by `r svc("service_cycle_tracking")` and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. Ovulation induction was offered by `r svc("service_ovulation_induction")`. IUI and IVF were each offered by `r svc("service_iui")`, a single practice in each case, and donor sperm care by `r svc("donor_sperm_yes")`. The IUI and IVF estimates rest on one practice apiece and should be read as an upper bound on availability rather than as stable rates; the confidence intervals reflect that.
 
 The services a single woman or same-sex female couple requires to conceive are therefore effectively absent from this sample, while the services RRM practices do provide are those appropriate to a couple attempting unassisted conception.
 
@@ -463,7 +450,7 @@ Inferred appointment availability among eligible calls was `r claim_pct("offer_s
 
 In complete-triad mixed-effects logistic regression (N = `r N_TRIAD` practices), relative to straight-couple callers, the odds of inferred appointment availability were OR `r orci(fit_offer_triad, "scenarioLesbian couple")` for lesbian couples and OR `r orci(fit_offer_triad, "scenarioSingle mother")` for single mothers. We report intervals without p-values throughout this section. A significance test presumes a design capable of detecting the effect it is testing for, and the minimum detectable effects here are `r mde_range`; a p-value computed under those conditions carries no information the interval does not already carry, and invites a reading the data cannot support. The intervals themselves span orders of magnitude, reflecting near-separation at this sample size: direction is interpretable, magnitude is not.
 
-**The magnitude of these estimates depends materially on the measurement definition, and this is a substantive result rather than a robustness check.** Under the broad definition, which additionally credits a stated scheduling timeframe, the same contrasts attenuate to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` for lesbian couples and OR `r orci(fit_offer_broad, "scenarioSingle mother")` for single mothers — an order-of-magnitude change in the point estimate, with intervals that include unity. Both definitions place the effect in the same direction; only the strict definition places it far from the null. Because neither definition was measured directly, the direction is the more defensible claim and the magnitude should not be quoted without its definition.
+**The magnitude of these estimates depends materially on the measurement definition, and this is a substantive result rather than a robustness check.** Under the broad definition, which additionally credits a stated scheduling timeframe, the same contrasts attenuate to OR `r orci(fit_offer_broad, "scenarioLesbian couple")` for lesbian couples and OR `r orci(fit_offer_broad, "scenarioSingle mother")` for single mothers, an order-of-magnitude change in the point estimate, with intervals that include unity. Both definitions place the effect in the same direction; only the strict definition places it far from the null. Because neither definition was measured directly, the direction is the more defensible claim and the magnitude should not be quoted without its definition.
 
 ```{r Table3}
 t3 <- mc |>
@@ -482,26 +469,7 @@ Within-practice paired differences in inferred availability were: Straight vs Si
 ### Caller Assignment
 Scenarios were not randomized across callers (Appendix Table S1). Caller identity was strongly associated with scenario (Cramér's V = `r cram`), and per-caller availability rates varied widely. Consequently, a scenario contrast and a caller contrast are numerically the same comparison, and within-practice pairing does not separate them because the paired calls were placed by different callers.
 
-```{r Table4}
-t4 <- cdom |>
-  transmute(
-    Scenario                    = scenario,
-    `Calls placed`              = n_calls,
-    `Largest single caller`     = top_caller,
-    `Their share of the arm`    = sprintf("%d (%.1f%%)", top_caller_n, top_caller_pct))
-kable(t4, caption = "Appendix Table S1. Concentration of each scenario arm in a single caller.")
-```
 
-```{r TableS2}
-t_s2 <- miss |>
-  transmute(
-    Scenario                 = scenario,
-    `Calls placed`           = calls_placed,
-    `No call date`           = sprintf("%d (%.1f%%)", no_call_date, pct_no_call_date),
-    `Reached staff`          = reached,
-    `No appointment date`    = sprintf("%d (%.1f%%)", no_appt_date, pct_no_appt_date))
-kable(t_s2, caption = "Appendix Table S2. Documentation completeness by caller scenario. Differential documentation and differential availability cannot be separated in these data.")
-```
 
 ### Wait Time to First Available Appointment
 Among calls with an observed appointment date (N = `r N_WAIT`), the median wait was `r wait_med("Straight couple")` for straight couples, `r wait_med("Lesbian couple")` for lesbian couples, and `r wait_med("Single mother")` for single mothers. In the log-transformed mixed model, waits relative to straight-couple callers had a geometric mean ratio of `r gmr("scenarioLesbian couple", "ci")` for lesbian couples and `r gmr("scenarioSingle mother", "ci")` for single mothers; a ratio below 1.00 indicates a shorter wait. Because appointment dates are missing for a scenario-dependent share of calls, these complete-case estimates condition on having been offered an appointment and are reported as descriptive.
@@ -524,9 +492,9 @@ We had also intended to test whether practices differ in willingness to schedule
 
 Two features are responsible, and they are separable.
 
-First, **power**. Within-practice matched contrasts draw information only from practices that answered differently to two callers. Concordance was high — most practices treated callers alike — leaving `r paste(mc$discordant, collapse = ", ")` discordant practices across the three contrasts, with minimum detectable effects of `r mde_range`. Audit-study effects of interest are far below that floor. For the Lesbian couple versus Single mother contrast in particular, the number of discordant practices is small enough that the exact test cannot return a significant result at any effect size.
+First, **power**. Within-practice matched contrasts draw information only from practices that answered differently to two callers. Concordance was high, since most practices treated callers alike, leaving `r paste(mc$discordant, collapse = ", ")` discordant practices across the three contrasts, with minimum detectable effects of `r mde_range`. Audit-study effects of interest are far below that floor. For the Lesbian couple versus Single mother contrast in particular, the number of discordant practices is small enough that the exact test cannot return a significant result at any effect size.
 
-Second, **caller assignment**. Callers were not randomised across scenarios. Of the three contrasts, `r n_no_overlap` had no caller who placed at least three calls under both scenarios (`r no_overlap_contrasts`): for those, the scenario variable and the caller variable are the same column of data, and no covariate adjustment recovers the difference. Where overlap did exist — Lesbian couple versus Single mother, in which three callers placed calls under both — the caller-stratified estimate was OR `r mh_txt`, consistent with the unadjusted estimate and with no difference.
+Second, **caller assignment**. Callers were not randomised across scenarios. Of the three contrasts, `r n_no_overlap` had no caller who placed at least three calls under both scenarios (`r no_overlap_contrasts`): for those, the scenario variable and the caller variable are the same column of data, and no covariate adjustment recovers the difference. Where overlap did exist, in Lesbian couple versus Single mother, in which three callers placed calls under both, the caller-stratified estimate was OR `r mh_txt`, consistent with the unadjusted estimate and with no difference.
 
 The contrast with enough discordant practices to be informative is therefore the one with no caller overlap, and the contrast free of caller confounding is the one with too few discordant practices to test. That is a property of how the calls were allocated, not a result about how practices behave, and it cannot be repaired analytically.
 

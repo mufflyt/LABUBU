@@ -26,6 +26,15 @@ mutate_and_test <- function(label, covers, mutate) {
   # to tolerate its absence.
   file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd",
               "evaluate_labubu_mysterycall.R"), tmp)
+  # The rendered submission artifacts are what privacy/no-practice-names-in-
+  # submission-artifacts screens, and that check fails rather than skips when
+  # one is absent, so the sandbox has to carry them too.
+  file.copy(Sys.glob(c("labubu_mysterycall_manuscript.html",
+                       "labubu_mysterycall_manuscript.docx",
+                       "supplemental_digital_content.html",
+                       "supplemental_digital_content.docx",
+                       "cover_letter_GREEN_JOURNAL.html",
+                       "cover_letter_GREEN_JOURNAL.docx")), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
@@ -62,6 +71,15 @@ expect_skip <- function(label, check_id, mutate) {
   # to tolerate its absence.
   file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd",
               "evaluate_labubu_mysterycall.R"), tmp)
+  # The rendered submission artifacts are what privacy/no-practice-names-in-
+  # submission-artifacts screens, and that check fails rather than skips when
+  # one is absent, so the sandbox has to carry them too.
+  file.copy(Sys.glob(c("labubu_mysterycall_manuscript.html",
+                       "labubu_mysterycall_manuscript.docx",
+                       "supplemental_digital_content.html",
+                       "supplemental_digital_content.docx",
+                       "cover_letter_GREEN_JOURNAL.html",
+                       "cover_letter_GREEN_JOURNAL.docx")), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
@@ -111,6 +129,15 @@ ok <- c(
 
   # The defect injected here is the one that was actually present: a reference
   # cited in the Discussion whose number precedes its first use in the Intro.
+  mutate_and_test("detects a practice name in a submission artifact",
+                  "privacy/no-practice-names-in-submission-artifacts", function(dir) {
+    f <- file.path(dir, "supplemental_digital_content.html")
+    key <- read.csv(file.path(dir, OUT, "labubu_cleaned_analysis.csv"),
+                    stringsAsFactors = FALSE)$practice_key
+    key <- key[!is.na(key) & nzchar(key) & key != "[redacted]"][1]
+    writeLines(c(readLines(f, warn = FALSE), sprintf("<p>%s</p>", key)), f)
+  }),
+
   mutate_and_test("detects a reference list out of first-appearance order",
                   "manuscript/references-consistent", function(dir) {
     f <- file.path(dir, "labubu_mysterycall_manuscript.Rmd")
