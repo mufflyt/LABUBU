@@ -90,8 +90,9 @@ their meaning is unknown.
 **Still needed, and not inferable from the export:** confirmation from the
 callers of what they recorded when they ticked a box. The exact wording to
 send, the pre-set decision rule, and why the frequency pattern must not settle
-it are in `docs/PI-QUERY-restriction-checkbox.md`. Ask every caller who entered
-data; if answers conflict, the variable is unusable for this wave. Deciding this
+it are in `docs/PI-QUERY-restriction-checkbox.md`. Ask all seven callers who entered data; if answers conflict, the variable is
+unusable for this wave. Note that 59 of 234 calls (25%) record no caller, so no
+answer can cover them. Deciding this
 from the frequency pattern alone would be reverse-coding on intuition, which
 this decision explicitly rules out — and it is the one reading that would
 reverse the direction of a discrimination finding.
