@@ -20,8 +20,8 @@ or_triad_lesbian_couple,triad offer OR scenarioLesbian couple,0.03894,0.005498,0
 or_triad_single_mother,triad offer OR scenarioSingle mother,0.094544,0.013796,0.64793,76
 or_broad_lesbian_couple,broad-definition offer OR scenarioLesbian couple,0.308118,0.076201,1.24587,100
 or_broad_single_mother,broad-definition offer OR scenarioSingle mother,0.285491,0.064211,1.269326,100
-gmr_wait_lesbian_couple,wait GMR scenarioLesbian couple,0.826118,0.468526,1.456635,57
-gmr_wait_single_mother,wait GMR scenarioSingle mother,0.818855,0.462761,1.448965,57
+gmr_wait_lesbian_couple,wait GMR scenarioLesbian couple,0.826118,0.475872,1.434148,57
+gmr_wait_single_mother,wait GMR scenarioSingle mother,0.818855,0.468888,1.430032,57
 paired_discordant_straight_couple_vs_single_mother,discordant practices -- Straight couple vs Single mother,7,NA,NA,16
 paired_p_straight_couple_vs_single_mother,exact McNemar p -- Straight couple vs Single mother,0.125,NA,NA,16
 paired_discordant_lesbian_couple_vs_single_mother,discordant practices -- Lesbian couple vs Single mother,2,NA,NA,22

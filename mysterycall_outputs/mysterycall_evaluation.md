@@ -1,6 +1,6 @@
 # LABUBU Mysterycall Evaluation
 
-Generated: 2026-09-05 09:17:25 MDT
+Generated: 2026-09-05 16:00:15 UTC
 
 ## Package
 
@@ -46,7 +46,7 @@ Every stage has its own denominator (each nested in the previous). The single 'a
 
 ```
 <mysterycall access cascade: 4 stages, 234 analytic calls>
-# A tibble: 4 x 6
+# A tibble: 4 × 6
   group          measure                      n denominator pct    ci           
   <chr>          <chr>                    <int>       <int> <chr>  <chr>        
 1 Access cascade Calls placed               234         234 100.0% [98.4, 100.0]
@@ -71,10 +71,10 @@ By scenario (strict offer = appointment date obtained; broad = date OR a concret
 ### Appointment-offer rate by scenario
 
 ```
-# A tibble: 3 x 8
+# A tibble: 3 × 8
   scenario       n_total n_missing n_accepted n_rejected  rate ci_lower ci_upper
   <chr>            <int>     <int>      <int>      <int> <dbl>    <dbl>    <dbl>
-1 Straight coup~      37         0         28          9 0.757    0.599    0.866
+1 Straight coup…      37         0         28          9 0.757    0.599    0.866
 2 Lesbian couple      33         0         14         19 0.424    0.272    0.592
 3 Single mother       30         0         15         15 0.5      0.332    0.668
 ```
@@ -84,10 +84,10 @@ By scenario (strict offer = appointment date obtained; broad = date OR a concret
 Sensitivity — broad offer definition:
 
 ```
-# A tibble: 3 x 8
+# A tibble: 3 × 8
   scenario       n_total n_missing n_accepted n_rejected  rate ci_lower ci_upper
   <chr>            <int>     <int>      <int>      <int> <dbl>    <dbl>    <dbl>
-1 Straight coup~      37         0         29          8 0.784    0.628    0.886
+1 Straight coup…      37         0         29          8 0.784    0.628    0.886
 2 Lesbian couple      33         0         20         13 0.606    0.437    0.753
 3 Single mother       30         0         18         12 0.6      0.423    0.754
 ```
@@ -97,10 +97,10 @@ Sensitivity — broad offer definition:
 ### Reachability by scenario (secondary — a live office answered)
 
 ```
-# A tibble: 3 x 8
+# A tibble: 3 × 8
   scenario       n_total n_missing n_accepted n_rejected  rate ci_lower ci_upper
   <chr>            <int>     <int>      <int>      <int> <dbl>    <dbl>    <dbl>
-1 Straight coup~      77         0         39         38 0.506    0.397    0.615
+1 Straight coup…      77         0         39         38 0.506    0.397    0.615
 2 Lesbian couple      83         0         37         46 0.446    0.344    0.553
 3 Single mother       74         0         32         42 0.432    0.326    0.546
 ```
@@ -116,12 +116,12 @@ Calls by caller and scenario:
 ```
             
              Straight couple Lesbian couple Single mother
-  Caller A                 0              0             1
-  Caller B                 0             14             4
+  Caller A                 0             14             4
+  Caller B                 0              0             1
   Caller C                 2             28            38
   Caller D                53              3             0
-  Caller E                17              0             0
-  Caller F                 2              9             4
+  Caller E                 2              9             4
+  Caller F                17              0             0
   Unrecorded               3             29            27
 ```
 
@@ -140,28 +140,28 @@ Per-caller reach and offer rates (callers differ substantially, which is the mec
 
 ```
       caller n_calls pct_reached n_offer_eligible pct_offered
-1   Caller A       1       100.0                1       100.0
-2   Caller B      18        88.9               15        26.7
+1   Caller A      18        88.9               15        26.7
+2   Caller B       1       100.0                1       100.0
 3   Caller C      68        48.5               33        69.7
 4   Caller D      56        48.2               23        82.6
-5   Caller E      17        52.9                9        77.8
-6   Caller F      15       100.0               15        21.4
+5   Caller E      15       100.0               15        21.4
+6   Caller F      17        52.9                9        77.8
 7 Unrecorded      59        11.9                6         0.0
 ```
 
 Offer model adjusted for caller (scenario + caller + practice random intercept):
 
 ```
-                         Estimate   Std. Error       z value  Pr(>|z|)
-(Intercept)              40.08733 2.157797e+06  1.857790e-05 0.9999852
-scenarioLesbian couple  -11.27515 8.017150e+00 -1.406378e+00 0.1596118
-scenarioSingle mother   -10.91931 8.147500e+00 -1.340204e+00 0.1801791
-callerCaller B          -31.45201 2.157797e+06 -1.457599e-05 0.9999884
-callerCaller C          -25.22363 2.157797e+06 -1.168953e-05 0.9999907
-callerCaller D          -33.88509 2.157797e+06 -1.570356e-05 0.9999875
-callerCaller E          -33.71465 2.157797e+06 -1.562457e-05 0.9999875
-callerCaller F          -34.59098 2.157797e+06 -1.603069e-05 0.9999872
-callerUnrecorded       -154.00739 3.008947e+07 -5.118316e-06 0.9999959
+                          Estimate   Std. Error       z value   Pr(>|z|)
+(Intercept)               8.635328 8.500438e+00  1.015869e+00 0.30969195
+scenarioLesbian couple  -11.275152 8.017157e+00 -1.406378e+00 0.15961194
+scenarioSingle mother   -10.919315 8.147507e+00 -1.340203e+00 0.18017926
+callerCaller B          320.783889 6.710886e+07  4.780052e-06 0.99999619
+callerCaller C            6.228388 3.164189e+00  1.968399e+00 0.04902211
+callerCaller D           -2.433080 8.697875e+00 -2.797327e-01 0.77968261
+callerCaller E           -3.138970 5.393720e+00 -5.819675e-01 0.56058858
+callerCaller F           -2.262643 7.683996e+00 -2.944618e-01 0.76840504
+callerUnrecorded       -391.481198 3.001200e+07 -1.304416e-05 0.99998959
 ```
 
 > Inspect the standard errors above. Where they are very large, scenario and caller are not jointly identifiable and the adjusted estimate should not be reported as a corrected effect — it is evidence that the design cannot separate the two.
@@ -290,7 +290,7 @@ The complete-case wait model below conditions on having an appointment date, and
 <mysterycall hurdle wait model: hurdle n=100, count n=54 (zero-truncated nbinom2)>
 
 Hurdle part -- appointment obtained (odds ratios):
-# A tibble: 3 x 5
+# A tibble: 3 × 5
   term                    estimate   conf_low conf_high p_value
   <chr>                      <dbl>      <dbl>     <dbl>   <dbl>
 1 (Intercept)            122.      2.27         6511.    0.0181
@@ -298,7 +298,7 @@ Hurdle part -- appointment obtained (odds ratios):
 3 scenarioSingle mother    0.00389 0.0000104       1.46  0.0665
 
 Count part -- wait days | obtained (incidence rate ratios):
-# A tibble: 3 x 5
+# A tibble: 3 × 5
   term                   estimate conf_low conf_high  p_value
   <chr>                     <dbl>    <dbl>     <dbl>    <dbl>
 1 (Intercept)              24.0     16.1       35.9  2.42e-54
@@ -314,9 +314,9 @@ Via mysterycall_lmm(). The wait is right-skewed, so the package's auto_log appli
 
 ```
                    Term   GMR CI_lo CI_hi       p
-            (Intercept) 17.64 11.26 27.61 < 0.001
- scenarioLesbian couple  0.83  0.47  1.46   0.494
-  scenarioSingle mother  0.82  0.46  1.45   0.479
+            (Intercept) 17.64 11.28 27.57 < 0.001
+ scenarioLesbian couple  0.83  0.48  1.43   0.490
+  scenarioSingle mother  0.82  0.47  1.43   0.475
 ```
 
 Note: mysterycall_lmm() [lme4::lmer]. Outcome: log1p_business_days. auto_log applied log1p() to the right-skewed wait; the table is the back-transformed GEOMETRIC MEAN RATIO from $gmr_table. The intercept is the reference group's geometric-mean wait in business days; each scenario row is a multiplicative ratio vs. Straight couple (GMR < 1 = shorter wait). These are NOT differences in days. n = 57 records with observed appointment date. Shapiro-Wilk on residuals: p = 0.208 (normality satisfied). Marginal R² = 0.006, Conditional R² = 0.702.
@@ -324,7 +324,7 @@ Note: mysterycall_lmm() [lme4::lmer]. Outcome: log1p_business_days. auto_log app
 ## Wait Time by Scenario — Descriptive (unmatched)
 
 ```
-# A tibble: 3 x 10
+# A tibble: 3 × 10
   scenario            n n_missing  mean    sd median    q1    q3   min   max
   <chr>           <int>     <int> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>
 1 Straight couple    28         6  46.1  47.8   26.5   9    61.5     0   179
@@ -448,7 +448,7 @@ The only directly measured discrimination item. Currently unanalysable because t
 5        22.4         0            76            77.6
 ```
 
-- Missingness was assessed for 5 analytic variables across 98 units, separated into item-level (n=5) and structural, missing-by-design (n=0) mechanisms. Item-level missingness ranged from 22.4% to 41.8% (greatest for first_appt_date) and reflects source non-linkage that is independent of the subgroup structure, rather than missingness conditioned on a unit's subgroup or observation status. Little's MCAR test not evaluated: Fewer than 2 numeric item-level variables; Little's test not defined.
+- Missingness was assessed for 5 analytic variables across 98 units, separated into item-level (n=5) and structural, missing-by-design (n=0) mechanisms. Item-level missingness ranged from 22.4% to 41.8% (greatest for first_appt_date) and reflects source non-linkage that is independent of the subgroup structure, rather than missingness conditioned on a unit's subgroup or observation status. Little's MCAR test not evaluated: naniar not installed; cannot run Little's MCAR test. Install with install.packages('naniar').
 
 ## Data-Quality Guards
 
