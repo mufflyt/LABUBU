@@ -3,10 +3,33 @@
 **Status:** unresolved. The variable is excluded from all inferential analyses
 and CI enforces that exclusion (`restriction/excluded-from-inference`).
 
-**Who to ask:** every caller who entered data — not one person. Nine callers
-appear in the export (`Caller A`–`Caller G`, plus `BS` and `Sam`-labelled
-entries collapsed into that set), and a convention one caller used is not
-evidence about what another recorded.
+**Who to ask:** every caller who entered data — not one person. A convention
+one caller used is not evidence about what another recorded.
+
+**Seven callers** entered data (`Caller A`–`Caller G`; the raw export holds ten
+distinct name strings, three of which are typos that `normalize_practice`-style
+cleanup collapses). Their call volumes are very uneven:
+
+| caller | calls |
+|---|---|
+| Caller C | 68 |
+| Caller D | 56 |
+| Caller A | 18 |
+| Caller G | 16 |
+| Caller F | 15 |
+| Caller B | 1 |
+| Caller E | 1 |
+
+**A limit on what any answer can establish.** 59 of 234 calls — 25% — record no
+caller at all. Nobody can be asked about those, so even unanimous agreement
+among all seven leaves a quarter of the checkbox responses unattributable to
+any stated convention. Two callers contributed a single call each, so their
+answers describe one observation apiece.
+
+If the convention is to be relied on, that 25% has to be accounted for
+explicitly: either the unattributed calls are also excluded, or the analysis
+states that it assumes a convention it cannot verify for a quarter of the data.
+That is a further decision, not something this query resolves.
 
 ---
 
