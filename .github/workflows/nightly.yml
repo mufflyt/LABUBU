@@ -156,6 +156,9 @@ jobs:
       - name: Scientific gate
         run: Rscript .github/scripts/scientific-gate.R
 
+      - name: Reference cross-check
+        run: Rscript .github/scripts/check-reference-crosscheck.R
+
       # Headline estimands in one diffable table, then classified against the
       # committed baseline. Exit 2 means something moved beyond tolerance and a
       # human should look; it does not fail the run on its own, because the

@@ -63,6 +63,14 @@ layers:
       note: >-
         Exit code 0 is not proof. The receipt is written only after every
         expected artifact exists and the denominator cascade nests.
+    - id: crosscheck/reference-crosscheck
+      script: .github/scripts/check-reference-crosscheck.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Recomputes Wilson CIs, exact McNemar p-values, MDE ORs, and business days
+        from independent reference formulas.
 
   data:
     - id: data/contract

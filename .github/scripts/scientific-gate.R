@@ -375,7 +375,8 @@ try_check("manuscript/references-consistent", {
   f <- "labubu_mysterycall_manuscript.Rmd"
   if (!file.exists(f))
     return(structure(FALSE, detail = paste(f, "absent")))
-  lines <- readLines(f, warn = FALSE)
+  lines <- readLines(f, warn = FALSE, encoding = "UTF-8")
+  lines <- enc2utf8(lines)
 
   intro <- grep("^## INTRODUCTION", lines)
   refs  <- grep("^## REFERENCES",   lines)
@@ -389,7 +390,7 @@ try_check("manuscript/references-consistent", {
     return(structure(FALSE, detail = "no reference entries parsed"))
 
   # Expand [4-9] and [3,13-15] into the integers they cite, in order.
-  groups <- regmatches(body, gregexpr("\\[[0-9]+(?:[,\u2013-][0-9]+)*\\]", body))[[1]]
+  groups <- regmatches(body, gregexpr("\\[[0-9]+(?:[,\u2013-][0-9]+)*\\]", body, perl = TRUE))[[1]]
   cited  <- unlist(lapply(groups, function(g) {
     unlist(lapply(strsplit(gsub("\\[|\\]", "", g), ",")[[1]], function(part) {
       ends <- as.integer(strsplit(part, "[\u2013-]")[[1]])

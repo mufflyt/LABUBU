@@ -27,12 +27,12 @@ It runs, in order:
 `check-ci-contract.R` (does `config/ci_contract.yml` match the implementation),
 `check-docs-sync.R` (is this file still true),
 `gate-selftest.R` (can the gate fail),
-then `scientific-gate.R`.
+`scientific-gate.R`, and `check-reference-crosscheck.R` (recomputes values against independent reference formulas).
 
 `pipeline execution` deletes `mysterycall_outputs/` before running. It then
 runs, in order: `check-lockfile.R`, `preflight-env.R`, the pipeline,
 `provenance.R`, `pipeline-receipt.R`, `data-contract.R`, `estimand-report.R`,
-`manuscript-claims.R`, `scientific-gate.R`, `check-manuscript-render.R`. That is
+`manuscript-claims.R`, `scientific-gate.R`, `check-reference-crosscheck.R`, `check-manuscript-render.R`. That is
 deliberate — the dangerous failure is code changing, the analysis silently not
 running, and CI validating last week's CSVs. Wiping first makes a stale file
 unable to masquerade as a fresh one.
@@ -75,10 +75,10 @@ claim, not a snapshot of today's numbers.
 | `figures/opaque-background` | A figure saved with a transparent background, invisible in dark viewers |
 | `restriction/excluded-from-inference` | The restriction checkboxes entering a model, estimand or claim while their meaning is unresolved |
 
-Beyond the gate, three scripts assert things the gate cannot:
+Beyond the gate, four scripts assert things the gate cannot:
 `data-contract.R` (18 row-level assertions, reported with offending record
 ids), `pipeline-receipt.R` (the analysis actually ran and its denominators
-nest), and `check-manuscript-render.R` (the paper still knits).
+nest), `check-reference-crosscheck.R` (recomputes values against independent reference formulas), and `check-manuscript-render.R` (the paper still knits).
 
 ### Why the gate has its own test suite
 

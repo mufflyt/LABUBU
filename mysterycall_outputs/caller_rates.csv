@@ -1,8 +1,8 @@
 "caller","n_calls","pct_reached","n_offer_eligible","pct_offered"
-"Caller A",18,88.9,15,26.7
-"Caller B",1,100,1,100
+"Caller A",1,100,1,100
+"Caller B",18,88.9,15,26.7
 "Caller C",68,48.5,33,69.7
 "Caller D",56,48.2,23,82.6
-"Caller E",15,100,15,21.4
-"Caller F",17,52.9,9,77.8
+"Caller E",17,52.9,9,77.8
+"Caller F",15,100,15,21.4
 "Unrecorded",59,11.9,6,0

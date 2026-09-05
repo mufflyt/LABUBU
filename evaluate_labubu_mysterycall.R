@@ -1069,15 +1069,37 @@ paired_contrasts <- list(
 
 # Exact-McNemar minimum detectable effect: smallest one-way discordant split
 # (expressed as an odds ratio) that yields 80% power at alpha = 0.05.
-mcnemar_mde_or <- function(n_d) {
+# Minimum detectable odds ratio for the exact McNemar test.
+#
+# The previous implementation built the rejection region from qbinom(0.025, n,
+# 0.5). That region is not a valid 5% region: at n = 7 it admits k = 1, whose
+# exact two-sided p is 0.125, and at n = 2 it admits k in {0, 2}, a test that
+# rejects half the time under the null. The effect was to overstate power and
+# understate the MDE by roughly fourfold, and to report a finite MDE for a
+# contrast where no effect size is detectable at all.
+#
+# The region is now the exact one. For p = 0.5 the two-sided binomial p-value
+# has the closed form 2 * pbinom(min(k, n - k), n, 0.5), capped at 1, which is
+# used here in preference to calling binom.test: tools/reference_implementations.R
+# cross-checks this quantity via binom.test and uniroot, and a check that shares
+# its implementation with the thing it checks certifies nothing.
+mcnemar_mde_or <- function(n_d, power = 0.80, alpha = 0.05, or_max = 500) {
   if (is.na(n_d) || n_d < 1) return(NA_real_)
-  crit <- qbinom(0.025, n_d, 0.5)
-  for (psi in seq(0.50, 0.99, 0.01)) {
-    k   <- 0:n_d
-    rej <- (k <= crit) | (k >= n_d - crit)
-    if (sum(dbinom(k[rej], n_d, psi)) >= 0.80) return(psi / (1 - psi))
+  k    <- 0:n_d
+  p_h0 <- pmin(1, 2 * pbinom(pmin(k, n_d - k), n_d, 0.5))
+  rej  <- k[p_h0 <= alpha]
+  # Some discordant counts admit no rejection region at all: with two pairs the
+  # smallest attainable two-sided p is 0.5. Such a contrast has no MDE, and
+  # returning a number for it would assert detectability that does not exist.
+  if (!length(rej)) return(NA_real_)
+  pow <- function(or) sum(dbinom(rej, n_d, or / (1 + or)))
+  if (pow(or_max) < power) return(NA_real_)
+  lo <- 1; hi <- or_max
+  for (i in seq_len(200)) {           # bisection on a monotone power curve
+    mid <- sqrt(lo * hi)              # geometric midpoint: OR is a ratio scale
+    if (pow(mid) < power) lo <- mid else hi <- mid
   }
-  NA_real_
+  hi
 }
 
 paired_mcnemar <- function(wide) {

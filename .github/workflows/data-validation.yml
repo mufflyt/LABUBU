@@ -90,6 +90,9 @@ jobs:
       - name: Scientific gate
         run: Rscript .github/scripts/scientific-gate.R
 
+      - name: Reference cross-check
+        run: Rscript .github/scripts/check-reference-crosscheck.R
+
       - name: Upload CI artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -216,6 +219,9 @@ jobs:
 
       - name: Scientific gate on freshly generated outputs
         run: Rscript .github/scripts/scientific-gate.R
+
+      - name: Reference cross-check
+        run: Rscript .github/scripts/check-reference-crosscheck.R
 
       # Nothing previously proved the manuscript still knits. It renders here
       # from the outputs this run just generated, not from committed ones.
