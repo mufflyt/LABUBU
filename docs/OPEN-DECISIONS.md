@@ -52,11 +52,40 @@ registers as drift instead of moving silently.
 inferential analyses and labelled unresolved** until the REDCap semantics are
 verified from the instrument itself.
 
-**The action needed:** retrieve the original REDCap field labels, choices,
-branching logic and coded values, and determine whether a checked box means
-"would provide care", "would restrict care", or something else. The observed
-pattern is suspicious enough that reverse-coding on intuition is not
-acceptable.
+**Codebook retrieved 2026-09-05** via the REDCap metadata API (pid 39546):
+
+```
+field_name : restrictions
+field_type : checkbox
+label      : "Are there any restrictions to the individuals you would provide care to?"
+choices    : 1, Lesbian couple | 2, Straight couple | 3, Single mother
+field_note : (none)
+branching  : (none)
+```
+
+**This narrows the question but does not close it.** The instrument carries no
+field note and no branching logic, so it defines the item without constraining
+how callers recorded it. The literal reading of the label is that a ticked box
+marks a group the practice *would restrict*.
+
+The observed frequencies point the other way:
+
+| box ticked | n |
+|---|---|
+| Straight couple | 37 |
+| Lesbian couple | 27 |
+| Single mother | 19 |
+
+Under the literal reading, 37 practices restrict straight couples — implausible
+for fertility practices, and the ordering straight > lesbian > single mother is
+exactly what "groups this practice **will** serve" would produce. Reading the
+data against the label is what suggests the field was used inversely.
+
+**Still needed, and not inferable from the export:** confirmation from the
+callers or the PI of what they recorded when they ticked a box. Deciding this
+from the frequency pattern alone would be reverse-coding on intuition, which
+this decision explicitly rules out — and it is the one reading that would
+reverse the direction of a discrimination finding.
 
 **If the codebook confirms they measure restriction,** this becomes a candidate
 **primary discrimination outcome** — it is directly observed rather than
