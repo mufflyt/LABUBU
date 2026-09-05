@@ -341,18 +341,18 @@ cram <- tryCatch(round(mysterycall_test_categorical(
 
 <div class="precis-box">
   <div class="precis-title">Pr&eacute;cis</div>
-  Restorative Reproductive Medicine practices almost uniformly offer cycle tracking but rarely offer intrauterine insemination, in vitro fertilization, or donor sperm care &mdash; the services required by single women and same-sex couples to conceive.
+  Restorative Reproductive Medicine practices almost never offer intrauterine insemination, in vitro fertilization, or donor sperm care, the services required to conceive without a male partner.
 </div>
 
 ## ABSTRACT
 
 OBJECTIVE: To characterize the reproductive services offered by Restorative Reproductive Medicine (RRM) practices in the United States, and secondarily to explore whether appointment access differs by caller family structure.
 
-METHODS: In a national mystery-caller (secret shopper) audit, RRM practices were telephoned by trained callers presenting one of three standardized clinical scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. The primary outcome was the service menu each practice reported: cycle tracking, hormonal laboratory monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and willingness to work with donor sperm. Proportions carry 95% Wilson score confidence intervals. A secondary, exploratory analysis compared appointment access across caller scenarios using within-practice matched contrasts; because the instrument contained no item asking whether staff agreed to schedule, that outcome is appointment availability inferred from call documentation.
+METHODS: In a national mystery-caller audit, RRM practices were telephoned by trained callers presenting one of three standardized scenarios: a straight couple, a lesbian couple, or a single mother seeking donor sperm care. The primary outcome was the reported service menu: cycle tracking, hormonal laboratory monitoring, ovulation induction, intrauterine insemination (IUI), in vitro fertilization (IVF), and willingness to work with donor sperm, with 95% Wilson score confidence intervals. A secondary, exploratory analysis compared appointment access across scenarios using within-practice matched contrasts. Because the instrument contained no item asking whether staff agreed to schedule, that outcome is appointment availability inferred from call documentation.
 
-RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices; a live office was reached on `r pci(d, "reached")` of calls, and `r N_INC` calls completed the service interview. Cycle tracking was offered by `r svc("service_cycle_tracking")` of practices and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. In contrast, ovulation induction was offered by `r svc("service_ovulation_induction")`, IUI by `r svc("service_iui")`, IVF by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. The exploratory access comparison was uninformative: only `r paste(mc$discordant, collapse = ", ")` practices were discordant across the three contrasts, giving minimum detectable effects of `r mde_range`, and `r n_no_overlap` of three contrasts had no caller who placed calls under both scenarios, so scenario and caller effects are not separable for those.
+RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices; `r N_INC` reached staff and completed the service interview. Cycle tracking was offered by `r svc("service_cycle_tracking")` and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. Ovulation induction was offered by `r svc("service_ovulation_induction")`, IUI by `r svc("service_iui")`, IVF by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. The exploratory access comparison was uninformative: only `r paste(mc$discordant, collapse = ", ")` practices were discordant across the three contrasts, and `r n_no_overlap` of three contrasts had no caller placing calls under both scenarios, leaving scenario and caller effects inseparable.
 
-CONCLUSION: RRM practices in this national sample almost never offer IUI, IVF, or donor sperm care. Because single women and same-sex female couples require donor gametes to conceive, this represents a structural absence of the necessary services rather than a discretionary scheduling decision, and it operates independently of staff attitudes. The audit was not adequately powered to evaluate differential scheduling by caller identity.
+CONCLUSION: RRM practices almost never offer IUI, IVF, or donor sperm care. Because single women and same-sex female couples require donor gametes to conceive, this is a structural absence of necessary services rather than a discretionary scheduling decision, operating independently of staff attitudes. The audit was not powered to evaluate differential scheduling by caller identity.
 
 ---
 
@@ -439,6 +439,11 @@ strobe_png <- file.path(OUT, "figures", "fig0_strobe_flow.png")
 if (file.exists(strobe_png)) knitr::include_graphics(strobe_png)
 ```
 
+```{r strobe_by_scenario, fig.cap="Figure 2. STROBE flow by caller scenario. The three arms enter the cascade at comparable widths and leave at very different ones.", out.width="100%"}
+panel_png <- file.path(OUT, "figures", "fig0b_strobe_flow_by_scenario.png")
+if (file.exists(panel_png)) knitr::include_graphics(panel_png)
+```
+
 ```{r Table1}
 t1 <- casc |>
   transmute(
@@ -449,27 +454,8 @@ t1 <- casc |>
     `Offered (strict)`             = sprintf("%d (%.1f%%)", offered_strict, pct_offered_strict),
     `Offered (broad)`              = sprintf("%d (%.1f%%)", offered_broad,  pct_offered_broad)
   )
-kable(t1, caption = "Table 1. Access cascade by caller scenario. Each stage is nested within the preceding one.")
+kable(t1, caption = "Table 2. Access cascade by caller scenario. Each stage is nested within the preceding one.")
 ```
-
-### Reproductive Services Offered
-Among calls that reached staff and completed the service interview (N = `r N_INC`), RRM practices almost uniformly offered natural cycle tracking but rarely provided ART or donor gamete services (Table 2).
-
-```{r Table2}
-t2 <- data.frame(
-  `Reproductive Service` = c(
-    "Cycle tracking", "Hormonal labs / fertility timing", "Ovulation induction",
-    "Intrauterine insemination (IUI)", "In vitro fertilization (IVF)",
-    "Works with donor sperm"),
-  `Proportion Offered (95% CI)` = c(
-    svc("service_cycle_tracking"), svc("service_hormonal_timing"),
-    svc("service_ovulation_induction"), svc("service_iui"),
-    svc("service_ivf"), svc("donor_sperm_yes")),
-  check.names = FALSE)
-kable(t2, caption = sprintf("Table 2. Reproductive healthcare services offered by RRM practices (N = %d calls reaching staff)", N_INC))
-```
-
-Cycle tracking was offered in `r svc("service_cycle_tracking")` of encounters. In contrast, IUI was offered in `r svc("service_iui")`, IVF in `r svc("service_ivf")`, and donor sperm management in `r svc("donor_sperm_yes")`. The IUI and IVF counts each reflect a single practice and should be read as an upper bound on availability rather than a stable rate estimate.
 
 ### Appointment Availability by Caller Identity
 Inferred appointment availability among eligible calls was `r claim_pct("offer_straight")` for straight couples, `r claim_pct("offer_lesbian")` for lesbian couples, and `r claim_pct("offer_single_mother")` for single mothers (Table 1).
@@ -487,13 +473,13 @@ t3 <- mc |>
     `Discordant`           = discordant,
     `Exact McNemar P`      = sprintf("%.3f", mcnemar_p),
     `MDE (80% Power)`      = sprintf("OR %.1f", mde_or_80power))
-kable(t3, caption = "Table 3. Within-practice matched paired analysis of inferred appointment availability. Only discordant practices contribute information.")
+kable(t3, caption = "Table 3. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
 ```
 
 Within-practice paired differences in inferred availability were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. Practices treated callers identically in `r conc_range` of paired reachability comparisons.
 
 ### Caller Assignment
-Scenarios were not randomized across callers (Table 4). Caller identity was strongly associated with scenario (Cramér's V = `r cram`), and per-caller availability rates varied widely. Consequently, a scenario contrast and a caller contrast are numerically the same comparison, and within-practice pairing does not separate them because the paired calls were placed by different callers.
+Scenarios were not randomized across callers (Appendix Table S1). Caller identity was strongly associated with scenario (Cramér's V = `r cram`), and per-caller availability rates varied widely. Consequently, a scenario contrast and a caller contrast are numerically the same comparison, and within-practice pairing does not separate them because the paired calls were placed by different callers.
 
 ```{r Table4}
 t4 <- cdom |>
@@ -502,7 +488,7 @@ t4 <- cdom |>
     `Calls placed`              = n_calls,
     `Largest single caller`     = top_caller,
     `Their share of the arm`    = sprintf("%d (%.1f%%)", top_caller_n, top_caller_pct))
-kable(t4, caption = "Table 4. Concentration of each scenario arm in a single caller.")
+kable(t4, caption = "Appendix Table S1. Concentration of each scenario arm in a single caller.")
 ```
 
 ### Wait Time to First Available Appointment

@@ -218,6 +218,11 @@ dat$caller[is.na(dat$caller) | dat$caller == ""] <- "Unrecorded"
 dat$caller <- sub("^Mufflly$", "Muffly", dat$caller)
 dat$caller <- sub("^sr$",      "SR",     dat$caller)
 dat$caller <- sub("^sofie$",   "Sofie",  dat$caller)
+# "Sam" and "SR" are the same person (Sam Raine), recorded two ways -- same
+# class of variant as Mufflly/Muffly. Both entries are straight-couple calls
+# only, which is consistent. Left unmerged they inflate the caller count and
+# split one person's 17 calls into 16 and 1.
+dat$caller <- sub("^Sam$",     "SR",     dat$caller)
 
 # De-identify. The caller-confounding analysis needs caller STRATA, not caller
 # identities: "Caller A placed 53/77 straight-couple calls" carries exactly the
