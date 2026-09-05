@@ -201,6 +201,30 @@ try_check("privacy/no-contact-details-in-artifacts", {
             else paste(length(artifact_files), "artifacts clean"))
 })
 
+# ── 5d. Manuscript claims resolve to the analysis ─────────────────────────────
+# The manuscript looks its headline numbers up by claim id. If the claims table
+# is missing, or a claim no longer resolves to an estimand, the paper and the
+# analysis have silently diverged -- which is the failure the claims table
+# exists to make impossible.
+try_check("manuscript/claims-resolve", {
+  claims_file    <- file.path(OUT, "manuscript_claims.csv")
+  estimand_file  <- file.path(OUT, "estimands.csv")
+  if (!file.exists(claims_file))
+    return(structure(FALSE, detail = "manuscript_claims.csv absent"))
+  if (!file.exists(estimand_file))
+    return(structure(FALSE, detail = "estimands.csv absent"))
+  claims    <- read.csv(claims_file, stringsAsFactors = FALSE)
+  estimands <- read.csv(estimand_file, stringsAsFactors = FALSE)
+  unresolved <- claims$claim_id[!claims$estimand_id %in% estimands$estimand_id]
+  empty      <- claims$claim_id[is.na(claims$estimate)]
+  offenders  <- unique(c(unresolved, empty))
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste("claims not backed by an estimand:",
+                    paste(offenders, collapse = ", "))
+            else paste(nrow(claims), "claims resolve"))
+})
+
 # ── 6. Caller confounding must be surfaced ────────────────────────────────────
 try_check("report/caller-confounding-reported", {
   f <- file.path(OUT, "caller_dominance_by_scenario.csv")
