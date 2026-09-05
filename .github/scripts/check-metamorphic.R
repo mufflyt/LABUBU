@@ -24,10 +24,23 @@
 
 suppressWarnings(suppressPackageStartupMessages({ library(readr) }))
 
-EXPORT <- Sys.glob("LABUBU_DATA_LABELS_*.csv")
-EXPORT <- EXPORT[order(EXPORT, decreasing = TRUE)][1]
-if (is.na(EXPORT))
-  stop("no LABUBU_DATA_LABELS_*.csv present; metamorphic check cannot evaluate")
+# Prefer a real export; fall back to the committed fixture. The raw exports are
+# gitignored (they carry contact details), so CI never has one and the
+# structural properties checked here hold on any dataset. Failing when neither
+# exists rather than skipping: a check that cannot evaluate its condition must
+# fail (docs/APPENDIX-lessons.md).
+resolve_export <- function() {
+  real <- Sys.glob("LABUBU_DATA_LABELS_*.csv")
+  real <- real[order(real, decreasing = TRUE)]
+  if (length(real)) return(real[1])
+  fx <- file.path("tests", "fixtures", "LABUBU_DATA_LABELS_fixture.csv")
+  if (file.exists(fx)) return(fx)
+  stop("no LABUBU_DATA_LABELS_*.csv and no tests/fixtures fixture; ",
+       "the check cannot evaluate its condition", call. = FALSE)
+}
+
+EXPORT <- resolve_export()
+cat("using export:", EXPORT, "\n")
 
 fail <- 0L; n_ok <- 0L
 report <- function(id, ok, detail) {

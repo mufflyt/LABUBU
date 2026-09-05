@@ -26,8 +26,22 @@
 
 suppressWarnings(suppressPackageStartupMessages({ library(readr) }))
 
-EXPORT <- rev(sort(Sys.glob("LABUBU_DATA_LABELS_*.csv")))[1]
-if (is.na(EXPORT)) stop("no export present; sabotage run cannot evaluate")
+# Prefer a real export; fall back to the committed fixture. The raw exports are
+# gitignored (they carry contact details), so CI never has one and the
+# structural properties checked here hold on any dataset. Failing when neither
+# exists rather than skipping: a check that cannot evaluate its condition must
+# fail (docs/APPENDIX-lessons.md).
+resolve_export <- function() {
+  real <- Sys.glob("LABUBU_DATA_LABELS_*.csv")
+  real <- real[order(real, decreasing = TRUE)]
+  if (length(real)) return(real[1])
+  fx <- file.path("tests", "fixtures", "LABUBU_DATA_LABELS_fixture.csv")
+  if (file.exists(fx)) return(fx)
+  stop("no LABUBU_DATA_LABELS_*.csv and no tests/fixtures fixture; ",
+       "the check cannot evaluate its condition", call. = FALSE)
+}
+
+EXPORT <- resolve_export()
 
 PIPELINE <- "evaluate_labubu_mysterycall.R"
 
@@ -109,7 +123,8 @@ MUTANTS <- list(
 run_in_sandbox <- function(mutant) {
   tmp <- file.path(tempdir(), paste0("sabotage-", mutant$id))
   unlink(tmp, recursive = TRUE); dir.create(tmp, recursive = TRUE)
-  file.copy(c(PIPELINE, "redcap_pull.R", EXPORT), tmp)
+  file.copy(c(PIPELINE, "redcap_pull.R"), tmp)
+  file.copy(EXPORT, file.path(tmp, basename(EXPORT)))
   dir.create(file.path(tmp, "tools"), showWarnings = FALSE)
   file.copy(Sys.glob("tools/*.R"), file.path(tmp, "tools"))
   dir.create(file.path(tmp, ".github", "scripts"), recursive = TRUE, showWarnings = FALSE)
