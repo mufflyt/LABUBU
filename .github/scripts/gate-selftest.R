@@ -21,7 +21,11 @@ mutate_and_test <- function(label, covers, mutate) {
   covered <<- c(covered, covers)
   tmp <- file.path(tempdir(), paste0("selftest-", gsub("[^a-z]", "", tolower(label))))
   unlink(tmp, recursive = TRUE); dir.create(tmp, recursive = TRUE)
-  file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd"), tmp)
+  # restriction/excluded-from-inference reads the pipeline source, so the
+  # scratch copy must mirror the real environment rather than the check having
+  # to tolerate its absence.
+  file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd",
+              "evaluate_labubu_mysterycall.R"), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
@@ -53,7 +57,11 @@ expect_skip <- function(label, check_id, mutate) {
   covered <<- c(covered, check_id)
   tmp <- file.path(tempdir(), paste0("selftest-skip-", gsub("[^a-z]", "", tolower(label))))
   unlink(tmp, recursive = TRUE); dir.create(tmp, recursive = TRUE)
-  file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd"), tmp)
+  # restriction/excluded-from-inference reads the pipeline source, so the
+  # scratch copy must mirror the real environment rather than the check having
+  # to tolerate its absence.
+  file.copy(c("PROVENANCE.md", "labubu_mysterycall_manuscript.Rmd",
+              "evaluate_labubu_mysterycall.R"), tmp)
   file.copy(OUT, tmp, recursive = TRUE)
   exports <- list.files(root, pattern = "^LABUBU_DATA_LABELS_.*\\.csv$", full.names = TRUE)
   if (length(exports)) file.copy(exports, tmp)
@@ -208,6 +216,14 @@ ok <- c(
     cc <- read.csv(f, stringsAsFactors = FALSE)
     cc$estimand_id[1] <- "an_estimand_that_no_longer_exists"
     write.csv(cc, f, row.names = FALSE)
+  }),
+
+  mutate_and_test("detects restriction var entering inference",
+                  "restriction/excluded-from-inference", function(dir) {
+    f <- file.path(dir, OUT, "estimands.csv")
+    ee <- read.csv(f, stringsAsFactors = FALSE)
+    ee$estimand_id[1] <- "restrict_lesbian_or"
+    write.csv(ee, f, row.names = FALSE)
   }),
 
   # The skip must not swallow real drift: provenance naming an export that is
