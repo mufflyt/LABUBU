@@ -278,6 +278,37 @@ try_check("restriction/excluded-from-inference", {
             else "3 restriction variables held out of inference")
 })
 
+# ── 5f. Committed figures are opaque ──────────────────────────────────────────
+# theme_void() leaves the plot background blank and ggsave() honours that,
+# writing an alpha channel. A figure of black text and black outlines then
+# renders correctly on a white page and disappears against any dark viewer,
+# dark-mode PDF reader or journal proofing tool. It looks fine right up until
+# it does not, which is why this needs a check rather than an eye.
+try_check("figures/opaque-background", {
+  figure_dir <- file.path(OUT, "figures")
+  if (!dir.exists(figure_dir))
+    return(structure(FALSE, detail = "figures directory absent"))
+  if (!requireNamespace("png", quietly = TRUE))
+    return(structure(FALSE, detail = "png package unavailable; cannot verify"))
+  figures <- list.files(figure_dir, pattern = "[.]png$", full.names = TRUE)
+  if (!length(figures))
+    return(structure(FALSE, detail = "no PNG figures found"))
+  offenders <- character(0)
+  for (f in figures) {
+    img <- png::readPNG(f)
+    if (length(dim(img)) == 3 && dim(img)[3] == 4) {
+      transparent <- mean(img[, , 4] == 0)
+      if (transparent > 0.01)
+        offenders <- c(offenders, sprintf("%s (%.0f%% transparent)",
+                                          basename(f), 100 * transparent))
+    }
+  }
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste("transparent background:", paste(offenders, collapse = ", "))
+            else paste(length(figures), "figures opaque"))
+})
+
 # ── 6. Caller confounding must be surfaced ────────────────────────────────────
 try_check("report/caller-confounding-reported", {
   f <- file.path(OUT, "caller_dominance_by_scenario.csv")

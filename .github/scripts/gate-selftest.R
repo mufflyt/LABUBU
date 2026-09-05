@@ -226,6 +226,18 @@ ok <- c(
     write.csv(ee, f, row.names = FALSE)
   }),
 
+  mutate_and_test("detects a transparent figure background",
+                  "figures/opaque-background", function(dir) {
+    f <- file.path(dir, OUT, "figures", "fig0_strobe_flow.png")
+    if (requireNamespace("png", quietly = TRUE)) {
+      img <- png::readPNG(f)
+      rgba <- array(1, dim = c(dim(img)[1], dim(img)[2], 4))
+      rgba[, , 1:3] <- img[, , 1:3]
+      rgba[, , 4] <- 0                      # fully transparent
+      png::writePNG(rgba, f)
+    }
+  }),
+
   # The skip must not swallow real drift: provenance naming an export that is
   # not the one actually present is a FAILURE, not a skip.
   mutate_and_test("detects provenance naming wrong export",

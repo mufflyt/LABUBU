@@ -13,7 +13,7 @@ Three jobs run.
 
 | Job | What it proves | Needs data? |
 |---|---|---|
-| `scientific gate` | The committed outputs satisfy 17 scientific invariants, and the gate is provably able to fail | Only `yaml` |
+| `scientific gate` | The committed outputs satisfy 18 scientific invariants, and the gate is provably able to fail | Only `yaml` |
 | `pipeline execution` | The analysis code runs and *regenerates* its outputs from scratch | Committed fixture |
 | `re-derive from REDCap` | Full run against live REDCap | Manual dispatch only |
 
@@ -49,7 +49,7 @@ vanished". A scheduled job must not change reported results without review.
 
 ## The scientific gate
 
-17 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
+18 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
 claim, not a snapshot of today's numbers.
 
 | Check | Protects against |
@@ -70,6 +70,7 @@ claim, not a snapshot of today's numbers.
 | `privacy/callers-de-identified` | Staff names reaching a committed analysis artifact |
 | `privacy/no-contact-details-in-artifacts` | Phone numbers or emails in committed outputs |
 | `manuscript/claims-resolve` | A manuscript claim no longer backed by an estimand |
+| `figures/opaque-background` | A figure saved with a transparent background, invisible in dark viewers |
 | `restriction/excluded-from-inference` | The restriction checkboxes entering a model, estimand or claim while their meaning is unresolved |
 
 Beyond the gate, three scripts assert things the gate cannot:

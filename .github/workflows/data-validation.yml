@@ -58,6 +58,7 @@ jobs:
           dependencies: '"hard"'
           packages: |
             any::yaml
+            any::png
 
       - name: Record the environment
         if: always()
@@ -141,6 +142,7 @@ jobs:
             any::remotes
             any::jsonlite
             any::openssl
+            any::png
 
       - name: Resolve pinned mysterycall SHA
         run: echo "MYSTERYCALL_SHA=$(cat .github/mysterycall-sha.txt)" >> "$GITHUB_ENV"
