@@ -415,11 +415,21 @@ try_check("ci/no-duplicate-script-registration", {
   if (!length(sc))
     return(structure(FALSE, detail = "no script: entries parsed; cannot evaluate"))
   dup <- unique(sc[duplicated(sc)])
-  structure(length(dup) == 0,
-            detail = if (length(dup))
-              paste("script registered more than once in the CI contract:",
-                    paste(dup, collapse = ", "))
-            else sprintf("%d distinct scripts registered, none twice", length(unique(sc))))
+
+  # Duplicate IDS, not just duplicate scripts. Two agents working the same tree
+  # each registered the same seven check ids, and every contract check passed
+  # anyway, because nothing compared ids to each other. That is the defect this
+  # half exists for.
+  ids <- trimws(sub("^\\s*-\\s*id:\\s*", "", grep("^\\s*-\\s*id:", txt, value = TRUE)))
+  dup_id <- unique(ids[duplicated(ids)])
+
+  problems <- c(
+    if (length(dup))    paste("script registered more than once:", paste(dup, collapse = ", ")),
+    if (length(dup_id)) paste("check id declared more than once:", paste(dup_id, collapse = ", ")))
+  structure(length(problems) == 0,
+            detail = if (length(problems)) paste(problems, collapse = "; ")
+                     else sprintf("%d scripts and %d ids registered, none twice",
+                                  length(unique(sc)), length(unique(ids))))
 })
 
 # INCIDENT: the fixture builder pseudonymised RAW practice names before

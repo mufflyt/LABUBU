@@ -81,13 +81,6 @@ claim, not a snapshot of today's numbers.
 | `privacy/no-practice-names-in-submission-artifacts` | A practice or clinician name reaching the rendered manuscript, supplement or cover letter |
 | `figures/opaque-background` | A figure saved with a transparent background, invisible in dark viewers |
 | `restriction/excluded-from-inference` | The restriction checkboxes entering a model, estimand or claim while their meaning is unresolved |
-| `manuscript/sdc-items-resolve` | A supplemental digital content item cited in text but missing from the supplement file |
-| `manuscript/no-duplicate-tables` | Duplicate table headers or numbering in the manuscript |
-| `manuscript/abstract-and-precis-within-limits` | Abstract or precis word count exceeding Green Journal limits |
-| `pipeline/default-export-resolvable` | Pipeline failing to locate a valid export CSV |
-| `ci/checks-cannot-silently-skip` | Checks silently skipping without explicit SKIP() classification |
-| `ci/no-duplicate-script-registration` | Multiple registration of the same check ID |
-| `fixture/preserves-practice-structure` | De-identification fixture fragmenting triads or practice keys |
 
 Beyond the gate, four scripts assert things the gate cannot:
 `data-contract.R` (18 row-level assertions, reported with offending record

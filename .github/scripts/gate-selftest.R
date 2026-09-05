@@ -198,6 +198,14 @@ ok <- c(
     writeLines(c(readLines(f, warn = FALSE), "try({", "  stop('swallowed')", "})"), f)
   }),
 
+  mutate_and_test("detects the same check id declared twice in the CI contract",
+                  "ci/no-duplicate-script-registration", function(dir) {
+    f <- file.path(dir, "config", "ci_contract.yml")
+    t <- readLines(f, warn = FALSE)
+    i <- grep("^\\s*- id: manuscript/sdc-items-resolve\\s*$", t)[1]
+    writeLines(append(t, "    - id: manuscript/sdc-items-resolve", after = i), f)
+  }),
+
   mutate_and_test("detects the same script enforced twice in the CI contract",
                   "ci/no-duplicate-script-registration", function(dir) {
     f <- file.path(dir, "config", "ci_contract.yml")

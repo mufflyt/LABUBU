@@ -127,19 +127,11 @@ layers:
     - id: privacy/no-contact-details-in-artifacts
     - id: privacy/no-practice-names-in-submission-artifacts
 
-  regression:
-    - id: pipeline/default-export-resolvable
-    - id: ci/checks-cannot-silently-skip
-    - id: ci/no-duplicate-script-registration
-    - id: fixture/preserves-practice-structure
 
   manuscript:
     - id: manuscript/no-hardcoded-statistics
     - id: manuscript/claims-resolve
     - id: manuscript/references-consistent
-    - id: manuscript/sdc-items-resolve
-    - id: manuscript/no-duplicate-tables
-    - id: manuscript/abstract-and-precis-within-limits
     - id: manuscript/sdc-items-resolve
     - id: manuscript/no-duplicate-tables
     - id: manuscript/abstract-and-precis-within-limits
