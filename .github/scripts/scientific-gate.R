@@ -201,6 +201,48 @@ try_check("privacy/no-contact-details-in-artifacts", {
             else paste(length(artifact_files), "artifacts clean"))
 })
 
+# This is a secret-shopper study. The practices and individual clinicians who
+# were called did not consent to being named, and practice_key holds real names
+# with credentials and state ("Armando Garza, MD (TX)"). Rendered manuscripts,
+# supplements and cover letters are the documents that leave the private repo,
+# so no practice key may appear in one. Caught here after a draft supplement
+# printed four clinician names in a protocol-deviation table.
+try_check("privacy/no-practice-names-in-submission-artifacts", {
+  analysis <- file.path(OUT, "labubu_cleaned_analysis.csv")
+  if (!file.exists(analysis))
+    return(structure(FALSE, detail = "labubu_cleaned_analysis.csv absent"))
+  keys <- unique(read.csv(analysis, stringsAsFactors = FALSE)$practice_key)
+  keys <- keys[!is.na(keys) & nzchar(keys) & keys != "[redacted]"]
+  if (!length(keys))
+    return(structure(FALSE, detail = "no practice keys parsed; check cannot evaluate"))
+
+  # Named explicitly rather than globbed. Internal working documents (the call
+  # worklists emailed to co-investigators) legitimately carry practice names;
+  # these three are the files that leave the study team.
+  submission <- c("labubu_mysterycall_manuscript", "supplemental_digital_content",
+                  "cover_letter_GREEN_JOURNAL")
+  artifacts <- unlist(lapply(submission, function(b) Sys.glob(paste0(b, c(".html", ".docx")))))
+  rendered  <- unique(sub("\\.(html|docx)$", "", basename(artifacts)))
+  missing   <- setdiff(submission, rendered)
+  if (length(missing))
+    return(structure(FALSE,
+      detail = paste("submission artifact never rendered, so it cannot be screened:",
+                     paste(missing, collapse = ", "))))
+
+  offenders <- character(0)
+  for (f in artifacts) {
+    txt <- tryCatch(paste(readLines(f, warn = FALSE), collapse = "\n"),
+                    error = function(e) "")
+    hit <- keys[vapply(keys, function(k) grepl(k, txt, fixed = TRUE), logical(1))]
+    if (length(hit))
+      offenders <- c(offenders, sprintf("%s (%s)", basename(f), hit[1]))
+  }
+  structure(length(offenders) == 0,
+            detail = if (length(offenders))
+              paste("practice names in:", paste(offenders, collapse = "; "))
+            else paste(length(artifacts), "rendered artifacts carry no practice name"))
+})
+
 # ── 5d. Manuscript claims resolve to the analysis ─────────────────────────────
 # The manuscript looks its headline numbers up by claim id. If the claims table
 # is missing, or a claim no longer resolves to an estimand, the paper and the
