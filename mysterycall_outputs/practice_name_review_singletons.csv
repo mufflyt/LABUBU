@@ -1,33 +1,33 @@
 "practice_id","practice_key","has_straight","has_lesbian","has_sm"
-3,"Angelus FertilityCare Center (Brazil)",TRUE,FALSE,FALSE
-6,"Armando Garza, MD (TX)",TRUE,FALSE,FALSE
-15,"Brad & Angie Schutt (SD)",FALSE,TRUE,FALSE
-17,"Brianna Best, DO (FL)",TRUE,FALSE,FALSE
-19,"Caritas FertilityCare (MD)",TRUE,FALSE,FALSE
-22,"Cherish FertilityCare (British Columbia)",TRUE,FALSE,FALSE
-26,"Danielle Koester, Femm Health",FALSE,TRUE,FALSE
-27,"Danielle Koestner, DO (MI)",TRUE,FALSE,FALSE
-28,"David Wachs, CFCMC, CFCP (SD)",FALSE,TRUE,FALSE
-30,"Dr. Mitchell F. Finnie, MD (TX)",TRUE,FALSE,FALSE
-38,"Faithful FertilityCare (CA)",FALSE,TRUE,FALSE
-43,"Femme Health",FALSE,FALSE,TRUE
-54,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE
-57,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE
-69,"Karen Dalton, MD (CO, CT)",TRUE,FALSE,FALSE
-70,"Kathleen Berchelmann, MD (CT, teleahealth)",TRUE,FALSE,FALSE
-71,"Kimberly Barrows, MD (telehealth)",TRUE,FALSE,FALSE
-74,"Leslie Marbach, PharmD, CFCP (Abiding FertilityCare Center TX)",FALSE,TRUE,FALSE
-78,"Marah Van Diest, M.D. (SD)",FALSE,TRUE,FALSE
-79,"Marilyn Wachs, CFCP (SD)",FALSE,TRUE,FALSE
-82,"Mary Callahan, MD (telehealth)",TRUE,FALSE,FALSE
-83,"Maura Buete, MD (Telehealth)",TRUE,FALSE,FALSE
-87,"Nicole Bazger (MI, OH)",TRUE,FALSE,FALSE
-91,"Rachel Langley, DO (CO springs)",FALSE,TRUE,FALSE
-92,"Reply Fertility",FALSE,TRUE,FALSE
-93,"Reproductive Health Medicine & Gynecology",FALSE,FALSE,TRUE
-94,"Reproductive Health Medicine & Gynecology (https://rhmgyn.com) (AL)",TRUE,FALSE,FALSE
-96,"Sarah Pederson, MD (Westminster, CO)",TRUE,FALSE,FALSE
-100,"Susan Caldwell, MD (LA, CA)",TRUE,FALSE,FALSE
-102,"Teresa Kenney, APRN (NE)",FALSE,TRUE,FALSE
-103,"Teresa Studer, M.D. (IA)",TRUE,FALSE,FALSE
-105,"[redacted]",FALSE,TRUE,FALSE
+1,"[redacted]",FALSE,TRUE,FALSE
+4,"Angelus FertilityCare Center (Brazil)",TRUE,FALSE,FALSE
+7,"Armando Garza, MD (TX)",TRUE,FALSE,FALSE
+16,"Brad & Angie Schutt (SD)",FALSE,TRUE,FALSE
+18,"Brianna Best, DO (FL)",TRUE,FALSE,FALSE
+20,"Caritas FertilityCare (MD)",TRUE,FALSE,FALSE
+23,"Cherish FertilityCare (British Columbia)",TRUE,FALSE,FALSE
+27,"Danielle Koester, Femm Health",FALSE,TRUE,FALSE
+28,"Danielle Koestner, DO (MI)",TRUE,FALSE,FALSE
+29,"David Wachs, CFCMC, CFCP (SD)",FALSE,TRUE,FALSE
+31,"Dr. Mitchell F. Finnie, MD (TX)",TRUE,FALSE,FALSE
+39,"Faithful FertilityCare (CA)",FALSE,TRUE,FALSE
+44,"Femme Health",FALSE,FALSE,TRUE
+56,"FertilityCare Center of St. Mary's (TX)",FALSE,TRUE,FALSE
+59,"FertilityCare Center of the Sandhills LLC (NE)",FALSE,TRUE,FALSE
+70,"Karen Dalton, MD (CO, CT)",TRUE,FALSE,FALSE
+71,"Kathleen Berchelmann, MD (CT, teleahealth)",TRUE,FALSE,FALSE
+72,"Kimberly Barrows, MD (telehealth)",TRUE,FALSE,FALSE
+75,"Leslie Marbach, PharmD, CFCP (Abiding FertilityCare Center TX)",FALSE,TRUE,FALSE
+79,"Marah Van Diest, M.D. (SD)",FALSE,TRUE,FALSE
+80,"Marilyn Wachs, CFCP (SD)",FALSE,TRUE,FALSE
+83,"Mary Callahan, MD (telehealth)",TRUE,FALSE,FALSE
+84,"Maura Buete, MD (Telehealth)",TRUE,FALSE,FALSE
+88,"Nicole Bazger (MI, OH)",TRUE,FALSE,FALSE
+92,"Rachel Langley, DO (CO springs)",FALSE,TRUE,FALSE
+93,"Reply Fertility",FALSE,TRUE,FALSE
+94,"Reproductive Health Medicine & Gynecology",FALSE,FALSE,TRUE
+95,"Reproductive Health Medicine & Gynecology (https://rhmgyn.com) (AL)",TRUE,FALSE,FALSE
+97,"Sarah Pederson, MD (Westminster, CO)",TRUE,FALSE,FALSE
+101,"Susan Caldwell, MD (LA, CA)",TRUE,FALSE,FALSE
+103,"Teresa Kenney, APRN (NE)",FALSE,TRUE,FALSE
+104,"Teresa Studer, M.D. (IA)",TRUE,FALSE,FALSE

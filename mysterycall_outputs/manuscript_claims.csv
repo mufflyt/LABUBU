@@ -9,8 +9,8 @@ or_triad_lesbian,"triad offer OR, lesbian vs straight",or_triad_lesbian_couple,0
 or_triad_single_mother,"triad offer OR, single mother vs straight",or_triad_single_mother,0.094544,0.013796,0.64793,76
 or_broad_lesbian,"broad-definition OR, lesbian vs straight",or_broad_lesbian_couple,0.308118,0.076201,1.24587,100
 or_broad_single_mother,"broad-definition OR, single mother vs straight",or_broad_single_mother,0.285491,0.064211,1.269326,100
-gmr_wait_lesbian,"wait GMR, lesbian vs straight",gmr_wait_lesbian_couple,0.826118,0.468526,1.456635,57
-gmr_wait_single_mother,"wait GMR, single mother vs straight",gmr_wait_single_mother,0.818855,0.462761,1.448965,57
+gmr_wait_lesbian,"wait GMR, lesbian vs straight",gmr_wait_lesbian_couple,0.826118,0.475872,1.434148,57
+gmr_wait_single_mother,"wait GMR, single mother vs straight",gmr_wait_single_mother,0.818855,0.468888,1.430032,57
 service_cycle_tracking,cycle tracking offered,service_cycle_tracking,94.9,88.6,97.8,98
 service_iui,IUI offered,service_iui,1,0.2,5.6,98
 service_ivf,IVF offered,service_ivf,1,0.2,5.6,98
