@@ -71,6 +71,13 @@ claim, not a snapshot of today's numbers.
 | `privacy/no-contact-details-in-artifacts` | Phone numbers or emails in committed outputs |
 | `manuscript/claims-resolve` | A manuscript claim no longer backed by an estimand |
 | `manuscript/references-consistent` | A citation with no reference entry, a reference nobody cites, or numbering out of first-appearance order |
+| `manuscript/sdc-items-resolve` | A supplemental item promised in the manuscript that the supplement never contains, or vice versa |
+| `manuscript/no-duplicate-tables` | A repeated main-text table number, or a table printed in both the manuscript and the supplement |
+| `manuscript/abstract-and-precis-within-limits` | Abstract over 300 words or precis over 25 |
+| `pipeline/default-export-resolvable` | A hardcoded default export filename, which rots as soon as that export is archived |
+| `ci/checks-cannot-silently-skip` | A check wrapped in `try()`, which lets a missing input pass as success |
+| `ci/no-duplicate-script-registration` | One script enforced twice in the CI contract |
+| `fixture/preserves-practice-structure` | A fixture whose pseudonymisation has split practices apart and destroyed its triads |
 | `privacy/no-practice-names-in-submission-artifacts` | A practice or clinician name reaching the rendered manuscript, supplement or cover letter |
 | `figures/opaque-background` | A figure saved with a transparent background, invisible in dark viewers |
 | `restriction/excluded-from-inference` | The restriction checkboxes entering a model, estimand or claim while their meaning is unresolved |
@@ -219,6 +226,30 @@ repeating is `isochrones-ci`'s reason for existing at all:
 > spots. If a helper is subtly wrong, both the implementation and its tests use
 > the wrong helper, and the suite certifies the wrong answer with total
 > confidence.
+
+### Regression invariants
+
+Seven checks exist because the mistake happened here, not because it was
+imagined. Each names its incident in the source so nobody deletes it later
+wondering what it guarded:
+
+- a supplement promised in the manuscript that did not exist, with three of its
+  tables printed inline in the main text instead;
+- two Table 1s after a restructure, and later the same appendix tables shipped
+  in both documents;
+- an abstract and precis that had to be cut by hand to meet the journal limits;
+- a default export filename that rotted the moment that export was archived,
+  so the pipeline would not run on its own;
+- a check wrapped in `try()`, which passed while its input was missing;
+- one script registered twice in the CI contract by two people independently;
+- a fixture whose pseudonymisation split practices apart and destroyed 34 of
+  its complete triads, after which it certified a pipeline that could no longer
+  see triads at all.
+
+The last one bit a third time while its own negative control was being written:
+the injected pseudonyms ended in digits, which `normalize_practice()` strips as
+call-list indices, so every row collapsed onto one practice that then held all
+three scenarios and hid the defect. The control now uses letters.
 
 ### What the first runs found
 
