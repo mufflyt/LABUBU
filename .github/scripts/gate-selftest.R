@@ -189,6 +189,19 @@ ok <- c(
     write.csv(dd, clean_of(dir), row.names = FALSE)
   }),
 
+  mutate_and_test("detects real staff name in artifact",
+                  "privacy/callers-de-identified", function(dir) {
+    dd <- read.csv(clean_of(dir), stringsAsFactors = FALSE)
+    dd$caller[1] <- "Jordan Reyes"      # a name, not a stratum label
+    write.csv(dd, clean_of(dir), row.names = FALSE)
+  }),
+
+  mutate_and_test("detects contact details in artifact",
+                  "privacy/no-contact-details-in-artifacts", function(dir) {
+    writeLines("practice,phone\nExample Clinic,303-555-0142",
+               file.path(dir, OUT, "leaky_artifact.csv"))
+  }),
+
   # The skip must not swallow real drift: provenance naming an export that is
   # not the one actually present is a FAILURE, not a skip.
   mutate_and_test("detects provenance naming wrong export",
