@@ -47,6 +47,18 @@ jobs:
           r-version: '4.4.2'
           use-public-rspm: true
 
+      # The one dependency this job takes. check-ci-contract.R needs a YAML
+      # parser; everything else here is base R by design, so an outage in the
+      # ANALYSIS stack cannot take down the study's validation (Deriv being
+      # archived from CRAN, which took glmmTMB with it, is why that property
+      # exists). yaml is a small pure-utility package with no analysis
+      # dependencies: this widens the surface by one leaf, not by a graph.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          packages: |
+            any::yaml
+
       - name: Record the environment
         if: always()
         shell: Rscript {0}
@@ -64,6 +76,9 @@ jobs:
       # skipping it? Base R only, so it runs even if the environment is broken.
       - name: CI contract
         run: Rscript .github/scripts/check-workflow-contract.R
+
+      - name: CI contract coverage
+        run: Rscript .github/scripts/check-ci-contract.R
 
       - name: Gate self-test
         run: Rscript .github/scripts/gate-selftest.R

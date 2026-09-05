@@ -1,0 +1,111 @@
+# LABUBU CI contract
+#
+# Every required check, the layer it belongs to, the workflow that runs it, and
+# whether it must carry a negative control. check-ci-contract.R verifies that
+# this file and the implementation agree in BOTH directions: a check declared
+# here but never executed does not protect the study, and a check that exists
+# but is undeclared has escaped review.
+#
+# Layers, roughly outermost to innermost:
+#   infrastructure  can the environment run the study at all
+#   execution       did the analysis actually run and regenerate its outputs
+#   data            is the dataset internally coherent
+#   scientific      are the study's definitions intact
+#   privacy         is identifiable information staying out of artifacts
+#   manuscript      does the paper still render and agree with the analysis
+#   provenance      do we know exactly which input produced this
+#   ci-integrity    can the gates themselves fail
+
+version: 1
+
+layers:
+  infrastructure:
+    - id: environment/preflight
+      script: .github/scripts/preflight-env.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Fails in seconds when a package the protocol models need is absent,
+        before the pipeline can write a thinned report.
+
+  ci-integrity:
+    - id: workflow/contract
+      script: .github/scripts/check-workflow-contract.R
+      workflows: [data-validation]
+      required: true
+      self_test_required: false
+    - id: gate/self-test
+      script: .github/scripts/gate-selftest.R
+      workflows: [data-validation]
+      required: true
+      self_test_required: false
+      note: >-
+        Injects each defect the gate claims to catch and asserts it turns red.
+        Also enforces that every gate check has a negative control.
+
+  execution:
+    - id: pipeline/completion-receipt
+      script: .github/scripts/pipeline-receipt.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: >-
+        Exit code 0 is not proof. The receipt is written only after every
+        expected artifact exists and the denominator cascade nests.
+
+  data:
+    - id: data/contract
+      script: .github/scripts/data-contract.R
+      workflows: [data-validation, nightly]
+      required: true
+      self_test_required: false
+      note: 18 row-level assertions, reported with offending record ids.
+
+  # Individual scientific invariants, each enforced by scientific-gate.R and
+  # each required to have a negative control in gate-selftest.R.
+  scientific:
+    - id: outcome/offer-not-aliased-to-inclusion
+    - id: outcome/offer-has-negative-events
+    - id: outcome/reached-refusals-retained
+    - id: cascade/monotonic
+    - id: data/all-exclusion-reasons-mapped
+    - id: data/checkbox-encoding-parsed
+    - id: data/no-unresolved-near-duplicate-practices
+    - id: denominators/distinct-levels
+    - id: report/wait-reported-as-gmr-not-days
+    - id: report/models-present
+    - id: report/caller-confounding-reported
+
+  privacy:
+    - id: privacy/callers-de-identified
+    - id: privacy/no-contact-details-in-artifacts
+
+  manuscript:
+    - id: manuscript/no-hardcoded-statistics
+    - id: manuscript/claims-resolve
+    - id: manuscript/render
+      script: .github/scripts/check-manuscript-render.R
+      workflows: [data-validation]
+      required: true
+      self_test_required: false
+
+  provenance:
+    - id: provenance/md5-matches-repo-export
+
+# Defaults for the bare scientific / privacy / manuscript / provenance entries
+# above, which are all enforced by the same script.
+defaults:
+  script: .github/scripts/scientific-gate.R
+  workflows: [data-validation, nightly]
+  required: true
+  self_test_required: true
+
+# Reported, never enforced: real situations needing a methods decision. See
+# docs/OPEN-DECISIONS.md. CI surfaces these and stops.
+advisory:
+  - id: practice/one-call-per-scenario
+    script: .github/scripts/data-contract.R
+    reason: >-
+      Which call represents a practice-scenario cell when two exist changes an
+      estimand. That is a PI decision, not a CI one.
