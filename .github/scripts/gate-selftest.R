@@ -168,6 +168,15 @@ ok <- c(
     utils::write.csv(d, f, row.names = FALSE)
   }),
 
+  mutate_and_test("detects a stratum derived from the outcomes it explains",
+                  "stratum/practitioner-type-not-derived-from-outcomes", function(dir) {
+    f <- file.path(dir, "evaluate_labubu_mysterycall.R")
+    t <- readLines(f, warn = FALSE)
+    i <- grep("^dat\\$physician_led <-", t)[1]
+    t[i] <- "dat$physician_led <- dat$service_hormonal_timing"
+    writeLines(t, f)
+  }),
+
   mutate_and_test("detects a figure plotting different numbers than its table",
                   "figures/plotted-values-match-tables", function(dir) {
     f <- file.path(dir, OUT, "fig5_service_forest_data.csv")

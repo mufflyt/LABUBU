@@ -305,6 +305,71 @@ try_check("figures/strobe-counts-match-data", {
                      else sprintf("%d STROBE counts match the data and nest", length(expected)))
 })
 
+# The practitioner stratification is the defence against the strongest objection
+# to the primary finding, so it has to be trustworthy. Two ways it could go
+# wrong: the strata could fail to partition the sample, or the classification
+# could be derived from the services observed, which would make "physicians
+# offer more labs" true by construction. This repository has already made the
+# circularity mistake once, when the forest plot's colour grouping was derived
+# from the observed percentage instead of the clinical category.
+try_check("stratum/practitioner-type-not-derived-from-outcomes", {
+  f  <- file.path(OUT, "service_prevalence_by_practitioner.csv")
+  cn <- file.path(OUT, "practitioner_type_counts.csv")
+  an <- file.path(OUT, "labubu_cleaned_analysis.csv")
+  src <- "evaluate_labubu_mysterycall.R"
+  for (need in c(f, cn, an, src))
+    if (!file.exists(need))
+      return(structure(FALSE, detail = paste(basename(need), "absent; cannot evaluate")))
+
+  d <- read.csv(an, stringsAsFactors = FALSE)
+  bad <- character(0)
+
+  # (a) Classification must be a function of the practice NAME, not of any
+  #     service column. Read the assignment out of the source and check it.
+  txt <- paste(readLines(src, warn = FALSE), collapse = "\n")
+  m <- regmatches(txt, regexpr("dat\\$physician_led\\s*<-[^\n]*", txt))
+  if (!length(m)) {
+    bad <- c(bad, "physician_led assignment not found in the pipeline")
+  } else {
+    if (!grepl("practice_key", m))
+      bad <- c(bad, "physician_led is not derived from practice_key")
+    if (grepl("service_|donor_sperm|appt_offered|reached", m))
+      bad <- c(bad, paste("physician_led is derived from an OUTCOME column, which makes",
+                          "any difference between strata true by construction:", m))
+  }
+
+  # (b) The strata must partition the interviewed sample exactly.
+  cc <- read.csv(cn, stringsAsFactors = FALSE)
+  tf <- function(x) x %in% c(TRUE, "TRUE", "True", 1, "1")
+  n_inc <- sum(tf(d$analytic_inclusion))
+  if (sum(cc$n_calls_interviewed) != n_inc)
+    bad <- c(bad, sprintf("strata hold %d interviewed calls, analytic inclusion has %d",
+                          sum(cc$n_calls_interviewed), n_inc))
+  n_prac <- length(unique(d$practice_key[!is.na(d$practice_key)]))
+  if (sum(cc$n_practices) != n_prac)
+    bad <- c(bad, sprintf("strata hold %d practices, data have %d",
+                          sum(cc$n_practices), n_prac))
+  if (any(cc$n_calls_interviewed <= 0))
+    bad <- c(bad, "a stratum is empty")
+
+  # (c) Per-service denominators must equal the stratum sizes, or a row is
+  #     silently reporting a different subset than its header claims.
+  sv <- read.csv(f, stringsAsFactors = FALSE)
+  ph_n <- cc$n_calls_interviewed[cc$practitioner_type == "Physician-led (MD/DO)"]
+  fc_n <- cc$n_calls_interviewed[cc$practitioner_type != "Physician-led (MD/DO)"]
+  if (length(ph_n) && any(sv$phys_n != ph_n))
+    bad <- c(bad, "a physician-stratum row uses a denominator other than the stratum size")
+  if (length(fc_n) && any(sv$fc_n != fc_n))
+    bad <- c(bad, "a FertilityCare-stratum row uses a denominator other than the stratum size")
+  if (any(sv$phys_k > sv$phys_n) || any(sv$fc_k > sv$fc_n))
+    bad <- c(bad, "a numerator exceeds its denominator")
+
+  structure(length(bad) == 0,
+            detail = if (length(bad)) paste(bad, collapse = "; ")
+                     else sprintf("classified from practice name; %d + %d calls partition %d interviewed",
+                                  ph_n, fc_n, n_inc))
+})
+
 try_check("figures/plotted-values-match-tables", {
   fd <- file.path(OUT, "fig5_service_forest_data.csv")
   sv <- file.path(OUT, "mysterycall_service_prevalence.csv")

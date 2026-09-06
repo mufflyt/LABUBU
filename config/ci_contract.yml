@@ -123,6 +123,7 @@ layers:
     - id: figures/opaque-background
     - id: figures/plotted-values-match-tables
     - id: figures/strobe-counts-match-data
+    - id: stratum/practitioner-type-not-derived-from-outcomes
 
   privacy:
     - id: privacy/callers-de-identified

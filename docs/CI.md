@@ -13,7 +13,7 @@ Three jobs run.
 
 | Job | What it proves | Needs data? |
 |---|---|---|
-| `scientific gate` | The committed outputs satisfy 29 scientific invariants, and the gate is provably able to fail | Only `yaml` |
+| `scientific gate` | The committed outputs satisfy 30 scientific invariants, and the gate is provably able to fail | Only `yaml` |
 | `pipeline execution` | The analysis code runs and *regenerates* its outputs from scratch | Committed fixture |
 | `re-derive from REDCap` | Full run against live REDCap | Manual dispatch only |
 
@@ -49,7 +49,7 @@ vanished". A scheduled job must not change reported results without review.
 
 ## The scientific gate
 
-29 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
+30 invariants, in `.github/scripts/scientific-gate.R`. Each is a *structural*
 claim, not a snapshot of today's numbers.
 
 | Check | Protects against |
@@ -74,6 +74,7 @@ claim, not a snapshot of today's numbers.
 | `manuscript/sdc-items-resolve` | A supplemental item promised in the manuscript that the supplement never contains, or vice versa |
 | `figures/plotted-values-match-tables` | A figure plotting different numbers than the table captioned as its numeric detail, an inverted or incoherent interval, a wrong colour grouping, a missing service, or a figure that publishes no data at all |
 | `figures/strobe-counts-match-data` | A STROBE flow count that disagrees with the analysis data, or a cascade that does not nest |
+| `stratum/practitioner-type-not-derived-from-outcomes` | A practice stratum classified from the outcomes it is meant to explain, strata that do not partition the sample, or a row using a denominator other than its stratum size |
 | `manuscript/no-duplicate-tables` | A repeated main-text table number, or a table printed in both the manuscript and the supplement |
 | `manuscript/abstract-and-precis-within-limits` | Abstract over 300 words or precis over 25 |
 | `pipeline/default-export-resolvable` | A hardcoded default export filename, which rots as soon as that export is archived |

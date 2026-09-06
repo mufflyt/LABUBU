@@ -3,6 +3,36 @@
 Short, dated notes for people returning to LABUBU. For the full record see
 `CHANGELOG.md`; for why the CI is shaped the way it is, `docs/APPENDIX-lessons.md`.
 
+## 2026-09-06 — practices split by practitioner type
+
+**Tyler's question: are the near-zero IUI and IVF rates just an artifact of
+pooling Creighton practitioners with actual physicians?** A FertilityCare
+practitioner holds a certificate in cycle-tracking instruction, not a medical
+licence, and of course would not offer IVF. If most of the roster is
+practitioners, the headline finding could be an accident of the denominator.
+
+**Checked. It is not, and the finding gets stronger.** Among the 39 interviewed
+calls to physician-led (MD/DO) practices, IUI and IVF were each offered by
+**one**, 2.6% (95% CI 0.5 to 13.2). Among the 59 calls to FertilityCare centres,
+neither was offered at all (0%, upper bound 6.1%). The one practice offering IUI
+also offered IVF and worked with donor sperm, was physician-led, and is the only
+practice in the sample providing the full donor-conception pathway.
+
+**The stratification also confirms the division of labour, and it is the
+cleanest contrast in the study.** Hormonal laboratory monitoring: 87.2% of
+physician-led calls against 47.5% of FertilityCare calls, P < .001. Cycle
+tracking is near-universal in both. Physicians do the workup, practitioners
+teach cycle tracking, exactly as the model describes.
+
+This pre-empts the strongest objection a reviewer can make to the primary
+finding. New **Table 2**; the paired analysis moves to Table 3.
+
+Classification is from credential tokens in the practice name, **never** from
+the services observed, and `stratum/practitioner-type-not-derived-from-outcomes`
+enforces that: deriving a stratum from the outcomes it explains would make the
+difference true by construction. This repository has made the analogous mistake
+before, when a figure's colour grouping was derived from observed percentages.
+
 ## 2026-09-05 (evening) — manuscript sent to coauthors
 
 **The paper went out.** Manuscript, supplement, three figures and a draft cover

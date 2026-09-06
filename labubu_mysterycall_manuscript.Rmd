@@ -191,6 +191,8 @@ cdom <- rd("caller_dominance_by_scenario.csv")
 covl <- rd("caller_overlap_by_contrast.csv")
 miss <- rd("missingness_by_arm.csv")
 rpat <- rd("restriction_checkbox_by_caller.csv")
+sbp  <- rd("service_prevalence_by_practitioner.csv")
+ptc  <- rd("practitioner_type_counts.csv")
 cicc <- rd("caller_icc.csv")
 prec <- rd("precision_bounds.csv")
 cstr <- if (file.exists(file.path(OUT, "caller_stratified_contrast.csv")))
@@ -366,6 +368,25 @@ icc_txt <- function(outcome_name) {
   if (!nrow(r) || is.na(r$icc[1])) return("not estimable")
   sprintf("%.2f", r$icc[1])
 }
+# Practitioner stratification. Physician-led practices are the answer to the
+# obvious objection that a cycle-tracking educator would not offer IVF, so the
+# figures are pulled out for use in the text.
+pt_n <- function(type, col) ptc[[col]][ptc$practitioner_type == type][1]
+N_PHYS_PRAC <- pt_n("Physician-led (MD/DO)", "n_practices")
+N_FC_PRAC   <- pt_n("FertilityCare practitioner or centre", "n_practices")
+N_PHYS_CALL <- pt_n("Physician-led (MD/DO)", "n_calls_interviewed")
+N_FC_CALL   <- pt_n("FertilityCare practitioner or centre", "n_calls_interviewed")
+sbp_txt <- function(service, arm = c("phys", "fc")) {
+  arm <- match.arg(arm); r <- sbp[sbp$service == service, ]
+  if (!nrow(r)) return("not estimable")
+  sprintf("%.1f%% (95%% CI %.1f-%.1f; %d/%d)",
+          r[[paste0(arm, "_pct")]][1], r[[paste0(arm, "_lo")]][1],
+          r[[paste0(arm, "_hi")]][1], r[[paste0(arm, "_k")]][1], r[[paste0(arm, "_n")]][1])
+}
+sbp_p <- function(service) {
+  v <- sbp$fisher_p[sbp$service == service][1]
+  if (is.na(v)) "not estimable" else if (v < .001) "P < .001" else sprintf("P = %.3f", v)
+}
 mde_caveat <- if (n_no_mde)
   sprintf("; %s of the three contrasts %s no attainable minimum detectable effect, the discordant count being too small for the exact test to reject at any effect size",
           c("one","two","three")[n_no_mde], if (n_no_mde > 1) "have" else "has") else ""
@@ -415,7 +436,7 @@ METHODS: In a national mystery-caller audit, RRM practices were telephoned by tr
 
 RESULTS: `r N_REC` calls were placed to `r N_PRAC` practices; `r N_INC` reached staff and completed the service interview. Cycle tracking was offered by `r svc("service_cycle_tracking")` and hormonal laboratory monitoring by `r svc("service_hormonal_timing")`. Ovulation induction was offered by `r svc("service_ovulation_induction")`, IUI by `r svc("service_iui")`, IVF by `r svc("service_ivf")`, and donor sperm care by `r svc("donor_sperm_yes")`. The exploratory access comparison was uninformative: only `r paste(mc$discordant, collapse = ", ")` practices were discordant across the three contrasts, and `r n_no_overlap` of three contrasts had no caller placing calls under both scenarios, leaving scenario and caller effects inseparable.
 
-CONCLUSION: RRM practices almost never offer IUI, IVF, or donor sperm care. Because single women and same-sex female couples require donor gametes to conceive, this is a structural absence of necessary services rather than a discretionary scheduling decision, operating independently of staff attitudes. The audit was not powered to evaluate differential scheduling by caller identity.
+CONCLUSION: RRM practices almost never offer IUI, IVF, or donor sperm care. Because single women and same-sex female couples require donor gametes to conceive, this is a structural absence of necessary services rather than a discretionary scheduling decision, operating independently of staff attitudes. The near-absence of donor-conception services persisted among physician-led practices (IUI and IVF each 1 of 39 interviewed calls), so it is not an artifact of including non-physician FertilityCare practitioners. The audit was not powered to evaluate differential scheduling by caller identity.
 
 ---
 
@@ -493,6 +514,59 @@ t1 <- casc |>
 kable(t1, caption = "Table 1. Access cascade by caller scenario. Each stage is nested within the preceding one.")
 ```
 
+### Practitioner Type: physician-led practices versus FertilityCare centres
+
+RRM practices are not a single kind of provider, and the distinction bears
+directly on the finding above. Of `r N_PRAC` practices, `r N_PHYS_PRAC` named a
+physician (MD or DO) and `r N_FC_PRAC` did not; the latter are predominantly
+FertilityCare centres staffed by Creighton Model practitioners, who hold a
+certificate in fertility-awareness instruction rather than a medical licence and
+function as an entry point to the model rather than as treating clinicians. A
+reader may reasonably object that a practitioner whose scope is cycle-tracking
+instruction would not be expected to offer IUI or IVF, and that pooling the two
+groups therefore manufactures the absence.
+
+It does not. Among the `r N_PHYS_CALL` interviewed calls to physician-led
+practices, IUI was offered by `r sbp_txt("Intrauterine insemination (IUI)")` and
+IVF by `r sbp_txt("In vitro fertilization (IVF)")`, against
+`r sbp_txt("Intrauterine insemination (IUI)", "fc")` and
+`r sbp_txt("In vitro fertilization (IVF)", "fc")` among the `r N_FC_CALL`
+interviewed calls to FertilityCare centres. The single practice offering IUI
+also offered IVF and worked with donor sperm, and was physician-led; it is the
+only practice in the sample providing the full donor-conception pathway.
+Donor sperm did not differ by practitioner type
+(`r sbp_txt("Works with donor sperm")` versus
+`r sbp_txt("Works with donor sperm", "fc")`; `r sbp_p("Works with donor sperm")`).
+
+The stratification does reveal the division of labour it was designed to test,
+and it is the clearest contrast in these data. Hormonal laboratory monitoring
+was offered by `r sbp_txt("Hormonal labs / fertility timing")` of physician-led
+calls against `r sbp_txt("Hormonal labs / fertility timing", "fc")` of
+FertilityCare calls (`r sbp_p("Hormonal labs / fertility timing")`), while cycle
+tracking was near-universal in both
+(`r sbp_txt("Cycle tracking")` and `r sbp_txt("Cycle tracking", "fc")`;
+`r sbp_p("Cycle tracking")`). Physicians perform the medical workup and
+FertilityCare practitioners teach cycle tracking, exactly as the model
+describes. What neither group provides is the donor-conception pathway.
+
+```{r TablePractitioner}
+t_pt <- sbp |>
+  transmute(
+    Service                = service,
+    `Physician-led (MD/DO)` = sprintf("%.1f%% (%d/%d)", phys_pct, phys_k, phys_n),
+    `FertilityCare`         = sprintf("%.1f%% (%d/%d)", fc_pct, fc_k, fc_n),
+    `P value`               = ifelse(fisher_p < .001, "<.001", sprintf("%.3f", fisher_p)))
+kable(t_pt, caption = sprintf("Table 2. Reproductive services offered by practitioner type, among the %d interviewed calls (%d physician-led, %d FertilityCare). Percentages are of calls within each stratum; P values are Fisher exact. Practitioner type is classified from credentials in the practice name and never from the services reported.", N_INC, N_PHYS_CALL, N_FC_CALL))
+```
+
+Practitioner type was classified from credential tokens in the practice name,
+not from the services a practice reported, so no difference between strata is
+true by construction. The classification is imperfect and errs in a known
+direction: a FertilityCare centre employing a physician who is not named is
+counted as non-physician, which can only raise the FertilityCare stratum's
+apparent service rates, not lower them. This stratification was not
+prespecified and is reported as a sensitivity analysis of the primary outcome.
+
 ### Appointment Availability by Caller Identity
 Inferred appointment availability among eligible calls was `r claim_pct("offer_straight")` for straight couples, `r claim_pct("offer_lesbian")` for lesbian couples, and `r claim_pct("offer_single_mother")` for single mothers (Table 1).
 
@@ -512,7 +586,7 @@ t3 <- mc |>
     # has no detectable effect size, not that a number went missing.
     `MDE (80% Power)`      = ifelse(is.na(mde_or_80power), "None attainable",
                                     sprintf("OR %.1f", mde_or_80power)))
-kable(t3, caption = "Table 2. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
+kable(t3, caption = "Table 3. Within-practice matched paired analysis of inferred appointment availability (exploratory). Only discordant practices contribute information.")
 ```
 
 Within-practice paired differences in inferred availability were: Straight vs Single Mother `r paired_diff_ci("Straight_couple", "Single_mother")`; Lesbian vs Single Mother `r paired_diff_ci("Lesbian_couple", "Single_mother")`; Straight vs Lesbian `r paired_diff_ci("Straight_couple", "Lesbian_couple")`. Practices treated callers identically in `r conc_range` of paired reachability comparisons.
@@ -550,7 +624,7 @@ Second, **caller assignment**. Callers were not randomised across scenarios. Of 
 The contrast with enough discordant practices to be informative is therefore the one with no caller overlap, and the contrast free of caller confounding is the one with too few discordant practices to test. That is a property of how the calls were allocated, not a result about how practices behave, and it cannot be repaired analytically.
 
 ### Interpretation and Literature Context
-Patients presenting to RRM clinics encounter a clinical menu focused on natural cycle monitoring.[1,2] For patients whose path to pregnancy requires donor gametes or ART, the absence of those services is a primary structural barrier to care, independent of staff attitudes.[3,13-15] Our estimates place that absence at approximately one practice in a hundred for IUI and IVF.
+Patients presenting to RRM clinics encounter a clinical menu focused on natural cycle monitoring.[1,2] That menu is delivered by two different kinds of provider. Roughly a third of practices in this sample are led by a physician; the remainder are FertilityCare centres staffed by Creighton Model practitioners, who are certified in fertility-awareness instruction rather than licensed to practise medicine and who function as an entry point to the model. The division of labour is visible in the data: physicians order hormonal laboratory monitoring at nearly twice the rate of FertilityCare centres, while cycle tracking is near-universal in both. A patient contacting an RRM practice may therefore reach a clinician or an educator, and the two differ in what they can evaluate. What they do not differ in is the donor-conception pathway, which is absent from both. For patients whose path to pregnancy requires donor gametes or ART, the absence of those services is a primary structural barrier to care, independent of staff attitudes.[3,13-15] Our estimates place that absence at approximately one practice in a hundred for IUI and IVF.
 
 ### Strengths and Limitations
 Strengths include the national scope, direct measurement of the primary outcome, business-day calendar modeling, and explicit cascade reporting with stage-specific denominators.
@@ -566,7 +640,8 @@ Limitations:
 5. **Informative missingness.** Appointment dates are absent for a scenario-dependent share of calls; complete-case wait-time results condition on having been offered an appointment and do not generalize to all callers.
 6. **Reachability is low.** A live office was reached on `r pci(d, "reached")` of calls, so all interview-based results describe the reachable subset of practices.
 7. **Single call per scenario.** Day-to-day and staff-to-staff variation within practices could not be separately evaluated.
-8. **Geographic representativeness is unverified.** The instrument recorded no practice address. A state was identifiable from the practice name for `r N_ST_PRAC` of `r N_PRAC` practices, spanning `r N_STATES` states, so the roster is not regionally concentrated; but with location missing for the remainder and no population weighting, we cannot establish that the sample represents the national distribution of RRM practices.
+8. **Practitioner type is inferred from practice names.** A practice was classified as physician-led if its recorded name contained an MD or DO credential. A FertilityCare centre employing a physician who is not named is therefore counted as non-physician. The misclassification runs in one direction: it moves physicians into the FertilityCare stratum, which can only raise that stratum's apparent service rates. The stratification was not prespecified and is reported as a sensitivity analysis.
+9. **Geographic representativeness is unverified.** The instrument recorded no practice address. A state was identifiable from the practice name for `r N_ST_PRAC` of `r N_PRAC` practices, spanning `r N_STATES` states, so the roster is not regionally concentrated; but with location missing for the remainder and no population weighting, we cannot establish that the sample represents the national distribution of RRM practices.
 
 ### Recommendations for the Next Wave
 Adding an explicit item asking whether staff agreed to schedule the caller, and randomizing or blocking caller assignment across scenarios, would convert the exploratory contrast reported here into an estimable effect. The instrument's only directly measured discrimination item, three checkboxes asking whether there are "restrictions to the individuals you would provide care to" (lesbian couple, straight couple, single mother), is **excluded from all analyses reported here**, and the study codebook establishes that it cannot be recovered. The codebook defines a ticked box as a restriction applying to that group, with no field note or branching logic. The recorded responses are inconsistent with that definition and with one another. A box was ticked on `r N_RESTRICT_ANY` of `r N_REC` calls. One caller ticked all three boxes on `r N_ALL_THREE` occasions, which under the codebook definition would mean those practices serve no one and plainly means its inverse, while every other caller ticked only the box matching the scenario they themselves called as, an echo of the assignment rather than an observation about the practice (`r N_ONE_BOX` calls). The convention is therefore a property of the caller rather than of the response, and `r sprintf("%.0f", PCT_NO_CALLER)`% of calls record no caller at all, so no post hoc recoding can separate the two. This is an instrument defect rather than an analytic one, and the fix belongs in the next wave: three explicit yes/no items with the direction stated in the stem, made required so that blank is distinguishable from "no restriction", and caller identity mandatory on every record.

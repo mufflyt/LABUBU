@@ -757,6 +757,83 @@ names(restrict_tab)[4] <- "by_scenario_included"
 # they called as, which is an echo carrying no information. No recoding rule
 # can separate two conventions after the fact, so the field stays excluded.
 # See docs/PI-QUERY-restriction-checkbox.md.
+# ── PRACTITIONER TYPE — physician-led vs FertilityCare practitioner ──────────
+# RRM practices are not one kind of thing. Roughly a third are led by an MD or
+# DO practising NaProTechnology; the rest are FertilityCare centres staffed by
+# Creighton Model practitioners (FCP/CFCP), who hold a certificate in cycle
+# tracking rather than a medical licence and function as a referral front door.
+#
+# The distinction has to be tested rather than assumed, because it is the
+# strongest available objection to this study's primary finding: a reviewer can
+# say that of course a cycle-tracking educator does not offer IVF, so the near
+# zero IUI and IVF rates are an artifact of a contaminated denominator.
+#
+# Classified from CREDENTIAL TOKENS in the practice name, never from the
+# services observed. Deriving a practice type from its outcomes and then
+# reporting outcomes by type is circular, and this repository has already made
+# the analogous mistake once, when the forest plot's colour grouping was derived
+# from the observed percentage instead of the clinical category.
+#
+# The classification is imperfect and errs in a known direction: a FertilityCare
+# centre that employs a physician without naming them is scored non-physician,
+# which puts physicians INTO the FertilityCare stratum and can only make that
+# stratum's service rates look higher, not lower.
+PHYSICIAN_RE <- "\\bMD\\b|\\bDO\\b"
+dat$physician_led <- grepl(PHYSICIAN_RE, dat$practice_key, perl = TRUE)
+dat$practitioner_type <- ifelse(dat$physician_led,
+                                "Physician-led (MD/DO)",
+                                "FertilityCare practitioner or centre")
+
+service_by_practitioner <- local({
+  inc_p <- dat[dat$analytic_inclusion, ]
+  vars <- c(service_cycle_tracking      = "Cycle tracking",
+            service_hormonal_timing     = "Hormonal labs / fertility timing",
+            service_ovulation_induction = "Ovulation induction",
+            service_iui                 = "Intrauterine insemination (IUI)",
+            service_ivf                 = "In vitro fertilization (IVF)",
+            donor_sperm_yes             = "Works with donor sperm")
+  # With zero events mysterycall_prevalence_ci() returns no TRUE row, and the
+  # obvious fallback of (0, 0, 0) reports a confidence interval of zero width.
+  # That asserts certainty that no practice in the stratum offers the service,
+  # which the data cannot support: the Wilson upper bound for 0/59 is 6.1%.
+  # The formula is written out for that case only; tools/reference_implementations.R
+  # verifies the same interval independently.
+  wilson0 <- function(n, conf = 0.95) {
+    z <- stats::qnorm(1 - (1 - conf) / 2)
+    c(lo = 0, hi = 100 * (z^2 / n) / (1 + z^2 / n))
+  }
+  cell <- function(sub, v) {
+    tb <- as.data.frame(mysterycall_prevalence_ci(sub, var = v))
+    r  <- tb[tb$category %in% c("TRUE", "1"), ][1, ]
+    if (nrow(r) == 0 || is.na(r$proportion)) {
+      w <- wilson0(nrow(sub))
+      return(list(k = 0L, n = nrow(sub), pct = 0, lo = w[["lo"]], hi = w[["hi"]]))
+    }
+    list(k = r$n, n = r$total, pct = 100 * r$proportion,
+         lo = 100 * r$ci_lower, hi = 100 * r$ci_upper)
+  }
+  ph <- inc_p[inc_p$physician_led, ]; fc <- inc_p[!inc_p$physician_led, ]
+  do.call(rbind, lapply(names(vars), function(v) {
+    a <- cell(ph, v); b <- cell(fc, v)
+    # Fisher exact rather than chi-square: several cells are 0 or 1.
+    tb <- table(factor(inc_p$physician_led, c(FALSE, TRUE)),
+                factor(inc_p[[v]] %in% c(TRUE, "TRUE", 1, "1"), c(FALSE, TRUE)))
+    p  <- tryCatch(stats::fisher.test(tb)$p.value, error = function(e) NA_real_)
+    data.frame(service = vars[[v]],
+               phys_k = a$k, phys_n = a$n, phys_pct = a$pct, phys_lo = a$lo, phys_hi = a$hi,
+               fc_k   = b$k, fc_n   = b$n, fc_pct   = b$pct, fc_lo   = b$lo, fc_hi   = b$hi,
+               fisher_p = p, stringsAsFactors = FALSE)
+  }))
+})
+
+practitioner_counts <- data.frame(
+  practitioner_type = c("Physician-led (MD/DO)", "FertilityCare practitioner or centre"),
+  n_practices = c(length(unique(dat$practice_key[dat$physician_led & !is.na(dat$practice_key)])),
+                  length(unique(dat$practice_key[!dat$physician_led & !is.na(dat$practice_key)]))),
+  n_calls_interviewed = c(sum(dat$analytic_inclusion & dat$physician_led),
+                          sum(dat$analytic_inclusion & !dat$physician_led)),
+  stringsAsFactors = FALSE)
+
 restrict_pattern <- local({
   short <- c(restrict_lesbian = "Lesbian", restrict_straight = "Straight",
              restrict_single_mother = "SingleMother")
@@ -1264,6 +1341,8 @@ if (!is.null(caller_stratified))
 write.csv(exclusion_xw,                 file.path(out_dir, "exclusion_crosswalk.csv"),                                  row.names = FALSE)
 write.csv(restrict_tab,                 file.path(out_dir, "restriction_checkbox_review.csv"),                          row.names = FALSE)
 write.csv(restrict_pattern,             file.path(out_dir, "restriction_checkbox_by_caller.csv"),                       row.names = FALSE)
+write.csv(service_by_practitioner,      file.path(out_dir, "service_prevalence_by_practitioner.csv"),                  row.names = FALSE)
+write.csv(practitioner_counts,          file.path(out_dir, "practitioner_type_counts.csv"),                            row.names = FALSE)
 write.csv(caller_icc,                   file.path(out_dir, "caller_icc.csv"),                                          row.names = FALSE)
 write.csv(precision_bounds,             file.path(out_dir, "precision_bounds.csv"),                                    row.names = FALSE)
 if (!is.null(service_prev))
