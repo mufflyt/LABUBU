@@ -38,6 +38,38 @@ is measured directly rather than derived. Intervals are Wilson score intervals,
 the same ones in Appendix Table S3 — the figure and that table are checked
 against each other by `figures/plotted-values-match-tables`.
 
+### Is it just a staffing artifact?
+
+![Services by practitioner type](mysterycall_outputs/figures/fig6_service_by_practitioner.png)
+
+RRM practices are not one kind of provider. Of 105 practices, 30 name a
+physician (MD or DO); the rest are largely FertilityCare centres staffed by
+Creighton Model practitioners, who hold a certificate in fertility-awareness
+instruction rather than a medical licence.
+
+That invites the strongest objection available to the finding above: *of course
+a cycle-tracking educator does not offer IVF, so pooling the two groups
+manufactures the absence.*
+
+**It does not.** Among the 39 interviewed calls to physician-led practices, IUI
+and IVF were each offered by **one** (2.6%, 95% CI 0.5 to 13.2), against **zero
+of 59** FertilityCare calls. The single practice offering IUI also offered IVF
+and worked with donor sperm, and was physician-led. It is the only practice in
+the sample providing the full donor-conception pathway.
+
+The stratification does reveal the division of labour it was built to test, and
+it is the cleanest contrast in the study: hormonal laboratory monitoring 87.2%
+against 47.5% (**P<.001**), with cycle tracking near-universal in both.
+Physicians perform the workup and practitioners teach cycle tracking, exactly as
+the model describes. What neither provides is donor conception.
+
+Practitioner type is classified from credential tokens in the practice name and
+never from the services reported;
+`stratum/practitioner-type-not-derived-from-outcomes` fails the build if that
+changes. The misclassification that remains runs in one direction only: a
+FertilityCare centre employing an unnamed physician is counted as
+non-physician, which can only raise that stratum's apparent rates.
+
 ### Cohort flow
 
 ![STROBE flow](mysterycall_outputs/figures/fig0_strobe_flow.png)
@@ -205,6 +237,7 @@ Before quoting sample sizes (*n*) in a manuscript, abstract, or presentation, co
 | [`docs/OPEN-DECISIONS.md`](docs/OPEN-DECISIONS.md) | PI decisions made, and the questions still open |
 | [`docs/PI-QUERY-restriction-checkbox.md`](docs/PI-QUERY-restriction-checkbox.md) | Why the restriction checkbox is unusable and the question is **closed**, not pending |
 | [`docs/APPENDIX-lessons.md`](docs/APPENDIX-lessons.md) | Why each CI check exists — every one traces to something that went wrong |
+| [`docs/APPENDIX-ITEMS-1-6-PROVENANCE.md`](docs/APPENDIX-ITEMS-1-6-PROVENANCE.md) | Proof that the six analytic corrections are committed, active and reproducible |
 | [`docs/APPENDIX-borrowed-techniques.md`](docs/APPENDIX-borrowed-techniques.md) | The five validation strategies taken from sibling repos, and what each one found |
 | [`PROVENANCE.md`](PROVENANCE.md) | Which export, commit and package versions produced the current results |
 

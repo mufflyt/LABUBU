@@ -8,6 +8,44 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com).
 
 ---
 
+## 2026-09-06
+
+### Science — the primary finding, stratified
+
+- **Service menu split by practitioner type, answering the strongest objection
+  to the primary finding.** A reviewer can say that pooling physicians with
+  Creighton Model practitioners manufactures the absence of donor-conception
+  services. Tested: among 39 interviewed calls to physician-led (MD/DO)
+  practices, IUI and IVF were each offered by one, 2.6% (95% CI 0.5-13.2),
+  against zero of 59 FertilityCare calls. The single practice offering IUI also
+  offered IVF and donor sperm and was physician-led. New **Table 2**; the paired
+  analysis moves to Table 3.
+- **The division of labour is the cleanest contrast in the study.** Hormonal
+  laboratory monitoring 87.2% of physician-led calls against 47.5% of
+  FertilityCare calls, Fisher P<.001, with cycle tracking near-universal in
+  both. Physicians perform the workup; practitioners teach cycle tracking.
+- Added to the abstract, a Discussion paragraph on the two-provider structure,
+  and Limitation 8 on the name-based classification.
+
+### Machinery
+
+- **New invariant `stratum/practitioner-type-not-derived-from-outcomes`.**
+  Classification must come from credential tokens in the practice name, never
+  from the services observed; the strata must partition the sample; and no row
+  may use a denominator other than its stratum size. Deriving a stratum from the
+  outcomes it explains would make the contrast true by construction, which this
+  repository has done once before when a figure's colour grouping was derived
+  from observed percentages. Both failure modes verified by injection. Gate is
+  30 checks with 30 negative controls.
+- **A zero-event confidence interval of zero width was found and fixed in the
+  new code before it shipped.** `mysterycall_prevalence_ci()` returns no TRUE
+  row when there are no events, and the obvious fallback reported 0.0% (0.0-0.0)
+  for FertilityCare IUI, asserting certainty that no such practice offers it.
+  The Wilson upper bound for 0/59 is 6.1%; `tools/reference_implementations.R`
+  confirms the corrected value independently.
+- **`tools/verify_reported_values.R`** reproduces all 14 headline values from
+  committed outputs and exits non-zero on any disagreement.
+
 ## 2026-09-05 (evening)
 
 Manuscript restructured around the service-menu finding and sent to coauthors.
